@@ -10,12 +10,17 @@ persistence level in order not to deal with mapping and (detatched) transfer obj
 from contextlib import contextmanager
 import os
 import uuid
+import logging
 
 import sqlalchemy.orm
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.model import sql
 from src.model import mapping
+
+
+# a logger for this module
+_LOG = logging.getLogger('src.model.dataaccess')
 
 
 class TermBase(object):
@@ -26,6 +31,7 @@ class TermBase(object):
         """Creates a new termbase with the given name.
 
         :param name: name of the termbase
+        :rtype: TermBase
         """
         self.name = name
         session = sqlalchemy.orm.sessionmaker(self._get_engine())
@@ -70,7 +76,8 @@ class TermBase(object):
         try:
             yield session
             session.commit()
-        except SQLAlchemyError:
+        except SQLAlchemyError as exc:
+            _LOG.exception(exc)
             session.rollback()
         finally:
             session.close()
@@ -91,7 +98,7 @@ class TermBase(object):
         :returns: the newly created entry
         :rtype: Entry
         """
-        entry_id = uuid.uuid4()
+        entry_id = str(uuid.uuid4())
         # adds a new entry into the termbase
         with self.get_session() as session:
             entry = mapping.Entry(entry_id=entry_id)
@@ -119,6 +126,7 @@ class Schema(object):
 
         :param termbase: termbase instance whose schema is being modified
         :type termbase: TermBase
+        :rtype: Schema
         """
         self._tb = termbase
 
@@ -138,7 +146,7 @@ class Schema(object):
         # it is impossible to create empty picklists
         assert prop_type != 'P' or values
         with self._tb.get_session() as session:
-            prop_id = uuid.uuid4()
+            prop_id = str(uuid.uuid4())
             prop = mapping.Property(name=name, prop_id=prop_id, level=level, prop_type=prop_type)
             session.add(prop)
             # adds the possible values for picklist properties
@@ -168,6 +176,7 @@ class Entry(object):
         :type entry_id: str
         :param termbase: termbase which the entry belongs to
         :type termbase: TermBase
+        :rtype : Entry
         """
         self._tb = termbase
         self.id = entry_id
@@ -184,7 +193,7 @@ class Entry(object):
         :returns: the newly created term instance
         :rtype: Term
         """
-        term_id = uuid.uuid4()
+        term_id = str(uuid.uuid4())
         with self._tb.get_session() as session:
             term = mapping.Term(term_id=self.id, lemma=lemma, lang_id=locale, vedette=vedette, entry_id=self.id)
             session.add(term)
@@ -274,6 +283,7 @@ class Term(object):
         :type vedette: bool
         :param termbase: reference to the containing termbase
         :type termbase: TermBase
+        :rtype: Term
         """
         self.id = term_id
         self.lemma = lemma
