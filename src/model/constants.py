@@ -5,7 +5,8 @@
 This module contains some handy constants that are used in the application model.
 """
 
-# property levels (entry, language or term)
 PROP_LEVELS = ['E', 'L', 'T']
-# property types (picklist, text or image)
+"Property levels: E = entry, L = language or T = term."
+
 PROP_TYPES = ['P', 'T', 'I']
+"Property types: P = picklist, T = text or I = image)"
