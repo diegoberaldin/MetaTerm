@@ -22,6 +22,8 @@ Mappable = sqlalchemy.ext.declarative.declarative_base()
 
 def initialize_tb_folder():
     """Creates the folder where all termbases will be stored.
+
+    :rtype: None
     """
     if not os.path.exists(DB_DIR):
         os.mkdir(DB_DIR)
@@ -31,7 +33,10 @@ def write_to_disk(tb_name, engine):
     """Creates an empty termbase in a local file.
 
     :param tb_name: name of the termbase to be saved
+    :type tb_name: str
     :param engine: SQLAlchemy engine to use
+    :type engine: object
+    :rtype: None
     """
     if not os.path.exists(tb_name):
         Mappable.metadata.create_all(engine)
