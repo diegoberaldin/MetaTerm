@@ -16,9 +16,9 @@ the one side, and between (a subset of) model classes and the GUI.
 Contents:
 
 .. toctree::
-:maxdepth: 1
+    :maxdepth: 1
 
-       code
+    code
 
 Indices and tables
 ==================
