@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="12.1">
+  <zoom_level>10</zoom_level>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>50</x>
+      <y>20</y>
+      <w>240</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>Entries
+--
+-entry_id: string &lt;&lt;PK&gt;&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>50</x>
+      <y>170</y>
+      <w>240</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>Languages
+--
+-locale: string &lt;&lt;PK&gt;&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>50</x>
+      <y>80</y>
+      <w>240</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>EntryLanguageAssoc
+--
+- ela_id: string &lt;&lt;PK&gt;&gt;
+-entry_id: string &lt;&lt;FK(Entries)&gt;&gt;  &lt;&lt;NOT NULL&gt;&gt;
+-lang_id: string  &lt;&lt;FK(Languages)&gt;&gt;  
+                                 &lt;&lt;NOT NULL&gt;&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>320</x>
+      <y>90</y>
+      <w>240</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>EntryLanguageAssocPropertyAssoc
+--
+-ela_id: string &lt;&lt;PK&gt;&gt; &lt;&lt;FK(EntryLanguageAssoc)
+-property_id: string &lt;&lt;PK&gt;&gt; &lt;&lt;FK(Properties)&gt;&gt;
+-value: string &lt;&lt;NOT NULL&gt;&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>590</x>
+      <y>90</y>
+      <w>240</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>Properties
+--
+-name: string &lt;&lt;NOT NULL&gt;&gt;
+-prop_id: string &lt;&lt;PK&gt;&gt;
+-level: enum('E', 'L', 'T') &lt;&lt;NOT NULL&gt;&gt;
+-prop_type: enum('P', 'T', 'I') &lt;&lt;NOT NULL&gt;&gt;
+&lt;&lt;UNIQUE(name, level, prop_type)&gt;&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>590</x>
+      <y>250</y>
+      <w>240</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>PickListValues
+--
+-prop_id: string &lt;&lt;PK&gt;&gt; &lt;&lt;FK(Properties)&gt;&gt;
+-value: string &lt;&lt;PK&gt;&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Note</type>
+    <coordinates>
+      <x>650</x>
+      <y>20</y>
+      <w>160</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>only properties with 'E' level
+bg=#dbb1ff</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>520</x>
+      <y>0</y>
+      <w>150</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=.</panel_attributes>
+    <additional_attributes>30;50;130;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Note</type>
+    <coordinates>
+      <x>650</x>
+      <y>50</y>
+      <w>160</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>only properties with 'P' type
+bg=#dbb1ff</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>760</x>
+      <y>40</y>
+      <w>50</w>
+      <h>250</h>
+    </coordinates>
+    <panel_attributes>lt=.</panel_attributes>
+    <additional_attributes>30;230;30;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>320</x>
+      <y>20</y>
+      <w>240</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>EntryPropertyAssoc
+--
+-entry_id: string &lt;&lt;PK&gt;&gt; &lt;&lt;FK(Entries)
+-prop_id: string &lt;&lt;PK&gt;&gt; &lt;&lt;FK(Properties)&gt;&gt;
+-value: string &lt;&lt;NOT NULL&gt;&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>330</x>
+      <y>230</y>
+      <w>240</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>TermPropertyAssoc
+--
+-term_id: string &lt;&lt;PK&gt;&gt; &lt;&lt;FK(Terms)&gt;&gt;
+-prop_id: string &lt;&lt;PK&gt;&gt; &lt;&lt;FK(Properties)&gt;&gt;
+-value: string &lt;&lt;NOT NULL&gt;&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>260</x>
+      <y>0</y>
+      <w>80</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>30;30;60;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>260</x>
+      <y>70</y>
+      <w>80</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>30;30;60;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>530</x>
+      <y>70</y>
+      <w>80</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>60;30;30;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>530</x>
+      <y>0</y>
+      <w>100</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>80;90;80;30;30;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>540</x>
+      <y>140</y>
+      <w>180</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>160;30;160;100;30;100</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>260</x>
+      <y>210</y>
+      <w>90</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>30;30;70;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>140</x>
+      <y>120</y>
+      <w>50</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>30;50;30;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>140</x>
+      <y>30</y>
+      <w>50</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>30;30;30;50</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>0</x>
+      <y>0</y>
+      <w>70</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>50;30;30;30;30;240;50;240</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>680</x>
+      <y>140</y>
+      <w>50</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>30;30;30;110</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Note</type>
+    <coordinates>
+      <x>410</x>
+      <y>190</y>
+      <w>160</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>only properties with 'T' level
+bg=#dbb1ff</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Note</type>
+    <coordinates>
+      <x>410</x>
+      <y>160</y>
+      <w>160</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>only properties with 'L' level
+bg=#dbb1ff</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>470</x>
+      <y>110</y>
+      <w>50</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=.</panel_attributes>
+    <additional_attributes>30;30;30;50</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>500</x>
+      <y>180</y>
+      <w>50</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=.</panel_attributes>
+    <additional_attributes>30;80;30;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>50</x>
+      <y>230</y>
+      <w>240</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>Terms
+--
+-term_id: string &lt;&lt;PK&gt;&gt;
+-lang_id: string &lt;&lt;FK(Languages)&gt;&gt; &lt;&lt;NOT NULL&gt;&gt;
+-lemma: string &lt;&lt;NOT NULL&gt;&gt;
+-entry_id &lt;&lt;FK(Entries)&gt;&gt; &lt;&lt;NOT NULL&gt;&gt;
+-vedette: bool</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>140</x>
+      <y>180</y>
+      <w>50</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+</panel_attributes>
+    <additional_attributes>30;50;30;30</additional_attributes>
+  </element>
+</diagram>

@@ -1,0 +1,8 @@
+# Python bytecode
+*.pyc
+
+# built documentation
+doc/_build/*
+
+# IDE directories
+.idea/
