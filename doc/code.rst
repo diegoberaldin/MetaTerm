@@ -15,3 +15,9 @@ Contents:
     model
     controller
     view
+
+Main entry point
+^^^^^^^^^^^^^^^^
+The project main entry point is the module named ``src.main``, which is conventionally part of the application
+controller but is placed at the top level alongside with the three above packages (``model``, ``view`` and
+``controller``) for practicality reasons.

@@ -9,4 +9,4 @@ PROP_LEVELS = ['E', 'L', 'T']
 "Property levels: E = entry, L = language or T = term."
 
 PROP_TYPES = ['P', 'T', 'I']
-"Property types: P = picklist, T = text or I = image)"
+"Property types: P = picklist, T = text or I = image."
