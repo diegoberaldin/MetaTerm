@@ -51,7 +51,6 @@ class EntryLanguageAssociation(sql.Mappable):
     ela_id = Column(String, primary_key=True)
     entry_id = Column(String, ForeignKey('Entries.entry_id', ondelete='CASCADE'))
     lang_id = Column(String, ForeignKey('Languages.locale', ondelete='CASCADE'))
-    value = Column(String, nullable=False)
     # other constraints
     UniqueConstraint('entry_id', 'lang_id')
 
