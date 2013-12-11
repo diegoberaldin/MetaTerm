@@ -130,7 +130,7 @@ class Schema(object):
         """
         self._tb = termbase
 
-    def add_property(self, name, level, prop_type='T', values=()):
+    def create_property(self, name, level, prop_type='T', values=()):
         """Adds a new property to the termbase.
 
         :param name: name of the property
@@ -141,7 +141,8 @@ class Schema(object):
         :type prop_type: str
         :param values: list of possible picklist values
         :type values: tuple
-        :rtype: None
+        :returns: the newly created property
+        :rtype: Property
         """
         # it is impossible to create empty picklists
         assert prop_type != 'P' or values
@@ -153,6 +154,7 @@ class Schema(object):
             for picklist_value in values:
                 value = mapping.PickListValue(prop_id=prop_id, value=picklist_value)
                 session.add(value)
+        return Property(prop_id, name)
 
     def delete_property(self, prop_id):
         """Deletes of a property from the termbase schema.
@@ -165,8 +167,25 @@ class Schema(object):
             session.query(mapping.Property).filter(mapping.Property.prop_id == prop_id).delete()
 
 
+class Property(object):
+    """High level representation of a property, which is characterized only by its ID and a textual name.
+    """
+
+    def __init__(self, prop_id, name):
+        """Constructor method.
+
+        :param prop_id: ID of the new property
+        :type prop_id: str
+        :param name: name of the the new property
+        :type name: str
+        :rtype: Property
+        """
+        self.prop_id = prop_id
+        self.name = name
+
+
 class Entry(object):
-    """High level representation of a terminological entry of the termbase.
+    """High level representation of a terminological entry of the termbase, which is characterized by its ID only.
     """
 
     def __init__(self, entry_id, termbase):
@@ -179,7 +198,7 @@ class Entry(object):
         :rtype : Entry
         """
         self._tb = termbase
-        self.id = entry_id
+        self.entry_id = entry_id
 
     def create_term(self, lemma, locale, vedette):
         """Adds a new term to the terminological entry.
@@ -195,7 +214,8 @@ class Entry(object):
         """
         term_id = str(uuid.uuid4())
         with self._tb.get_session() as session:
-            term = mapping.Term(term_id=self.id, lemma=lemma, lang_id=locale, vedette=vedette, entry_id=self.id)
+            term = mapping.Term(term_id=self.entry_id, lemma=lemma, lang_id=locale, vedette=vedette,
+                                entry_id=self.entry_id)
             session.add(term)
         return Term(term_id, lemma, locale, vedette, self._tb)
 
@@ -210,7 +230,7 @@ class Entry(object):
         with self._tb.get_session() as session:
             return session.query(mapping.EntryPropertyAssociation.value).filter(
                 mapping.EntryPropertyAssociation.prop_id == prop_id,
-                mapping.EntryPropertyAssociation.entry_id == self.id).scalar()
+                mapping.EntryPropertyAssociation.entry_id == self.entry_id).scalar()
 
     def set_property(self, prop_id, value):
         """Changes the value of a given property for the invocation entry.
@@ -222,10 +242,14 @@ class Entry(object):
         :rtype: None
         """
         with self._tb.get_session() as session:
-            prop = session.query(mapping.EntryPropertyAssociation).filter(
-                mapping.EntryPropertyAssociation.prop_id == prop_id,
-                mapping.EntryPropertyAssociation.entry_id == self.id).first()
-            prop.value = value
+            try:
+                prop = session.query(mapping.EntryPropertyAssociation).filter(
+                    mapping.EntryPropertyAssociation.prop_id == prop_id,
+                    mapping.EntryPropertyAssociation.entry_id == self.entry_id).one()
+                prop.value = value
+            except sqlalchemy.orm.exc.NoResultFound:  # the property had not been set previously
+                prop = mapping.EntryPropertyAssociation(entry_id=self.entry_id, prop_id=prop_id, value=value)
+                session.add(prop)
 
     def get_language_property(self, lang_id, prop_id):
         """Gets the value of a language level property for the invocation terminological entry.
@@ -239,7 +263,7 @@ class Entry(object):
         """
         with self._tb.get_session() as session:
             ela_id = session.query(mapping.EntryLanguageAssociation.ela_id).filter(
-                mapping.EntryLanguageAssociation.entry_id == self.id,
+                mapping.EntryLanguageAssociation.entry_id == self.entry_id,
                 mapping.EntryLanguageAssociation.lang_id == lang_id).scalar()
             return session.query(mapping.EntryLanguagePropertyAssociation.value).filter(
                 mapping.EntryLanguagePropertyAssociation.ela_id == ela_id,
@@ -258,12 +282,20 @@ class Entry(object):
         """
         with self._tb.get_session() as session:
             ela_id = session.query(mapping.EntryLanguageAssociation.ela_id).filter(
-                mapping.EntryLanguageAssociation.entry_id == self.id,
+                mapping.EntryLanguageAssociation.entry_id == self.entry_id,
                 mapping.EntryLanguageAssociation.lang_id == lang_id).scalar()
-            prop = session.query(mapping.EntryLanguagePropertyAssociation).filter(
-                mapping.EntryLanguagePropertyAssociation.ela_id == ela_id,
-                mapping.EntryLanguagePropertyAssociation.prop_id == prop_id).one()
-            prop.value = value
+            if not ela_id:  # the association had not been created previously
+                ela_id = str(uuid.uuid4())
+                ela = mapping.EntryLanguageAssociation(ela_id=ela_id, entry_id=self.entry_id, lang_id=lang_id)
+                session.add(ela)
+            try:
+                prop = session.query(mapping.EntryLanguagePropertyAssociation).filter(
+                    mapping.EntryLanguagePropertyAssociation.ela_id == ela_id,
+                    mapping.EntryLanguagePropertyAssociation.prop_id == prop_id).one()
+                prop.value = value
+            except sqlalchemy.orm.exc.NoResultFound:  # the property had not been set previously
+                prop = mapping.EntryLanguagePropertyAssociation(ela_id=ela_id, prop_id=prop_id, value=value)
+                session.add(prop)
 
 
 class Term(object):
@@ -274,7 +306,7 @@ class Term(object):
         """Constructor method.
 
         :param term_id: ID of the term
-        :type term_id: int
+        :type term_id: str
         :param lemma: string representation of the term
         :type lemma: str
         :param locale: language ID to associate the term with a language
@@ -285,7 +317,7 @@ class Term(object):
         :type termbase: TermBase
         :rtype: Term
         """
-        self.id = term_id
+        self.term_id = term_id
         self.lemma = lemma
         self.locale = locale
         self.vedette = vedette
@@ -301,7 +333,7 @@ class Term(object):
         """
         with self._tb.get_session() as session:
             return session.query(mapping.TermPropertyAssociation.value).filter(
-                mapping.TermPropertyAssociation.term_id == self.id,
+                mapping.TermPropertyAssociation.term_id == self.term_id,
                 mapping.TermPropertyAssociation.prop_id == prop_id).scalar()
 
     def set_property(self, prop_id, value):
@@ -312,7 +344,11 @@ class Term(object):
         :rtype: None
         """
         with self._tb.get_session() as session:
-            prop = session.query(mapping.TermPropertyAssociation).filter(
-                mapping.TermPropertyAssociation.term_id == self.id,
-                mapping.TermPropertyAssociation.prop_id == prop_id).first()
-            prop.value = value
+            try:
+                prop = session.query(mapping.TermPropertyAssociation).filter(
+                    mapping.TermPropertyAssociation.term_id == self.term_id,
+                    mapping.TermPropertyAssociation.prop_id == prop_id).one()
+                prop.value = value
+            except sqlalchemy.orm.exc.NoResultFound:  # the property had not been set previously
+                prop = mapping.TermPropertyAssociation(term_id=self.term_id, prop_id=prop_id, value=value)
+                session.add(prop)

@@ -22,5 +22,3 @@ def initialize_logging():
 if __name__ == '__main__':
     initialize_logging()
     model.initialize_tb_folder()
-    tb = model.TermBase('prova')
-    tb.schema.add_property('Domain', 'E')
