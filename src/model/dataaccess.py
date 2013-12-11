@@ -75,7 +75,8 @@ class TermBase(object):
         finally:
             session.close()
 
-    def get_schema(self):
+    @property
+    def schema(self):
         """
         Returns a handle to modify the termbase information schema.
 
@@ -121,7 +122,7 @@ class Schema(object):
         """
         self._tb = termbase
 
-    def add_property(self, name, level, prop_type, values=()):
+    def add_property(self, name, level, prop_type='T', values=()):
         """Adds a new property to the termbase.
 
         :param name: name of the property
