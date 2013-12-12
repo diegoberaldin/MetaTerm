@@ -3,12 +3,15 @@
 """
 .. currentmodule:: src.main
 
-This module is the main application entry point.
+This module is the main entry point of the program, containing its main function as well as the definition of the
+QApplication where the event loop is run.
 """
 
 import logging.config
+import sys
+from PyQt4 import QtGui
 
-from src import model
+from src import model, controller, view
 
 
 def initialize_logging():
@@ -19,6 +22,40 @@ def initialize_logging():
     """
     logging.config.fileConfig('logging.conf')
 
+
+class MetaTermApplication(QtGui.QApplication):
+    """This is the application hosting the main event loop, directly inherited by the superclass and started when the
+    exec_() method is called.
+    """
+
+    def __init__(self, args):
+        """Costructor method for the application.
+
+        :param args: list of arguments from the command line
+        :type args: list
+        :rtype: MetaTermApplication
+        """
+        super(MetaTermApplication, self).__init__(args)
+        # initializes logging
+        initialize_logging()
+        # initializes the termbase folder
+        model.initialize_tb_folder()
+        # creates the view
+        self._view = view.MainWindow()
+        # creates the controller
+        self._controller = controller.MainController(self._view)
+        # has the view drawn on the screen (finally)
+        self._view.show()
+
+
+def main():
+    """This is my personal tribute to procedural style programming, a main function. Wow!
+
+    :rtype: None
+    """
+    app = MetaTermApplication(sys.argv)  # 2 lines of plain old boilerplate code won't harm anybody
+    sys.exit(app.exec_())
+
+# what to to when this module is executed as the main module (which it apparently is)
 if __name__ == '__main__':
-    initialize_logging()
-    model.initialize_tb_folder()
+    main()
