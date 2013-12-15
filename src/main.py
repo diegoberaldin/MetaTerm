@@ -29,7 +29,7 @@ class MetaTermApplication(QtGui.QApplication):
     """
 
     def __init__(self, args):
-        """Costructor method for the application.
+        """Constructor method for the application.
 
         :param args: list of arguments from the command line
         :type args: list

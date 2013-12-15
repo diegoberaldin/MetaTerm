@@ -29,6 +29,15 @@ def initialize_tb_folder():
         os.mkdir(DB_DIR)
 
 
+def get_termbase_names():
+    """Returns the list of all termbases available on the system.
+
+    :returns: a list of absolute file names corresponding to termbases
+    :rtype: list
+    """
+    return [name for name in os.listdir(DB_DIR) if name.endswith('.sqlite')]
+
+
 def write_to_disk(tb_name, engine):
     """Creates an empty termbase in a local file.
 

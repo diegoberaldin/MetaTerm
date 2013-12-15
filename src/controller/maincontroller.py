@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 .. currentmodule:: src.controller.maincontroller
 
@@ -7,11 +9,15 @@ of the application and is in charge of processing all those events that are gene
 
 from PyQt4 import QtCore
 
+from src import model as mdl
+from src import view as gui
+
 
 class AbstractController(QtCore.QObject):
     """This is a convenience class that contains the generic event handler (namely the ``handle_event`` method) which
     all controllers must implement in order to be able to react to events originated in the GUI.
     """
+
     def __init__(self):
         """Constructor method (to be called in subclass constructors).
 
@@ -51,4 +57,40 @@ class MainController(AbstractController):
         """
         super(MainController, self).__init__()
         self._view = view
+        # assures events originated from the UI are handled correctly
         self._view.fire_event.connect(self.handle_event)
+        self._model = None
+        # child controllers
+        self._children = {}
+
+    def _handle_open_termbase(self, termbase_name):
+        """Opens an existing termbase.
+
+        :param termbase_name: the name of the termbase to open
+        :type termbase_name: str
+        :rtype: None
+        """
+        self._model = mdl.TermBase(termbase_name)
+        # TODO: UI must be updated
+
+    def _handle_new_termbase(self):
+        """Starts the wizard used to create a new termbase.
+
+        :rtype: None
+        """
+        wizard = gui.NewTermbaseWizard(self._view)
+        new_termbase_controller = NewTermbaseController(wizard)
+        new_termbase_controller.new_termbase_created.connect(self._handle_open_termbase)
+        self._children['new_termbase'] = new_termbase_controller
+        wizard.setVisible(True)
+
+
+class NewTermbaseController(AbstractController):
+    new_termbase_created = QtCore.pyqtSignal(str)
+    ('This signal is emitted when a new termbase has been created. The name of the newly created termbase must be'
+     'passed as a parameter when this signal is emitted.')
+
+    def __init__(self, wizard):
+        super(NewTermbaseController, self).__init__()
+        self._view = wizard
+
