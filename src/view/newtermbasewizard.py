@@ -113,7 +113,7 @@ class LanguagePage(QtGui.QWizardPage):
         :rtype: None
         """
         for locale, language_name in mdl.DEFAULT_LANGUAGES.items():
-            flag = QtGui.QIcon(':/flags/{0}'.format(locale))
+            flag = QtGui.QIcon(':/flags/{0}.png'.format(locale))
             item = QtGui.QListWidgetItem(flag, language_name,
                                          self._available_languages)
             self._available_languages.addItem(item)
@@ -182,8 +182,80 @@ class DefinitionModelPage(QtGui.QWizardPage):
         self.setTitle('Definition model')
         self.setSubTitle(
             'Create the structure of the termbase by specifying the set of '
-            'properties that its entries'
-            'will be made up of')
+            'properties that its entries will be made up of')
+        self.setLayout(QtGui.QHBoxLayout(self))
+        self._view = QtGui.QTreeView(self)
+        self._model = mdl.TermbaseDefinitionModel()
+        self._view.setModel(self._model)
+        self._view.pressed.connect(self._handle_view_pressed)
+        self._form = QtGui.QWidget(self)
+        self._form.setMinimumWidth(250)
+        self.layout().addWidget(self._view)
+        self.layout().addWidget(self._form)
+
+    def _get_selected_node(self):
+        selection = [index.internalPointer() for index in
+                     self._view.selectedIndexes() if index.column() == 0]
+        return selection.pop()
+
+    @QtCore.pyqtSlot(QtCore.QModelIndex)
+    def _handle_view_pressed(self, index):
+        item = self._get_selected_node()
+        old_form = self._form
+        self.layout().removeWidget(old_form)
+        if not item.parent.parent:  # level node
+            self._form = NewPropertyForm(self)
+
+        else:  # modify existing property
+            pass
+        self._form.setMinimumWidth(250)
+        self.layout().addWidget(self._form)
+        old_form.deleteLater()
+
+
+class NewPropertyForm(QtGui.QWidget):
+    types = ['Text', 'Image', 'Picklist']
+
+    def __init__(self, parent):
+        super(NewPropertyForm, self).__init__(parent)
+        self.setLayout(QtGui.QFormLayout(self))
+        name_label = QtGui.QLabel('Name', self)
+        self._name_input = QtGui.QLineEdit(self)
+        type_label = QtGui.QLabel('Type', self)
+        type_input = QtGui.QComboBox(self)
+        type_input.setModel(
+            QtGui.QStringListModel(self.types))
+        type_input.currentIndexChanged.connect(self._handle_type_changed)
+        add_widget = QtGui.QWidget(self)
+        add_widget.setLayout(QtGui.QHBoxLayout(add_widget))
+        add_button = QtGui.QToolButton(add_widget)
+        add_button.setText('Add property')
+        add_button.setIcon(QtGui.QIcon(':/list-add.png'))
+        add_widget.layout().addStretch()
+        add_widget.layout().addWidget(add_button)
+        self._value_label = None
+        self._value_input = None
+        # puts it all together
+        self.layout().addWidget(add_widget)
+        self.layout().addRow(name_label, self._name_input)
+        self.layout().addRow(type_label, type_input)
+        self.layout().addRow(self._value_label, self._value_input)
+
+
+    @QtCore.pyqtSlot(int)
+    def _handle_type_changed(self, type_index):
+        if self._value_input and self._value_label:
+            self.layout().removeWidget(self._value_input)
+            self.layout().removeWidget(self._value_label)
+            self._value_input.deleteLater()
+            self._value_label.deleteLater()
+        if type_index == 2:  # picklist property
+            self._value_label = QtGui.QLabel('Values')
+            self._value_input = QtGui.QLabel('picklist', self)
+            self.layout().addRow(self._value_label, self._value_input)
+        else:
+            self._value_label = None
+            self._value_input = None
 
 
 class FinalPage(QtGui.QWizardPage):

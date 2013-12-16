@@ -1,11 +1,12 @@
 <RCC>
     <qresource prefix="/">
-        <file>flags/en_GB</file>
-        <file>flags/en_US</file>
-        <file>flags/es_ES</file>
-        <file>flags/fr_FR</file>
-        <file>flags/gr_GR</file>
-        <file>flags/it_IT</file>
-        <file>flags/ro_RO</file>
+        <file>flags/en_GB.png</file>
+        <file>flags/en_US.png</file>
+        <file>flags/es_ES.png</file>
+        <file>flags/fr_FR.png</file>
+        <file>flags/gr_GR.png</file>
+        <file>flags/it_IT.png</file>
+        <file>flags/ro_RO.png</file>
+        <file>list-add.png</file>
     </qresource>
 </RCC>
