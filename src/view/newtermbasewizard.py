@@ -8,6 +8,7 @@ user through the creation of a new terminological database.
 """
 
 from PyQt4 import QtGui, QtCore
+from src import model as mdl
 
 
 class NewTermbaseWizard(QtGui.QWizard):
@@ -39,7 +40,8 @@ class NewTermbaseWizard(QtGui.QWizard):
 
         :rtype: None
         """
-        pass
+        language_page = self._pages[1]
+        print(language_page.get_selected_locales())
 
 
 class NamePage(QtGui.QWizardPage):
@@ -82,6 +84,74 @@ class LanguagePage(QtGui.QWizardPage):
             'Select the languages of the terms that will be stored in the new '
             'termbase.')
         self.setLayout(QtGui.QGridLayout(self))
+        self._available_languages = QtGui.QListWidget(self)
+        for locale, language_name in mdl.DEFAULT_LANGUAGES.items():
+            item = QtGui.QListWidgetItem(language_name)
+            self._available_languages.addItem(item)
+        self._available_languages.sortItems(QtCore.Qt.AscendingOrder)
+        self._chosen_languages = QtGui.QListWidget(self)
+        # buttons for moving languages around
+        button_widget = QtGui.QWidget(self)
+        select_language_button = QtGui.QPushButton('>', button_widget)
+        select_language_button.setMaximumWidth(40)
+        select_language_button.clicked.connect(self._handle_language_selected)
+        deselect_language_button = QtGui.QPushButton('<', button_widget)
+        deselect_language_button.setMaximumWidth(40)
+        deselect_language_button.clicked.connect(
+            self._handle_language_deselected)
+        button_widget.setLayout(QtGui.QVBoxLayout(button_widget))
+        button_widget.layout().addWidget(select_language_button)
+        button_widget.layout().addWidget(deselect_language_button)
+        # puts it all together
+        self.layout().addWidget(self._available_languages, 0, 0)
+        self.layout().addWidget(button_widget, 0, 1)
+        self.layout().addWidget(self._chosen_languages, 0, 2)
+
+    @QtCore.pyqtSlot()
+    def _handle_language_selected(self):
+        """This slot removes the selected item from the list of available
+        languages and inserts in in the list of the selected languages.
+
+        :rtype: None
+        """
+        index = self._available_languages.currentRow()
+        item = self._available_languages.takeItem(index)
+        self._chosen_languages.addItem(item)
+        self._chosen_languages.sortItems(QtCore.Qt.AscendingOrder)
+        self.completeChanged.emit()
+
+    @QtCore.pyqtSlot()
+    def _handle_language_deselected(self):
+        """This slot removes the selected item from the list of the chosen
+        languages and reinserts it in the list of available languages.
+
+        :rtype: None
+        """
+        index = self._chosen_languages.currentRow()
+        item = self._chosen_languages.takeItem(index)
+        self._available_languages.addItem(item)
+        self._available_languages.sortItems(QtCore.Qt.AscendingOrder)
+        self.completeChanged.emit()
+
+    def isComplete(self):
+        """This method is overridden in order not to enable the 'Next' button
+        unless at least one language has been selected by the user.
+
+        :return: True if the page is complete and at least one language has
+        been selected; False otherwise
+        :rtype: bool
+        """
+        some_language_selected = self._chosen_languages.count() != 0
+        return super(LanguagePage, self).isComplete() and some_language_selected
+
+    def get_selected_locales(self):
+        items = []
+        while self._chosen_languages.count():
+            items.append(self._chosen_languages.takeItem(0))
+        items = [item.data(0) for item in items]
+        # TODO: careful when new languages are added
+        return [k for lang_name in items for k, v in
+                mdl.DEFAULT_LANGUAGES.items() if v == lang_name]
 
 
 class DefinitionModelPage(QtGui.QWizardPage):
