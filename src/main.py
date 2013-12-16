@@ -3,8 +3,8 @@
 """
 .. currentmodule:: src.main
 
-This module is the main entry point of the program, containing its main function as well as the definition of the
-QApplication where the event loop is run.
+This module is the main entry point of the program, containing its main function
+as well as the definition of the ``QApplication`` where the event loop is run.
 """
 
 import logging.config
@@ -15,8 +15,9 @@ from src import model, controller, view
 
 
 def initialize_logging():
-    """Initializes the logging module for use throughout the whole application, reading the configuration from the
-    ``logging.conf`` file located at the same level as the main module.
+    """Initializes the logging module for use throughout the whole application,
+    reading the configuration from the ``logging.conf`` file located at the same
+    level as the main module.
 
     :rtype: None
     """
@@ -24,8 +25,8 @@ def initialize_logging():
 
 
 class MetaTermApplication(QtGui.QApplication):
-    """This is the application hosting the main event loop, directly inherited by the superclass and started when the
-    exec_() method is called.
+    """This is the application hosting the main event loop, directly inherited
+    by the superclass and started when the exec() method is called.
     """
 
     def __init__(self, args):
@@ -49,13 +50,15 @@ class MetaTermApplication(QtGui.QApplication):
 
 
 def main():
-    """This is my personal tribute to procedural style programming, a main function. Wow!
+    """This is my personal tribute to procedural style programming, a main
+    function. Wow!
 
     :rtype: None
     """
-    app = MetaTermApplication(sys.argv)  # 2 lines of plain old boilerplate code won't harm anybody
-    sys.exit(app.exec_())
+    # 2 lines of plain old boilerplate code won't harm anybody
+    app = MetaTermApplication(sys.argv)
+    sys.exit(app.exec())
 
-# what to to when this module is executed as the main module (which it apparently is)
+# what to to when this module is executed as the main module (which it is)
 if __name__ == '__main__':
     main()
