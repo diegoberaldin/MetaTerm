@@ -3,10 +3,12 @@
 """
 .. currentmodule:: src.model.sql
 
-This module contains the types and constants that are needed in order to handle the data persistence layer, i.e. a
-constant representing the location where termbases are stored and a mechanism to initialize it on the target system,
-the function used to make termbases persistent once they are created for the first time and, most notably, the base
-class which is extended by all transfer objects and by means of which the ORM is made possible.
+This module contains the types and constants that are needed in order to handle
+the data persistence layer, i.e. a constant representing the location where
+termbases are stored and a mechanism to initialize it on the target system, the
+function used to make termbases persistent once they are created for the first
+time and, most notably, the base class which is extended by all transfer objects
+and by means of which the ORM is made possible.
 """
 
 import os

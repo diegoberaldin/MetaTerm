@@ -3,8 +3,9 @@
 """
 .. currentmodule:: src.model.dataaccess
 
-Object-oriented data access layer of the application which is used as an abstraction level built on top of the data
-persistence level in order not to deal with mapping and (detatched) transfer objects all the time.
+Object-oriented data access layer of the application which is used as an
+abstraction level built on top of the data persistence level in order not to
+deal with mapping and (detached) transfer objects all the time.
 """
 
 from contextlib import contextmanager
@@ -48,7 +49,8 @@ class TermBase(object):
         return os.path.join(sql.DB_DIR, self.name)
 
     def _get_connection_string(self):
-        """Returns the connection string to be used to interact with the local database associated to this termbase.
+        """Returns the connection string to be used to interact with the local
+        database associated to this termbase.
 
         :returns: string to be used to connect with the DB (through an engine)
         :rtype: str
@@ -56,8 +58,8 @@ class TermBase(object):
         return 'sqlite:///{0}.sqlite'.format(self._get_termbase_file_name())
 
     def _get_engine(self):
-        """Returns an engine used to create sessions and to write DB metadata to disk when the termbase is made
-        persistent.
+        """Returns an engine used to create sessions and to write DB metadata to
+        disk when the termbase is made persistent.
 
         :returns: an engine object to interact with the termbase
         :rtype: object
@@ -66,8 +68,8 @@ class TermBase(object):
 
     @contextmanager
     def get_session(self):
-        """Returns a transactional session to be used in with statements to manipulate the content of the invocation
-        termbase.
+        """Returns a transactional session to be used in with statements to
+        manipulate the content of the invocation termbase.
 
         :returns: session to be used in with blocks
         :rtype: object
@@ -118,7 +120,8 @@ class TermBase(object):
 
 
 class Schema(object):
-    """Instances of this class are used to manipulate the information schema associated to the given termbase.
+    """Instances of this class are used to manipulate the information schema
+    associated to the given termbase.
     """
 
     def __init__(self, termbase):
@@ -148,11 +151,13 @@ class Schema(object):
         assert prop_type != 'P' or values
         with self._tb.get_session() as session:
             prop_id = str(uuid.uuid4())
-            prop = mapping.Property(name=name, prop_id=prop_id, level=level, prop_type=prop_type)
+            prop = mapping.Property(name=name, prop_id=prop_id, level=level,
+                                    prop_type=prop_type)
             session.add(prop)
             # adds the possible values for picklist properties
             for picklist_value in values:
-                value = mapping.PickListValue(prop_id=prop_id, value=picklist_value)
+                value = mapping.PickListValue(prop_id=prop_id,
+                                              value=picklist_value)
                 session.add(value)
         return Property(prop_id, name)
 
@@ -164,11 +169,13 @@ class Schema(object):
         :rtype: None
         """
         with self._tb.get_session() as session:
-            session.query(mapping.Property).filter(mapping.Property.prop_id == prop_id).delete()
+            session.query(mapping.Property).filter(
+                mapping.Property.prop_id == prop_id).delete()
 
 
 class Property(object):
-    """High level representation of a property, which is characterized only by its ID and a textual name.
+    """High level representation of a property, which is characterized only by
+    its ID and a textual name.
     """
 
     def __init__(self, prop_id, name):
@@ -185,7 +192,8 @@ class Property(object):
 
 
 class Entry(object):
-    """High level representation of a terminological entry of the termbase, which is characterized by its ID only.
+    """High level representation of a terminological entry of the termbase,
+    which is characterized by its ID only.
     """
 
     def __init__(self, entry_id, termbase):
@@ -214,7 +222,8 @@ class Entry(object):
         """
         term_id = str(uuid.uuid4())
         with self._tb.get_session() as session:
-            term = mapping.Term(term_id=self.entry_id, lemma=lemma, lang_id=locale, vedette=vedette,
+            term = mapping.Term(term_id=self.entry_id, lemma=lemma,
+                                lang_id=locale, vedette=vedette,
                                 entry_id=self.entry_id)
             session.add(term)
         return Term(term_id, lemma, locale, vedette, self._tb)
@@ -230,7 +239,8 @@ class Entry(object):
         with self._tb.get_session() as session:
             return session.query(mapping.EntryPropertyAssociation.value).filter(
                 mapping.EntryPropertyAssociation.prop_id == prop_id,
-                mapping.EntryPropertyAssociation.entry_id == self.entry_id).scalar()
+                mapping.EntryPropertyAssociation.entry_id == self.entry_id
+            ).scalar()
 
     def set_property(self, prop_id, value):
         """Changes the value of a given property for the invocation entry.
@@ -245,14 +255,19 @@ class Entry(object):
             try:
                 prop = session.query(mapping.EntryPropertyAssociation).filter(
                     mapping.EntryPropertyAssociation.prop_id == prop_id,
-                    mapping.EntryPropertyAssociation.entry_id == self.entry_id).one()
+                    mapping.EntryPropertyAssociation.entry_id == self.entry_id
+                ).one()
                 prop.value = value
-            except sqlalchemy.orm.exc.NoResultFound:  # the property had not been set previously
-                prop = mapping.EntryPropertyAssociation(entry_id=self.entry_id, prop_id=prop_id, value=value)
+            except sqlalchemy.orm.exc.NoResultFound:
+                # the property had not been set previously
+                prop = mapping.EntryPropertyAssociation(entry_id=self.entry_id,
+                                                        prop_id=prop_id,
+                                                        value=value)
                 session.add(prop)
 
     def get_language_property(self, lang_id, prop_id):
-        """Gets the value of a language level property for the invocation terminological entry.
+        """Gets the value of a language level property for the invocation
+        terminological entry.
 
         :param lang_id: ID of the language involved
         :type lang_id: str
@@ -262,15 +277,19 @@ class Entry(object):
         :rtype: str
         """
         with self._tb.get_session() as session:
-            ela_id = session.query(mapping.EntryLanguageAssociation.ela_id).filter(
+            ela_id = session.query(
+                mapping.EntryLanguageAssociation.ela_id).filter(
                 mapping.EntryLanguageAssociation.entry_id == self.entry_id,
                 mapping.EntryLanguageAssociation.lang_id == lang_id).scalar()
-            return session.query(mapping.EntryLanguagePropertyAssociation.value).filter(
+            return session.query(
+                mapping.EntryLanguagePropertyAssociation.value).filter(
                 mapping.EntryLanguagePropertyAssociation.ela_id == ela_id,
-                mapping.EntryLanguagePropertyAssociation.prop_id == prop_id).scalar()
+                mapping.EntryLanguagePropertyAssociation.prop_id == prop_id
+            ).scalar()
 
     def set_language_property(self, lang_id, prop_id, value):
-        """Changes the value of a language level property for the invocation terminological entry.
+        """Changes the value of a language level property for the invocation
+        terminological entry.
 
         :param lang_id: ID of the language involved
         :type lang_id: str
@@ -281,25 +300,33 @@ class Entry(object):
         :rtype: None
         """
         with self._tb.get_session() as session:
-            ela_id = session.query(mapping.EntryLanguageAssociation.ela_id).filter(
+            ela_id = session.query(
+                mapping.EntryLanguageAssociation.ela_id).filter(
                 mapping.EntryLanguageAssociation.entry_id == self.entry_id,
                 mapping.EntryLanguageAssociation.lang_id == lang_id).scalar()
             if not ela_id:  # the association had not been created previously
                 ela_id = str(uuid.uuid4())
-                ela = mapping.EntryLanguageAssociation(ela_id=ela_id, entry_id=self.entry_id, lang_id=lang_id)
+                ela = mapping.EntryLanguageAssociation(ela_id=ela_id,
+                                                       entry_id=self.entry_id,
+                                                       lang_id=lang_id)
                 session.add(ela)
             try:
-                prop = session.query(mapping.EntryLanguagePropertyAssociation).filter(
+                prop = session.query(
+                    mapping.EntryLanguagePropertyAssociation).filter(
                     mapping.EntryLanguagePropertyAssociation.ela_id == ela_id,
-                    mapping.EntryLanguagePropertyAssociation.prop_id == prop_id).one()
+                    mapping.EntryLanguagePropertyAssociation.prop_id == prop_id
+                ).one()
                 prop.value = value
-            except sqlalchemy.orm.exc.NoResultFound:  # the property had not been set previously
-                prop = mapping.EntryLanguagePropertyAssociation(ela_id=ela_id, prop_id=prop_id, value=value)
+            except sqlalchemy.orm.exc.NoResultFound:
+                # the property had not been set previously
+                prop = mapping.EntryLanguagePropertyAssociation(ela_id=ela_id,
+                                                                prop_id=prop_id,
+                                                                value=value)
                 session.add(prop)
 
 
 class Term(object):
-    """High level representation of a term within a terminological entry in a termbase.
+    """High level representation of a term within a terminological entry.
     """
 
     def __init__(self, term_id, lemma, locale, vedette, termbase):
@@ -311,7 +338,7 @@ class Term(object):
         :type lemma: str
         :param locale: language ID to associate the term with a language
         :type locale: str
-        :param vedette: flag indicating whether the term is a vedette or not for the language
+        :param vedette: flag indicating whether the term is a vedette or not
         :type vedette: bool
         :param termbase: reference to the containing termbase
         :type termbase: TermBase
@@ -349,6 +376,9 @@ class Term(object):
                     mapping.TermPropertyAssociation.term_id == self.term_id,
                     mapping.TermPropertyAssociation.prop_id == prop_id).one()
                 prop.value = value
-            except sqlalchemy.orm.exc.NoResultFound:  # the property had not been set previously
-                prop = mapping.TermPropertyAssociation(term_id=self.term_id, prop_id=prop_id, value=value)
+            except sqlalchemy.orm.exc.NoResultFound:
+                # the property had not been set previously
+                prop = mapping.TermPropertyAssociation(term_id=self.term_id,
+                                                       prop_id=prop_id,
+                                                       value=value)
                 session.add(prop)

@@ -2,7 +2,7 @@
 """
 .. currentmodule:: src.model.constants
 
-This module contains some handy constants that are used in the application model.
+This module contains some constants that are used in the application model.
 """
 
 PROP_LEVELS = ['E', 'L', 'T']
