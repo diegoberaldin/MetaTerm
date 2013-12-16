@@ -86,7 +86,9 @@ class LanguagePage(QtGui.QWizardPage):
         self.setLayout(QtGui.QGridLayout(self))
         self._available_languages = QtGui.QListWidget(self)
         for locale, language_name in mdl.DEFAULT_LANGUAGES.items():
-            item = QtGui.QListWidgetItem(language_name)
+            flag = QtGui.QIcon(':/flags/{0}'.format(locale))
+            item = QtGui.QListWidgetItem(flag, language_name,
+                                         self._available_languages)
             self._available_languages.addItem(item)
         self._available_languages.sortItems(QtCore.Qt.AscendingOrder)
         self._chosen_languages = QtGui.QListWidget(self)
