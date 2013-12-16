@@ -84,14 +84,10 @@ class LanguagePage(QtGui.QWizardPage):
             'Select the languages of the terms that will be stored in the new '
             'termbase.')
         self.setLayout(QtGui.QGridLayout(self))
+        # creates the two QListWidgets
         self._available_languages = QtGui.QListWidget(self)
-        for locale, language_name in mdl.DEFAULT_LANGUAGES.items():
-            flag = QtGui.QIcon(':/flags/{0}'.format(locale))
-            item = QtGui.QListWidgetItem(flag, language_name,
-                                         self._available_languages)
-            self._available_languages.addItem(item)
-        self._available_languages.sortItems(QtCore.Qt.AscendingOrder)
         self._chosen_languages = QtGui.QListWidget(self)
+        self._populate_available_languages()
         # buttons for moving languages around
         button_widget = QtGui.QWidget(self)
         select_language_button = QtGui.QPushButton('>', button_widget)
@@ -108,6 +104,20 @@ class LanguagePage(QtGui.QWizardPage):
         self.layout().addWidget(self._available_languages, 0, 0)
         self.layout().addWidget(button_widget, 0, 1)
         self.layout().addWidget(self._chosen_languages, 0, 2)
+
+    def _populate_available_languages(self):
+        """ Extracts the information about languages that is stored in the
+        model (default languages) and populates the available languages
+        QListView with the corresponding items.
+
+        :rtype: None
+        """
+        for locale, language_name in mdl.DEFAULT_LANGUAGES.items():
+            flag = QtGui.QIcon(':/flags/{0}'.format(locale))
+            item = QtGui.QListWidgetItem(flag, language_name,
+                                         self._available_languages)
+            self._available_languages.addItem(item)
+        self._available_languages.sortItems(QtCore.Qt.AscendingOrder)
 
     @QtCore.pyqtSlot()
     def _handle_language_selected(self):
@@ -147,6 +157,12 @@ class LanguagePage(QtGui.QWizardPage):
         return super(LanguagePage, self).isComplete() and some_language_selected
 
     def get_selected_locales(self):
+        """Returns a list of all the language locales that have been selected
+        this ``LanguagePage`` instance.
+
+        :return: list of all selected locales
+        :rtype: list
+        """
         items = []
         while self._chosen_languages.count():
             items.append(self._chosen_languages.takeItem(0))
