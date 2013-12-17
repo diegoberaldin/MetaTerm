@@ -1,8 +1,14 @@
 # Python bytecode
 *.pyc
 
+# log files
+*.log
+
 # built documentation
 doc/_build/*
+
+# resources
+resources.py
 
 # IDE directories
 .idea/
