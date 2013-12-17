@@ -49,16 +49,8 @@ class MetaTermApplication(QtGui.QApplication):
         self._view.show()
 
 
-def main():
-    """This is my personal tribute to procedural style programming, a main
-    function. Wow!
-
-    :rtype: None
-    """
+# what to to when this module is executed as the main module (which it is)
+if __name__ == '__main__':
     # 2 lines of plain old boilerplate code won't harm anybody
     app = MetaTermApplication(sys.argv)
     sys.exit(app.exec())
-
-# what to to when this module is executed as the main module (which it is)
-if __name__ == '__main__':
-    main()
