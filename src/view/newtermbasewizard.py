@@ -233,22 +233,42 @@ class DefinitionModelPage(QtGui.QWizardPage):
         old_form.deleteLater()
 
 
-class NewPropertyForm(QtGui.QWidget):
-    """Form used to create a new property in the termbase definition. The
-    property must be added within the level that has been selected in the tree
-    view at the moment property creation was started.
+class AlterPropertyForm(QtGui.QWidget):
+    """Base class for those forms having the purpose of creating or updating a
+    property in the termbase definition model. These forms share some common
+    fields such as the property name and type, plus a toolbar allowing the
+    changes to be reflected in the underlying termbase definition model.
     """
-    # TODO: create shared superclass with ChangePropertyForm
-
     def __init__(self, parent):
-        """Constructor method.
+        """Constructor method
 
-        :param parent: reference to the wizard page containing this form
-        :type parent: QtCore.QWidget
-        :rtype: NewPropertyForm
+        :param parent: reference to the containing wizard page
+        :type parent: QtGui.QWidget
+        :rtype: AlterPropertyForm
         """
-        super(NewPropertyForm, self).__init__(parent)
-        # form fields
+        super(AlterPropertyForm, self).__init__(parent)
+        self.setLayout(QtGui.QFormLayout(self))
+        self._name_input = None
+        self._type_input = None
+        self._value_label = None
+        self._value_input = None
+        self._create_toolbar()
+        self._create_form_fields()
+
+    def _create_toolbar(self):
+        """Hook method used to create the toolbar which will be displayed in
+        the upper part of the form.
+
+        :rtype: None
+        """
+        raise NotImplementedError('Implement me!')
+
+    def _create_form_fields(self):
+        """Creates the fields which are shared by all forms (i.e. a field for
+        the property name and one for the property type).
+
+        :rtype: None
+        """
         name_label = QtGui.QLabel('Name', self)
         self._name_input = QtGui.QLineEdit(self)
         type_label = QtGui.QLabel('Type', self)
@@ -256,23 +276,9 @@ class NewPropertyForm(QtGui.QWidget):
         self._type_input.setModel(
             QtGui.QStringListModel(PROP_TYPES))
         self._type_input.currentIndexChanged.connect(self._handle_type_changed)
-        # subwidget corresponding to the 'toolbar'
-        toolbar = QtGui.QWidget(self)
-        toolbar.setLayout(QtGui.QHBoxLayout(toolbar))
-        add_button = QtGui.QToolButton(toolbar)
-        add_button.setText('Add property')
-        add_button.setIcon(QtGui.QIcon(':/document-new.png'))
-        toolbar.layout().addStretch()
-        toolbar.layout().addWidget(add_button)
-        self._value_label = None
-        self._value_input = None
-        # puts it all together
-        self.setLayout(QtGui.QFormLayout(self))
-        self.layout().addWidget(toolbar)
         self.layout().addRow(name_label, self._name_input)
         self.layout().addRow(type_label, self._type_input)
 
-    @QtCore.pyqtSlot(int)
     def _handle_type_changed(self, type_index):
         """This slot has the responsibility of changing the form contents
         depending on the type of property that has been selected. If a non-
@@ -299,8 +305,39 @@ class NewPropertyForm(QtGui.QWidget):
             self._value_input = None
 
 
-class ChangePropertyForm(QtGui.QWidget):
+class NewPropertyForm(AlterPropertyForm):
+    """Form used to create a new property in the termbase definition. The
+    property must be added within the level that has been selected in the tree
+    view at the moment property creation was started.
     """
+
+    def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the wizard page containing this form
+        :type parent: QtCore.QWidget
+        :rtype: NewPropertyForm
+        """
+        super(NewPropertyForm, self).__init__(parent)
+
+    def _create_toolbar(self):
+        """Overridden in order to create a toolbar with an 'add property' tool
+        button used to create the new property and inserting it in the
+        underlying termbase definition model.
+        """
+        toolbar = QtGui.QWidget(self)
+        toolbar.setLayout(QtGui.QHBoxLayout(toolbar))
+        add_button = QtGui.QToolButton(toolbar)
+        add_button.setText('Add property')
+        add_button.setIcon(QtGui.QIcon(':/document-new.png'))
+        toolbar.layout().addStretch()
+        toolbar.layout().addWidget(add_button)
+        self.layout().addWidget(toolbar)
+
+
+class ChangePropertyForm(AlterPropertyForm):
+    """This form is used to change the name, type or possible picklist values
+    of an exising property, as well as reflecting those changes in the model.
     """
 
     def __init__(self, prop, parent):
@@ -314,22 +351,27 @@ class ChangePropertyForm(QtGui.QWidget):
         """
         super(ChangePropertyForm, self).__init__(parent)
         self._property = prop
-        # form fields
-        name_label = QtGui.QLabel('Name', self)
-        self._name_input = QtGui.QLineEdit(self)
+
+    def _create_form_fields(self):
+        super(ChangePropertyForm, self)._create_form_fields()
         self._name_input.setText(self._property.name)
-        type_label = QtGui.QLabel('Type', self)
-        self._type_input = QtGui.QComboBox(self)
-        self._type_input.setModel(
-            QtGui.QStringListModel(PROP_TYPES))
-        self._type_input.currentIndexChanged.connect(self._handle_type_changed)
         if self._property.type == 'T':
             self._type_input.setCurrentIndex(0)
         elif self._property.type == 'I':
             self._type_input.setCurrentIndex(1)
         else:
             self._type_input.setCurrentIndex(2)
-        # subwidget corresponding to the 'toolbar'
+        if self._property.type == 'P':
+            self._value_label = QtGui.QLabel('Values', self)
+            self._value_input = QtGui.QLabel('picklist', self)
+        else:
+            self._value_label = None
+            self._value_input = None
+
+    def _create_toolbar(self):
+        """Overridden in order to create a toolbar with an 'save property' tool
+        button used to update existing property with the latest changes.
+        """
         toolbar = QtGui.QWidget(self)
         toolbar.setLayout(QtGui.QHBoxLayout(toolbar))
         save_button = QtGui.QToolButton(toolbar)
@@ -337,17 +379,7 @@ class ChangePropertyForm(QtGui.QWidget):
         save_button.setIcon(QtGui.QIcon(':/document-save.png'))
         toolbar.layout().addStretch()
         toolbar.layout().addWidget(save_button)
-        if self._property.type == 'P':
-            self._value_label = QtGui.QLabel('Values', self)
-            self._value_input = QtGui.QLabel('picklist', self)
-        else:
-            self._value_label = None
-            self._value_input = None
-        # puts it all together
-        self.setLayout(QtGui.QFormLayout(self))
         self.layout().addWidget(toolbar)
-        self.layout().addRow(name_label, self._name_input)
-        self.layout().addRow(type_label, self._type_input)
 
     @QtCore.pyqtSlot(int)
     def _handle_type_changed(self, type_index):
