@@ -37,6 +37,7 @@ class NewTermbaseWizard(QtGui.QWizard):
                        FinalPage(self)]
         for page in self._pages:
             self.addPage(page)
+        self.setMinimumSize(500, 400)
         self.setVisible(True)
         # signal-slot connections
         self.finished.connect(self._handle_finished)
@@ -187,6 +188,10 @@ class LanguagePage(QtGui.QWizardPage):
 
 
 class DefinitionModelPage(QtGui.QWizardPage):
+    """This page allows users to define the structure of the termbase by
+    specifying the properties that will be applied to entries, languages and
+    terms and, in case of picklist properties, the set of acceptable values.
+    """
     def __init__(self, parent):
         """Constructor method.
 
@@ -202,6 +207,7 @@ class DefinitionModelPage(QtGui.QWizardPage):
         self.setLayout(QtGui.QHBoxLayout(self))
         self._view = QtGui.QTreeView(self)
         self._view.setModel(self.parent().termbase_definition_model)
+        self._view.setFixedWidth(200)
         self._view.pressed.connect(self._handle_view_pressed)
         self._form = QtGui.QWidget(self)
         self._form.setMinimumWidth(250)
@@ -239,6 +245,7 @@ class AlterPropertyForm(QtGui.QWidget):
     fields such as the property name and type, plus a toolbar allowing the
     changes to be reflected in the underlying termbase definition model.
     """
+
     def __init__(self, parent):
         """Constructor method
 
@@ -298,7 +305,7 @@ class AlterPropertyForm(QtGui.QWidget):
             self._value_label.deleteLater()
         if type_index == 2:  # picklist property
             self._value_label = QtGui.QLabel('Values', self)
-            self._value_input = QtGui.QLabel('picklist', self)
+            self._value_input = PicklistEditor(self)
             self.layout().addRow(self._value_label, self._value_input)
         else:
             self._value_label = None
@@ -337,7 +344,7 @@ class NewPropertyForm(AlterPropertyForm):
 
 class ChangePropertyForm(AlterPropertyForm):
     """This form is used to change the name, type or possible picklist values
-    of an exising property, as well as reflecting those changes in the model.
+    of an existing property, as well as reflecting those changes in the model.
     """
 
     def __init__(self, prop, parent):
@@ -363,7 +370,7 @@ class ChangePropertyForm(AlterPropertyForm):
             self._type_input.setCurrentIndex(2)
         if self._property.type == 'P':
             self._value_label = QtGui.QLabel('Values', self)
-            self._value_input = QtGui.QLabel('picklist', self)
+            self._value_input = PicklistEditor(self)
         else:
             self._value_label = None
             self._value_input = None
@@ -381,31 +388,109 @@ class ChangePropertyForm(AlterPropertyForm):
         toolbar.layout().addWidget(save_button)
         self.layout().addWidget(toolbar)
 
-    @QtCore.pyqtSlot(int)
-    def _handle_type_changed(self, type_index):
-        """This slot has the responsibility of changing the form contents
-        depending on the type of property that has been selected. If a non-
-        picklist property is selected, only the name of the property must be
-        entered, whereas if a picklist property is being created, the set of
-        possible values must be specified too.
 
-        :param type_index: integer corresponding to the index of the property
-        type as it is found in the PROP_TYPE module constant.
-        :type type_index: int
+class PicklistEditor(QtGui.QWidget):
+    """Graphical widget used to create and manage picklists by adding or
+    removing values to the range of possible values.
+    """
+    def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: parent of the widget
+        :type parent: QtGui.QWidget
+        :rtype: PicklistEditor
+        """
+        super(PicklistEditor, self).__init__(parent)
+        self.values = []
+        # widget to insert the new value
+        self._value_input = QtGui.QLineEdit(self)
+        self._value_input.setMinimumHeight(20)
+        value_widget = QtGui.QWidget(self)
+        value_widget.setLayout(QtGui.QGridLayout(value_widget))
+        value_widget.layout().addWidget(self._value_input, 0, 0)
+        add_button = QtGui.QToolButton(value_widget)
+        add_button.setIcon(QtGui.QIcon(':/list-add.png'))
+        add_button.setText('Append to picklist')
+        add_button.setMinimumHeight(20)
+        add_button.clicked.connect(self._handle_new_value)
+        value_widget.layout().addWidget(add_button, 0, 1)
+        # list view where possible values are displayed
+        self._list_view = QtGui.QListWidget(self)
+        self._list_view.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                                      QtGui.QSizePolicy.Expanding)
+        self.setLayout(QtGui.QVBoxLayout(self))
+        self.layout().addWidget(value_widget)
+        self.layout().addWidget(self._list_view)
+
+    @QtCore.pyqtSlot()
+    def _handle_new_value(self):
+        """This slot is activated whenever a new value needs to be inserted
+        in the set of possible values for a picklist property, based on the
+        value of the line edit contained within the picklist editor itself.
+
         :rtype: None
         """
-        if self._value_input and self._value_label:
-            self.layout().removeWidget(self._value_input)
-            self.layout().removeWidget(self._value_label)
-            self._value_input.deleteLater()
-            self._value_label.deleteLater()
-        if type_index == 2:  # picklist property
-            self._value_label = QtGui.QLabel('Values', self)
-            self._value_input = QtGui.QLabel('picklist', self)
-            self.layout().addRow(self._value_label, self._value_input)
-        else:
-            self._value_label = None
-            self._value_input = None
+        text = self._value_input.text()
+        self.values.append(text)
+        item = QtGui.QListWidgetItem()
+        widget = PicklistValueWidget(text, self)
+        widget.removed.connect(self._handle_remove_value)
+        item.setSizeHint(QtCore.QSize(50, 30))
+        index = self._list_view.count()
+        self._list_view.insertItem(index, item)
+        self._list_view.setItemWidget(item, widget)
+        self._value_input.clear()
+
+    @QtCore.pyqtSlot(str)
+    def _handle_remove_value(self, value):
+        """This slot is activated when the given value needs to be removed from
+        the set of possible values for a picklist property. It will also remove
+        the corresponding item widget (``PicklistValueWidget``) from the
+        list view where the current values are shown.
+
+        :param value: the value to be removed
+        :type value: str
+        :rtype: None
+        """
+        index = 0
+        while index < self._list_view.count():
+            item = self._list_view.item(index)
+            widget = self._list_view.itemWidget(item)
+            if widget.value == value:
+                break
+            index += 1
+        self._list_view.takeItem(index)
+        self.values.remove(value)
+
+
+class PicklistValueWidget(QtGui.QWidget):
+    """Instances of this class are used to represent those graphical widget
+    that are inserted in the ``PicklistEditor`` internal tree view in order
+    to represent the possible values of a picklist property. Each item widget
+    must display the value of the property inside a label and contains a
+    button used to remove the value from the set of acceptable values.
+    """
+    removed = QtCore.pyqtSignal(str)
+    """Signal emitted when the user asks to remove the item from the set.
+    """
+
+    def __init__(self, value, parent):
+        """Constructor method.
+
+        :param value: representation of the value to add
+        :type value: str
+        :param parent: reference to the widget parent
+        :type parent: QtCore.QWidget
+        :rtype: PicklistValueWidget
+        """
+        super(PicklistValueWidget, self).__init__(parent)
+        self.value = value
+        self.setLayout(QtGui.QHBoxLayout(self))
+        self.layout().addWidget(QtGui.QLabel(value, self))
+        remove_button = QtGui.QToolButton(self)
+        remove_button.setIcon(QtGui.QIcon(':/list-remove.png'))
+        self.layout().addWidget(remove_button)
+        remove_button.clicked.connect(lambda: self.removed.emit(value))
 
 
 class FinalPage(QtGui.QWizardPage):
