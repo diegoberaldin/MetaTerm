@@ -31,6 +31,7 @@ class NewTermbaseWizard(QtGui.QWizard):
                        FinalPage(self)]
         for page in self._pages:
             self.addPage(page)
+        self.setVisible(True)
         # signal-slot connections
         self.finished.connect(self._handle_finished)
 

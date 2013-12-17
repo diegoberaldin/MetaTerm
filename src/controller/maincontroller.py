@@ -82,24 +82,46 @@ class MainController(AbstractController):
 
         :rtype: None
         """
+        # instantiates the model
         termbase_definition_model = mdl.TermbaseDefinitionModel()
+        # creates the view
         wizard = gui.NewTermbaseWizard(termbase_definition_model, self._view)
+        # creates the controller
         new_termbase_controller = NewTermbaseController(
             termbase_definition_model, wizard)
+        self._children['new_termbase'] = new_termbase_controller
+        # signal-slot connections
+        new_termbase_controller.new_termbase_created.connect(
+            self._handle_exit_wizard)
         new_termbase_controller.new_termbase_created.connect(
             self._handle_open_termbase)
-        self._children['new_termbase'] = new_termbase_controller
-        wizard.setVisible(True)
+        new_termbase_controller.wizard_canceled.connect(
+            self._handle_exit_wizard)
+
+    @QtCore.pyqtSlot()
+    def _handle_exit_wizard(self):
+        del self._children['new_termbase']
 
 
 class NewTermbaseController(AbstractController):
     new_termbase_created = QtCore.pyqtSignal(str)
-    ('Signal emitted when a new termbase has been created. The name of the '
-     'newly created termbase must be passed as a parameter when the signal'
-     'is emitted.')
+    """Signal emitted when a new termbase has been created. The name of the
+     newly created termbase must be passed as a parameter when the signal
+     is emitted."""
+
+    wizard_canceled = QtCore.pyqtSignal()
+    """Signal emitted whenever the uses exits the wizard abnormally (this is
+    needed by the main controller to deallocate its child controller).
+    """
 
     def __init__(self, model, wizard):
         super(NewTermbaseController, self).__init__()
         self._view = wizard
+        self._view.rejected.connect(lambda: self.wizard_canceled.emit())
+        self._view.finished.connect(self._handle_termbase_created)
         self._model = model
 
+    @QtCore.pyqtSlot()
+    def _handle_termbase_created(self):
+        # extract data from the view!
+        pass
