@@ -19,6 +19,10 @@ class NewTermbaseWizard(QtGui.QWizard):
     """Main ``QWizard`` subclass used to implement the new termbase wizard.
     """
 
+    fire_event = QtCore.pyqtSignal(str, dict)
+    """Signal emitted so that events can be handled by the controller.
+    """
+
     def __init__(self, termbase_definition_model, parent):
         """Constructor method.
 
@@ -37,6 +41,7 @@ class NewTermbaseWizard(QtGui.QWizard):
                        FinalPage(self)]
         for page in self._pages:
             self.addPage(page)
+        self._pages[2].fire_event.connect(self.fire_event)
         self.setMinimumSize(500, 400)
         self.setVisible(True)
         # signal-slot connections
@@ -192,6 +197,11 @@ class DefinitionModelPage(QtGui.QWizardPage):
     specifying the properties that will be applied to entries, languages and
     terms and, in case of picklist properties, the set of acceptable values.
     """
+
+    fire_event = QtCore.pyqtSignal(str, dict)
+    """Signal emitted to dispatch event to the controller.
+    """
+
     def __init__(self, parent):
         """Constructor method.
 
@@ -231,12 +241,22 @@ class DefinitionModelPage(QtGui.QWizardPage):
         self.layout().removeWidget(old_form)
         if not item.parent.parent:  # level node
             self._form = NewPropertyForm(self)
-
         else:  # modify existing property
             self._form = ChangePropertyForm(item, self)
+        self._form.fire_event.connect(self.fire_event)
         self._form.setMinimumWidth(250)
         self.layout().addWidget(self._form)
         old_form.deleteLater()
+
+    def get_level(self):
+        item = [index.internalPointer() for index in
+                self._view.selectedIndexes() if index.column() == 0].pop()
+        index = item.parent.children.index(item)
+        if index == 0:
+            return 'E'
+        if index == 1:
+            return 'L'
+        return 'T'
 
 
 class AlterPropertyForm(QtGui.QWidget):
@@ -244,6 +264,10 @@ class AlterPropertyForm(QtGui.QWidget):
     property in the termbase definition model. These forms share some common
     fields such as the property name and type, plus a toolbar allowing the
     changes to be reflected in the underlying termbase definition model.
+    """
+
+    fire_event = QtCore.pyqtSignal(str, dict)
+    """Signal emitted to dispatch event to the controller.
     """
 
     def __init__(self, parent):
@@ -311,6 +335,20 @@ class AlterPropertyForm(QtGui.QWidget):
             self._value_label = None
             self._value_input = None
 
+    def _extract_property_data(self):
+        property_data = {
+            'name': self._name_input.text(),
+            'level': self.parent().get_level()
+        }
+        if self._type_input.currentIndex() == 0:
+            property_data['prop_type'] = 'T'
+        elif self._type_input.currentIndex() == 1:
+            property_data['prop_type'] = 'I'
+        else:
+            property_data['prop_type'] = 'P'
+            property_data['values'] = self._value_input.values
+        return property_data
+
 
 class NewPropertyForm(AlterPropertyForm):
     """Form used to create a new property in the termbase definition. The
@@ -337,9 +375,15 @@ class NewPropertyForm(AlterPropertyForm):
         add_button = QtGui.QToolButton(toolbar)
         add_button.setText('Add property')
         add_button.setIcon(QtGui.QIcon(':/document-new.png'))
+        add_button.clicked.connect(self._handle_react)
         toolbar.layout().addStretch()
         toolbar.layout().addWidget(add_button)
         self.layout().addWidget(toolbar)
+
+    @QtCore.pyqtSlot()
+    def _handle_react(self):
+        self.fire_event.emit('new_property',
+                             self._extract_property_data())
 
 
 class ChangePropertyForm(AlterPropertyForm):
@@ -393,6 +437,7 @@ class PicklistEditor(QtGui.QWidget):
     """Graphical widget used to create and manage picklists by adding or
     removing values to the range of possible values.
     """
+
     def __init__(self, parent):
         """Constructor method.
 

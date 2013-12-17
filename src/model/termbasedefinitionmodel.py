@@ -63,6 +63,9 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         term_level = PropertyNode('Term level', parent=self._root)
         self.endInsertRows()
 
+    def insert_node(self, level, node):
+        pass
+
     def flags(self, index):
         """
 

@@ -44,7 +44,7 @@ class AbstractController(QtCore.QObject):
             try:  # this is the first and last little bit of black magic
                 getattr(self, method_name)(**params)
             except TypeError as exc:  # incorrect parameters
-                pass
+                print(exc)
 
 
 class MainController(AbstractController):
@@ -119,9 +119,14 @@ class NewTermbaseController(AbstractController):
         self._view = wizard
         self._view.rejected.connect(lambda: self.wizard_canceled.emit())
         self._view.finished.connect(self._handle_termbase_created)
+        self._view.fire_event.connect(self.handle_event)
         self._model = model
 
     @QtCore.pyqtSlot()
     def _handle_termbase_created(self):
         # extract data from the view!
         pass
+
+    def _handle_new_property(self, name, prop_type, level, values=()):
+        node = mdl.PropertyNode(name=name, prop_type=prop_type, values=values)
+        self._model.insert_node(level, node)
