@@ -227,7 +227,7 @@ class DefinitionModelPage(QtGui.QWizardPage):
             self._form = NewPropertyForm(self)
 
         else:  # modify existing property
-            pass
+            self._form = ChangePropertyForm(item, self)
         self._form.setMinimumWidth(250)
         self.layout().addWidget(self._form)
         old_form.deleteLater()
@@ -238,6 +238,7 @@ class NewPropertyForm(QtGui.QWidget):
     property must be added within the level that has been selected in the tree
     view at the moment property creation was started.
     """
+    # TODO: create shared superclass with ChangePropertyForm
 
     def __init__(self, parent):
         """Constructor method.
@@ -251,27 +252,25 @@ class NewPropertyForm(QtGui.QWidget):
         name_label = QtGui.QLabel('Name', self)
         self._name_input = QtGui.QLineEdit(self)
         type_label = QtGui.QLabel('Type', self)
-        type_input = QtGui.QComboBox(self)
-        type_input.setModel(
+        self._type_input = QtGui.QComboBox(self)
+        self._type_input.setModel(
             QtGui.QStringListModel(PROP_TYPES))
-        type_input.currentIndexChanged.connect(self._handle_type_changed)
+        self._type_input.currentIndexChanged.connect(self._handle_type_changed)
         # subwidget corresponding to the 'toolbar'
-        add_widget = QtGui.QWidget(self)
-        add_widget.setLayout(QtGui.QHBoxLayout(add_widget))
-        add_button = QtGui.QToolButton(add_widget)
+        toolbar = QtGui.QWidget(self)
+        toolbar.setLayout(QtGui.QHBoxLayout(toolbar))
+        add_button = QtGui.QToolButton(toolbar)
         add_button.setText('Add property')
-        add_button.setIcon(QtGui.QIcon(':/list-add.png'))
-        add_widget.layout().addStretch()
-        add_widget.layout().addWidget(add_button)
+        add_button.setIcon(QtGui.QIcon(':/document-new.png'))
+        toolbar.layout().addStretch()
+        toolbar.layout().addWidget(add_button)
         self._value_label = None
         self._value_input = None
         # puts it all together
         self.setLayout(QtGui.QFormLayout(self))
-        self.layout().addWidget(add_widget)
+        self.layout().addWidget(toolbar)
         self.layout().addRow(name_label, self._name_input)
-        self.layout().addRow(type_label, type_input)
-        self.layout().addRow(self._value_label, self._value_input)
-
+        self.layout().addRow(type_label, self._type_input)
 
     @QtCore.pyqtSlot(int)
     def _handle_type_changed(self, type_index):
@@ -292,7 +291,84 @@ class NewPropertyForm(QtGui.QWidget):
             self._value_input.deleteLater()
             self._value_label.deleteLater()
         if type_index == 2:  # picklist property
-            self._value_label = QtGui.QLabel('Values')
+            self._value_label = QtGui.QLabel('Values', self)
+            self._value_input = QtGui.QLabel('picklist', self)
+            self.layout().addRow(self._value_label, self._value_input)
+        else:
+            self._value_label = None
+            self._value_input = None
+
+
+class ChangePropertyForm(QtGui.QWidget):
+    """
+    """
+
+    def __init__(self, prop, parent):
+        """Constructor method.
+
+        :param prop: the property being edited
+        :type prop: PropertyNode
+        :param parent: reference to the wizard page containing this form
+        :type parent: QtCore.QWidget
+        :rtype: ChangePropertyForm
+        """
+        super(ChangePropertyForm, self).__init__(parent)
+        self._property = prop
+        # form fields
+        name_label = QtGui.QLabel('Name', self)
+        self._name_input = QtGui.QLineEdit(self)
+        self._name_input.setText(self._property.name)
+        type_label = QtGui.QLabel('Type', self)
+        self._type_input = QtGui.QComboBox(self)
+        self._type_input.setModel(
+            QtGui.QStringListModel(PROP_TYPES))
+        self._type_input.currentIndexChanged.connect(self._handle_type_changed)
+        if self._property.type == 'T':
+            self._type_input.setCurrentIndex(0)
+        elif self._property.type == 'I':
+            self._type_input.setCurrentIndex(1)
+        else:
+            self._type_input.setCurrentIndex(2)
+        # subwidget corresponding to the 'toolbar'
+        toolbar = QtGui.QWidget(self)
+        toolbar.setLayout(QtGui.QHBoxLayout(toolbar))
+        save_button = QtGui.QToolButton(toolbar)
+        save_button.setText('Save property')
+        save_button.setIcon(QtGui.QIcon(':/document-save.png'))
+        toolbar.layout().addStretch()
+        toolbar.layout().addWidget(save_button)
+        if self._property.type == 'P':
+            self._value_label = QtGui.QLabel('Values', self)
+            self._value_input = QtGui.QLabel('picklist', self)
+        else:
+            self._value_label = None
+            self._value_input = None
+        # puts it all together
+        self.setLayout(QtGui.QFormLayout(self))
+        self.layout().addWidget(toolbar)
+        self.layout().addRow(name_label, self._name_input)
+        self.layout().addRow(type_label, self._type_input)
+
+    @QtCore.pyqtSlot(int)
+    def _handle_type_changed(self, type_index):
+        """This slot has the responsibility of changing the form contents
+        depending on the type of property that has been selected. If a non-
+        picklist property is selected, only the name of the property must be
+        entered, whereas if a picklist property is being created, the set of
+        possible values must be specified too.
+
+        :param type_index: integer corresponding to the index of the property
+        type as it is found in the PROP_TYPE module constant.
+        :type type_index: int
+        :rtype: None
+        """
+        if self._value_input and self._value_label:
+            self.layout().removeWidget(self._value_input)
+            self.layout().removeWidget(self._value_label)
+            self._value_input.deleteLater()
+            self._value_label.deleteLater()
+        if type_index == 2:  # picklist property
+            self._value_label = QtGui.QLabel('Values', self)
             self._value_input = QtGui.QLabel('picklist', self)
             self.layout().addRow(self._value_label, self._value_input)
         else:
