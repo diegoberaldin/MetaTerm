@@ -82,8 +82,10 @@ class MainController(AbstractController):
 
         :rtype: None
         """
-        wizard = gui.NewTermbaseWizard(self._view)
-        new_termbase_controller = NewTermbaseController(wizard)
+        termbase_definition_model = mdl.TermbaseDefinitionModel()
+        wizard = gui.NewTermbaseWizard(termbase_definition_model, self._view)
+        new_termbase_controller = NewTermbaseController(
+            termbase_definition_model, wizard)
         new_termbase_controller.new_termbase_created.connect(
             self._handle_open_termbase)
         self._children['new_termbase'] = new_termbase_controller
@@ -96,7 +98,8 @@ class NewTermbaseController(AbstractController):
      'newly created termbase must be passed as a parameter when the signal'
      'is emitted.')
 
-    def __init__(self, wizard):
+    def __init__(self, model, wizard):
         super(NewTermbaseController, self).__init__()
         self._view = wizard
+        self._model = model
 

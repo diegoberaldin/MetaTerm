@@ -15,7 +15,7 @@ class NewTermbaseWizard(QtGui.QWizard):
     """Main ``QWizard`` subclass used to implement the new termbase wizard.
     """
 
-    def __init__(self, parent):
+    def __init__(self, termbase_definition_model, parent):
         """Constructor method.
 
         :param parent: reference to the application main window
@@ -23,12 +23,15 @@ class NewTermbaseWizard(QtGui.QWizard):
         :rtype: NewTermbaseWizard
         """
         super(NewTermbaseWizard, self).__init__(parent)
+        # a reference to the termbase definition model
+        self.termbase_definition_model = termbase_definition_model
         self.setWindowTitle('Create new termbase')
-        self._pages = [NamePage(), LanguagePage(), DefinitionModelPage(),
-                       FinalPage()]
+        self._pages = [NamePage(self), LanguagePage(self),
+                       DefinitionModelPage(self),
+                       FinalPage(self)]
         for page in self._pages:
             self.addPage(page)
-            # signal-slot connections
+        # signal-slot connections
         self.finished.connect(self._handle_finished)
 
     @QtCore.pyqtSlot()
@@ -49,12 +52,12 @@ class NamePage(QtGui.QWizardPage):
     being created.
     """
 
-    def __init__(self):
+    def __init__(self, parent):
         """Constructor method.
 
         :rtype: NamePage
         """
-        super(NamePage, self).__init__()
+        super(NamePage, self).__init__(parent)
         self.setTitle('Termbase name')
         self.setSubTitle(
             'This wizard will guide you through the creation of a new '
@@ -73,12 +76,12 @@ class LanguagePage(QtGui.QWizardPage):
     be stored in the new termbase.
     """
 
-    def __init__(self):
+    def __init__(self, parent):
         """Constructor method.
 
         :rtype: LanguagePage
         """
-        super(LanguagePage, self).__init__()
+        super(LanguagePage, self).__init__(parent)
         self.setTitle('Termbase languages')
         self.setSubTitle(
             'Select the languages of the terms that will be stored in the new '
@@ -173,20 +176,19 @@ class LanguagePage(QtGui.QWizardPage):
 
 
 class DefinitionModelPage(QtGui.QWizardPage):
-    def __init__(self):
+    def __init__(self, parent):
         """Constructor method.
 
         :rtype: DefinitionModelPage
         """
-        super(DefinitionModelPage, self).__init__()
+        super(DefinitionModelPage, self).__init__(parent)
         self.setTitle('Definition model')
         self.setSubTitle(
             'Create the structure of the termbase by specifying the set of '
             'properties that its entries will be made up of')
         self.setLayout(QtGui.QHBoxLayout(self))
         self._view = QtGui.QTreeView(self)
-        self._model = mdl.TermbaseDefinitionModel()
-        self._view.setModel(self._model)
+        self._view.setModel(self.parent().termbase_definition_model)
         self._view.pressed.connect(self._handle_view_pressed)
         self._form = QtGui.QWidget(self)
         self._form.setMinimumWidth(250)
@@ -259,12 +261,12 @@ class NewPropertyForm(QtGui.QWidget):
 
 
 class FinalPage(QtGui.QWizardPage):
-    def __init__(self):
+    def __init__(self, parent):
         """Constructor method.
 
         :rtype: FinalPage
         """
-        super(FinalPage, self).__init__()
+        super(FinalPage, self).__init__(parent)
         self.setTitle('Congrats!')
         self.setSubTitle(
             'If you confirm the operation, the new termbase will be created.')
