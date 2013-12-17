@@ -10,6 +10,10 @@ user through the creation of a new terminological database.
 from PyQt4 import QtGui, QtCore
 from src import model as mdl
 
+PROP_TYPES = ['Text', 'Image', 'Picklist']
+"""Type of the properties that must be displayed in the UI.
+"""
+
 
 class NewTermbaseWizard(QtGui.QWizard):
     """Main ``QWizard`` subclass used to implement the new termbase wizard.
@@ -18,8 +22,10 @@ class NewTermbaseWizard(QtGui.QWizard):
     def __init__(self, termbase_definition_model, parent):
         """Constructor method.
 
+        :param termbase_definition_model: reference to the term definition model
+        :type termbase_definition_model: TermbaseDefinitionModel
         :param parent: reference to the application main window
-        :type parent: QWidget
+        :type parent: QtGui.QWidget
         :rtype: NewTermbaseWizard
         """
         super(NewTermbaseWizard, self).__init__(parent)
@@ -56,6 +62,8 @@ class NamePage(QtGui.QWizardPage):
     def __init__(self, parent):
         """Constructor method.
 
+        :param parent: reference to the containing wizard
+        :type parent: QtGui.QWidget
         :rtype: NamePage
         """
         super(NamePage, self).__init__(parent)
@@ -80,6 +88,8 @@ class LanguagePage(QtGui.QWizardPage):
     def __init__(self, parent):
         """Constructor method.
 
+        :param parent: reference to the containing wizard
+        :type parent: QtGui.QWidget
         :rtype: LanguagePage
         """
         super(LanguagePage, self).__init__(parent)
@@ -180,6 +190,8 @@ class DefinitionModelPage(QtGui.QWizardPage):
     def __init__(self, parent):
         """Constructor method.
 
+        :param parent: reference to the containing wizard
+        :type parent: QtGui.QWidget
         :rtype: DefinitionModelPage
         """
         super(DefinitionModelPage, self).__init__(parent)
@@ -196,14 +208,19 @@ class DefinitionModelPage(QtGui.QWizardPage):
         self.layout().addWidget(self._view)
         self.layout().addWidget(self._form)
 
-    def _get_selected_node(self):
-        selection = [index.internalPointer() for index in
-                     self._view.selectedIndexes() if index.column() == 0]
-        return selection.pop()
-
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def _handle_view_pressed(self, index):
-        item = self._get_selected_node()
+        """This slot must be activated when the tree view is clicked and has
+        the responsibility of changing the right part of the wizard page in
+        order to either add a new property (when a 'level node' is selected in
+        the view) or modify an existing property (when a 'property node' is
+        selected.
+
+        :param index: the index being selected when the view is clicked
+        :type index: QtCore.QModelIndex
+        :rtype: None
+        """
+        item = index.internalPointer()
         old_form = self._form
         self.layout().removeWidget(old_form)
         if not item.parent.parent:  # level node
@@ -217,18 +234,28 @@ class DefinitionModelPage(QtGui.QWizardPage):
 
 
 class NewPropertyForm(QtGui.QWidget):
-    types = ['Text', 'Image', 'Picklist']
+    """Form used to create a new property in the termbase definition. The
+    property must be added within the level that has been selected in the tree
+    view at the moment property creation was started.
+    """
 
     def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the wizard page containing this form
+        :type parent: QtCore.QWidget
+        :rtype: NewPropertyForm
+        """
         super(NewPropertyForm, self).__init__(parent)
-        self.setLayout(QtGui.QFormLayout(self))
+        # form fields
         name_label = QtGui.QLabel('Name', self)
         self._name_input = QtGui.QLineEdit(self)
         type_label = QtGui.QLabel('Type', self)
         type_input = QtGui.QComboBox(self)
         type_input.setModel(
-            QtGui.QStringListModel(self.types))
+            QtGui.QStringListModel(PROP_TYPES))
         type_input.currentIndexChanged.connect(self._handle_type_changed)
+        # subwidget corresponding to the 'toolbar'
         add_widget = QtGui.QWidget(self)
         add_widget.setLayout(QtGui.QHBoxLayout(add_widget))
         add_button = QtGui.QToolButton(add_widget)
@@ -239,6 +266,7 @@ class NewPropertyForm(QtGui.QWidget):
         self._value_label = None
         self._value_input = None
         # puts it all together
+        self.setLayout(QtGui.QFormLayout(self))
         self.layout().addWidget(add_widget)
         self.layout().addRow(name_label, self._name_input)
         self.layout().addRow(type_label, type_input)
@@ -247,6 +275,17 @@ class NewPropertyForm(QtGui.QWidget):
 
     @QtCore.pyqtSlot(int)
     def _handle_type_changed(self, type_index):
+        """This slot has the responsibility of changing the form contents
+        depending on the type of property that has been selected. If a non-
+        picklist property is selected, only the name of the property must be
+        entered, whereas if a picklist property is being created, the set of
+        possible values must be specified too.
+
+        :param type_index: integer corresponding to the index of the property
+        type as it is found in the PROP_TYPE module constant.
+        :type type_index: int
+        :rtype: None
+        """
         if self._value_input and self._value_label:
             self.layout().removeWidget(self._value_input)
             self.layout().removeWidget(self._value_label)
