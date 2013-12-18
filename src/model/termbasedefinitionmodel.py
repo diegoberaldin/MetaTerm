@@ -83,12 +83,12 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
             parent = self._root.children[2]
         child_num = len(parent.children)
         parent_index = self.createIndex(0, 0, parent)
-        # self.layoutAboutToBeChanged.emit()
+        self.layoutAboutToBeChanged.emit()
         self.beginInsertRows(parent_index, child_num, child_num)
         node.parent = parent
         parent.children.append(node)
         self.endInsertRows()
-        # self.layoutChanged.emit()
+        self.layoutChanged.emit()
 
     def flags(self, index):
         """Indicates that the items of this model are selectable and enabled

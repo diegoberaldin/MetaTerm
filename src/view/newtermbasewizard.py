@@ -302,7 +302,7 @@ class AlterPropertyForm(QtGui.QWidget):
         """
         if self._value_label:
             self.layout().removeWidget(self._value_label)
-            self._value_label.deleteLager()
+            self._value_label.deleteLater()
         if self._value_input:
             self.layout().removeWidget(self._value_input)
             self._value_input.deleteLater()
@@ -457,17 +457,26 @@ class ChangePropertyForm(AlterPropertyForm):
             self._type_input.setCurrentIndex(1)
         else:
             self._type_input.setCurrentIndex(2)
-        if self._property.type == 'P':
-            self._value_label = QtGui.QLabel('Values', self)
-            self._value_input = PicklistEditor(self)
-            # TODO: retrieve and insert values in the editor
-        else:
-            self._value_label = None
-            self._value_input = None
+
+    def _handle_type_changed(self, type_index):
+        """This is overridden because when the form fields are initialized the
+        index is changed programmatically so this slot is invoked and it needs
+        to add the correct values in the list view.
+
+        :param type_index: index of the property type combobox
+        :type type_index: int
+        :rtype: None
+        """
+        super(ChangePropertyForm, self)._handle_type_changed(type_index)
+        if type_index == 2:
+            for value in self._property.values:
+                self._value_input.insert_value(value)
 
     def _create_toolbar(self):
         """Overridden in order to create a toolbar with an 'save property' tool
         button used to update existing property with the latest changes.
+
+        :rtype: None
         """
         toolbar = QtGui.QWidget(self)
         toolbar.setLayout(QtGui.QHBoxLayout(toolbar))
@@ -541,6 +550,23 @@ class PicklistEditor(QtGui.QWidget):
         self.layout().addWidget(value_widget)
         self.layout().addWidget(self._list_view)
 
+    def insert_value(self, value):
+        """Inserts a new value in the picklist editor so that it is displayed
+        in the list widget and it is accessible to subsequent save operations.
+
+        :param value: the new item to add to the picklist value set
+        :type value: str
+        :rtype: None
+        """
+        self.values.append(value)
+        item = QtGui.QListWidgetItem()
+        widget = PicklistValueWidget(value, self)
+        widget.removed.connect(self._handle_remove_value)
+        item.setSizeHint(QtCore.QSize(50, 30))
+        index = self._list_view.count()
+        self._list_view.insertItem(index, item)
+        self._list_view.setItemWidget(item, widget)
+
     @QtCore.pyqtSlot()
     def _handle_new_value(self):
         """This slot is activated whenever a new value needs to be inserted
@@ -550,14 +576,7 @@ class PicklistEditor(QtGui.QWidget):
         :rtype: None
         """
         text = self._value_input.text()
-        self.values.append(text)
-        item = QtGui.QListWidgetItem()
-        widget = PicklistValueWidget(text, self)
-        widget.removed.connect(self._handle_remove_value)
-        item.setSizeHint(QtCore.QSize(50, 30))
-        index = self._list_view.count()
-        self._list_view.insertItem(index, item)
-        self._list_view.setItemWidget(item, widget)
+        self.insert_value(text)
         self._value_input.clear()
 
     @QtCore.pyqtSlot(str)
