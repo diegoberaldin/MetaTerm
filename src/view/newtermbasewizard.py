@@ -294,6 +294,23 @@ class AlterPropertyForm(QtGui.QWidget):
         """
         raise NotImplementedError('Implement me!')
 
+    def clear(self):
+        """Completely clears the form, which loses any information that has
+        been inserted in it.
+
+        :rtype: None
+        """
+        if self._value_label:
+            self.layout().removeWidget(self._value_label)
+            self._value_label.deleteLager()
+        if self._value_input:
+            self.layout().removeWidget(self._value_input)
+            self._value_input.deleteLater()
+        self._value_input = None
+        self._value_label = None
+        self._name_input.clear()
+        self._type_input.setCurrentIndex(0)
+
     def _create_form_fields(self):
         """Creates the fields which are shared by all forms (i.e. a field for
         the property name and one for the property type).
@@ -310,6 +327,7 @@ class AlterPropertyForm(QtGui.QWidget):
         self.layout().addRow(name_label, self._name_input)
         self.layout().addRow(type_label, self._type_input)
 
+    @QtCore.pyqtSlot(int)
     def _handle_type_changed(self, type_index):
         """This slot has the responsibility of changing the form contents
         depending on the type of property that has been selected. If a non-
@@ -335,7 +353,14 @@ class AlterPropertyForm(QtGui.QWidget):
             self._value_label = None
             self._value_input = None
 
-    def _extract_property_data(self):
+    def extract_property_data(self):
+        """Extracts the information about the new property from the form.
+
+        :returns: a dictionary with the ``name``, ``level``, ``prop_type`` and
+        ``values`` keys representing the information about the property to be
+        added to the termbase definition model
+        :rtype: dict
+        """
         property_data = {
             'name': self._name_input.text(),
             'level': self.parent().get_level()
@@ -348,6 +373,24 @@ class AlterPropertyForm(QtGui.QWidget):
             property_data['prop_type'] = 'P'
             property_data['values'] = self._value_input.values
         return property_data
+
+    def is_complete(self):
+        """Determines whether the information in the form is enough to define
+        a new property. For text and image based properties the simple name of
+        the property suffices, whereas in case of picklist properties at least
+        one item must be specified in the set of possible values.
+
+        :returns: True if all the required fields have been filled in correctly,
+        False otherwise
+        :rtype: bool
+        """
+        if self._name_input:
+            if self._type_input.currentIndex() == 2:
+                if self._value_input.values:
+                    return True
+            else:
+                return True
+        return False
 
 
 class NewPropertyForm(AlterPropertyForm):
@@ -375,15 +418,17 @@ class NewPropertyForm(AlterPropertyForm):
         add_button = QtGui.QToolButton(toolbar)
         add_button.setText('Add property')
         add_button.setIcon(QtGui.QIcon(':/document-new.png'))
-        add_button.clicked.connect(self._handle_react)
+        add_button.clicked.connect(self._handle_add_property)
         toolbar.layout().addStretch()
         toolbar.layout().addWidget(add_button)
         self.layout().addWidget(toolbar)
 
     @QtCore.pyqtSlot()
-    def _handle_react(self):
-        self.fire_event.emit('new_property',
-                             self._extract_property_data())
+    def _handle_add_property(self):
+        if self.is_complete():
+            self.fire_event.emit('new_property',
+                                 self.extract_property_data())
+            self.clear()
 
 
 class ChangePropertyForm(AlterPropertyForm):
@@ -415,6 +460,7 @@ class ChangePropertyForm(AlterPropertyForm):
         if self._property.type == 'P':
             self._value_label = QtGui.QLabel('Values', self)
             self._value_input = PicklistEditor(self)
+            # TODO: retrieve and insert values in the editor
         else:
             self._value_label = None
             self._value_input = None
@@ -428,9 +474,37 @@ class ChangePropertyForm(AlterPropertyForm):
         save_button = QtGui.QToolButton(toolbar)
         save_button.setText('Save property')
         save_button.setIcon(QtGui.QIcon(':/document-save.png'))
+        save_button.clicked.connect(self._handle_change_property)
+        delete_button = QtGui.QToolButton(toolbar)
+        delete_button.setText('Delete property')
+        delete_button.setIcon(QtGui.QIcon(':/document-close.png'))
+        delete_button.clicked.connect(self._handle_delete_property)
         toolbar.layout().addStretch()
+        toolbar.layout().addWidget(delete_button)
         toolbar.layout().addWidget(save_button)
         self.layout().addWidget(toolbar)
+
+    @QtCore.pyqtSlot()
+    def _handle_change_property(self):
+        """This slot is activated when a property needs to be changed, it simply
+        emits a signal which the controller listen to in order to modify the
+        termbase definition model data structure.
+
+        :rtype: None
+        """
+        if self.is_complete():
+            prop_data = self.extract_property_data()
+            prop_data['old_node'] = self._property
+            self.fire_event.emit('change_property', prop_data)
+
+    @QtCore.pyqtSlot()
+    def _handle_delete_property(self):
+        """This slot is activated whenever a property needs to be deleted. It
+        dispatches an event so that the controller can carry out the operation.
+
+        :rtype: None
+        """
+        self.fire_event.emit('delete_property', {'old_node': self._property})
 
 
 class PicklistEditor(QtGui.QWidget):
