@@ -400,8 +400,8 @@ class ChangePropertyForm(AlterPropertyForm):
         :type parent: QtCore.QWidget
         :rtype: ChangePropertyForm
         """
+        self._property = prop  # used in constructor hook
         super(ChangePropertyForm, self).__init__(parent)
-        self._property = prop
 
     def _create_form_fields(self):
         super(ChangePropertyForm, self)._create_form_fields()

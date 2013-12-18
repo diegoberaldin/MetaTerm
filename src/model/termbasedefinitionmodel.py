@@ -64,10 +64,35 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         self.endInsertRows()
 
     def insert_node(self, level, node):
-        pass
+        """Inserts a new property node in the termbase definition model tree,
+        at the level specified by the ``level`` parameter.
+
+        :param level: level where the new property node must be inserted, which
+        must be a single character string in ``['E', 'L', 'T']``
+        :type level: str
+        :param node: the new property node to be inserted
+        :type node: PropertyNode
+        :rtype: None
+        """
+        assert level in ['E', 'L', 'T']
+        if level == 'E':
+            parent = self._root.children[0]
+        elif level == 'L':
+            parent = self._root.children[1]
+        else:
+            parent = self._root.children[2]
+        child_num = len(parent.children)
+        parent_index = self.createIndex(0, 0, parent)
+        # self.layoutAboutToBeChanged.emit()
+        self.beginInsertRows(parent_index, child_num, child_num)
+        node.parent = parent
+        parent.children.append(node)
+        self.endInsertRows()
+        # self.layoutChanged.emit()
 
     def flags(self, index):
-        """
+        """Indicates that the items of this model are selectable and enabled
+        by default but they cannot be edited directly.
 
         :param index: the index to be queried
         :type index: QtCore.QModelIndex
@@ -93,7 +118,8 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
             return 'Name'
 
     def rowCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
-        """
+        """Returns the number of rows (i.e. the number of children) that are
+        available for a given model index.
 
         :param parent: the index to be queried
         :type parent: QtCore.QModelIndex
@@ -107,7 +133,8 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         return len(item.children)
 
     def columnCount(self, parent=QtCore.QModelIndex(), *args, **kwargs):
-        """
+        """Returns the number of columns available for the given index, which
+        in this model is fixed and corresponds to the number of sections.
 
         :param parent: the index to be queried
         :type parent: QtCore.QModelIndex
@@ -117,7 +144,10 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         return 1
 
     def index(self, row, column, parent=QtCore.QModelIndex(), *args, **kwargs):
-        """
+        """Allows views to go one level deeper in the index hierarchy of the
+        model, by moving from the given parent index to its row-th child and
+        accessing its column-th field. Invalid index allow to access the tree
+        from its root, leaves do not allow to proceed any further.
 
         :param row: row of the new index (n-th child of the parent)
         :type row: int
@@ -138,7 +168,10 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         return self.createIndex(row, column, item)
 
     def parent(self, index=QtCore.QModelIndex()):
-        """
+        """Allows view to go one step backwards in the index hierarchy by
+        calculating and returning the parent of the given index (if any) or
+        returning an invalid index otherwise, such as in the case of the root
+        index which obviously has no parent.
 
         :param index: the index whose parent must be determined
         :type index: QtCore.QModelIndex
@@ -152,7 +185,9 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         return self.createIndex(row, 0, item.parent)
 
     def data(self, index=QtCore.QModelIndex(), role=QtCore.Qt.DisplayRole):
-        """
+        """Allows views to query indices for the data they internally store,
+        i.e. that part of property nodes which can be exposed to a tree view:
+        the property name label.
 
         :param index: index where data must be extracted from
         :type index: QtCore.QModelIndex
