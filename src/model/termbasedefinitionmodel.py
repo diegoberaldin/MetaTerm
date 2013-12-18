@@ -106,6 +106,20 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         node.parent = None  # these nodes have no children (luckily)
         self.endRemoveRows()
 
+    def alter_node(self, old_node, new_node):
+        parent = old_node.parent
+        parent_index = self.createIndex(0, 0, parent)
+        row = parent.children.index(old_node)
+        self.beginRemoveRows(parent_index, row, row)
+        parent.children.remove(old_node)
+        old_node.parent = None
+        self.endRemoveRows()
+        child_count = len(parent.children)
+        self.beginInsertRows(parent_index, child_count, child_count)
+        parent.children.append(new_node)
+        new_node.parent = parent  # these nodes have no children (luckily)
+        self.endInsertRows()
+
     def flags(self, index):
         """Indicates that the items of this model are selectable and enabled
         by default but they cannot be edited directly.
@@ -194,10 +208,13 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         :return: an index pointing to the parent of the given index
         :rtype: QtCore.QModelIndex
         """
-        if not index.isValid() or index.internalPointer() == self._root:
+        if not index.isValid() :
             return QtCore.QModelIndex()
         item = index.internalPointer()
-        row = item.parent.children.index(item)
+        parent = item.parent
+        if not parent:
+            return QtCore.QModelIndex()
+        row = parent.children.index(item)
         return self.createIndex(row, 0, item.parent)
 
     def data(self, index=QtCore.QModelIndex(), role=QtCore.Qt.DisplayRole):

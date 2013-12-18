@@ -134,6 +134,8 @@ class NewTermbaseController(AbstractController):
     def _handle_delete_property(self, old_node):
         self._model.delete_node(old_node)
 
-    def _handle_change_property(self, name_prop_type, level, old_node,
+    def _handle_change_property(self, name, prop_type, level, old_node,
                                 values=()):
-        pass
+        new_node = mdl.PropertyNode(name=name, prop_type=prop_type,
+                                    values=values)
+        self._model.alter_node(old_node, new_node)
