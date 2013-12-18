@@ -90,6 +90,22 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         self.endInsertRows()
         self.layoutChanged.emit()
 
+    def delete_node(self, node):
+        """Deletes a node from the tree structure of the termbase definition
+        model, notifying all connected views about the changes occurring.
+
+        :param node: the node to be removed from the tree
+        :type node: PropertyNode
+        :rtype: None
+        """
+        parent = node.parent
+        parent_index = self.createIndex(0, 0, parent)
+        row = parent.children.index(node)
+        self.beginRemoveRows(parent_index, row, row)
+        parent.children.remove(node)
+        node.parent = None  # these nodes have no children (luckily)
+        self.endRemoveRows()
+
     def flags(self, index):
         """Indicates that the items of this model are selectable and enabled
         by default but they cannot be edited directly.
