@@ -138,7 +138,7 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         :return: the number of properties that have been defined so fare
         :rtype: int
         """
-        return sum([self._root.children[i].children for i in range(3)])
+        return sum([len(self._root.children[i].children) for i in range(3)])
 
     def flags(self, index):
         """Indicates that the items of this model are selectable and enabled

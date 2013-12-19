@@ -24,7 +24,7 @@ from src.model import mapping
 _LOG = logging.getLogger('src.model.dataaccess')
 
 
-class TermBase(object):
+class Termbase(object):
     """Representation of a terminological database.
     """
 
@@ -32,7 +32,7 @@ class TermBase(object):
         """Creates a new termbase with the given name.
 
         :param name: name of the termbase
-        :rtype: TermBase
+        :rtype: Termbase
         """
         self.name = name
         session = sqlalchemy.orm.sessionmaker(self._get_engine())
@@ -128,7 +128,7 @@ class Schema(object):
         """Constructor method.
 
         :param termbase: termbase instance whose schema is being modified
-        :type termbase: TermBase
+        :type termbase: Termbase
         :rtype: Schema
         """
         self._tb = termbase
@@ -202,7 +202,7 @@ class Entry(object):
         :param entry_id: ID of the entry
         :type entry_id: str
         :param termbase: termbase which the entry belongs to
-        :type termbase: TermBase
+        :type termbase: Termbase
         :rtype : Entry
         """
         self._tb = termbase
@@ -341,7 +341,7 @@ class Term(object):
         :param vedette: flag indicating whether the term is a vedette or not
         :type vedette: bool
         :param termbase: reference to the containing termbase
-        :type termbase: TermBase
+        :type termbase: Termbase
         :rtype: Term
         """
         self.term_id = term_id

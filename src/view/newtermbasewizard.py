@@ -44,20 +44,24 @@ class NewTermbaseWizard(QtGui.QWizard):
         self._pages[2].fire_event.connect(self.fire_event)
         self.setMinimumSize(500, 400)
         self.setVisible(True)
-        # signal-slot connections
-        self.finished.connect(self._handle_finished)
 
-    def get_termbase_data(self):
-        """
+    def get_termbase_name(self):
+        """Returns the name of the new termbase chosen by the user.
 
-        :returns: a dictionary containing the information about the new termbase
-        :rtype: dict
+        :returns: the name of the new termbase
+        :rtype: str
         """
-        result = {
-            'termbase_name': self.field('termbase_name')
-        }
+        return self.field('termbase_name')
+
+    def get_termbase_locales(self):
+        """Extracts the list of the selected languages (locale strings, to be
+        used as keys in the ``DEFAULT_LANGUAGES`` dictionary) for the new TB.
+
+        :returns: a list of the locales that have been selected by the user
+        :rtype: list
+        """
         language_page = self._pages[1]
-        result['locales'] = language_page.get_selected_locales()
+        return language_page.get_selected_locales()
 
 
 class NamePage(QtGui.QWizardPage):
@@ -446,6 +450,8 @@ class NewPropertyForm(AlterPropertyForm):
             self.fire_event.emit('new_property',
                                  self.extract_property_data())
             self.clear()
+            # notifies the wizard page that a property has been added
+            self.parent().completeChanged.emit()
 
 
 class ChangePropertyForm(AlterPropertyForm):
@@ -531,6 +537,8 @@ class ChangePropertyForm(AlterPropertyForm):
         :rtype: None
         """
         self.fire_event.emit('delete_property', {'old_node': self._property})
+        # notifies the wizard page that a property has been deleted
+        self.parent().completeChanged.emit()
 
 
 class PicklistEditor(QtGui.QWidget):
