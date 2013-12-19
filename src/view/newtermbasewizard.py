@@ -280,8 +280,7 @@ class DefinitionModelPage(QtGui.QWizardPage):
         return self._model.get_property_number() != 0
 
     def reset_all(self):
-        """Resets the page as if nothing were selected (useful after the
-        deletion of a property).
+        """Redraws the correct form in the page based on the current selection.
 
         :rtype: None
         """
@@ -539,6 +538,8 @@ class ChangePropertyForm(AlterPropertyForm):
             prop_data = self.extract_property_data()
             prop_data['old_node'] = self._property
             self.fire_event.emit('change_property', prop_data)
+            # puts the form back in a consistent state (_property reference)
+            self.parent().reset_all()
 
     @QtCore.pyqtSlot()
     def _handle_delete_property(self):
