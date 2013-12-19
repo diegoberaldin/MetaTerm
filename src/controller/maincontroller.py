@@ -124,6 +124,11 @@ class NewTermbaseController(AbstractController):
 
     @QtCore.pyqtSlot()
     def _handle_termbase_created(self):
+        """This slot is activated when the user presses the 'finish' button of
+        the wizard, it collects all the data that have either been stored in
+        wizard fields or in page-specific structures and informs the controller
+        about the event so that the termbase file can be created on disk.
+        """
         # extract data from the view!
         pass
 

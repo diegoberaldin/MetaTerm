@@ -107,6 +107,17 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         self.endRemoveRows()
 
     def alter_node(self, old_node, new_node):
+        """Replaces the given old node with another (new) node in the termbase
+        definition model tree to allow changes in property definition, i.e.
+        converting the type of a property or altering the set of possible values
+        that a picklist property can accept.
+
+        :param old_node: old node which must be replaced
+        :type old_node: PropertyNode
+        :param new_node: new node to be inserted in the tree
+        :type new_node: PropertyNode
+        :rtype: None
+        """
         parent = old_node.parent
         parent_index = self.createIndex(0, 0, parent)
         row = parent.children.index(old_node)
@@ -119,6 +130,15 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         parent.children.append(new_node)
         new_node.parent = parent  # these nodes have no children (luckily)
         self.endInsertRows()
+
+    def get_property_number(self):
+        """Returns the total number of properties that have been created in the
+        termbase definition model, no matter the level they belong to.
+
+        :return: the number of properties that have been defined so fare
+        :rtype: int
+        """
+        return sum([self._root.children[i].children for i in range(3)])
 
     def flags(self, index):
         """Indicates that the items of this model are selectable and enabled

@@ -47,17 +47,17 @@ class NewTermbaseWizard(QtGui.QWizard):
         # signal-slot connections
         self.finished.connect(self._handle_finished)
 
-    @QtCore.pyqtSlot()
-    def _handle_finished(self):
-        """This slot is activated when the user presses the 'finish' button of
-        the wizard, it collects all the data that have either been stored in
-        wizard fields or in page-specific structures and informs the controller
-        about the event so that the termbase file can be created on disk.
-
-        :rtype: None
+    def get_termbase_data(self):
         """
+
+        :returns: a dictionary containing the information about the new termbase
+        :rtype: dict
+        """
+        result = {
+            'termbase_name': self.field('termbase_name')
+        }
         language_page = self._pages[1]
-        print(language_page.get_selected_locales())
+        result['locales'] = language_page.get_selected_locales()
 
 
 class NamePage(QtGui.QWizardPage):
@@ -216,7 +216,8 @@ class DefinitionModelPage(QtGui.QWizardPage):
             'properties that its entries will be made up of')
         self.setLayout(QtGui.QHBoxLayout(self))
         self._view = QtGui.QTreeView(self)
-        self._view.setModel(self.parent().termbase_definition_model)
+        self._model = self.parent().termbase_definition_model
+        self._view.setModel(self._model)
         self._view.setFixedWidth(200)
         self._view.pressed.connect(self._handle_view_pressed)
         self._form = QtGui.QWidget(self)
@@ -249,6 +250,13 @@ class DefinitionModelPage(QtGui.QWizardPage):
         old_form.deleteLater()
 
     def get_level(self):
+        """Returns a string in ``['E', 'L', 'T']`` corresponding to the level
+        where a newly created property must be inserted in the TDM.
+
+        :return: a single-character string representing the level where the
+        new property must be inserted
+        :rtype: str
+        """
         item = [index.internalPointer() for index in
                 self._view.selectedIndexes() if index.column() == 0].pop()
         index = item.parent.children.index(item)
@@ -257,6 +265,15 @@ class DefinitionModelPage(QtGui.QWizardPage):
         if index == 1:
             return 'L'
         return 'T'
+
+    def isComplete(self):
+        """Overridden in order to ensure that at least one property has been
+        defined in the termbase definition model.
+
+        :return: True if some property has been defined, False otherwise
+        :rtype: bool
+        """
+        return self._model.get_property_number() != 0
 
 
 class AlterPropertyForm(QtGui.QWidget):
