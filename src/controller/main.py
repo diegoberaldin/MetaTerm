@@ -8,7 +8,7 @@ is directly bound to the main window of the application and is in charge of
 processing all those events that are generated there.
 """
 
-from PyQt4 import QtCore
+import os
 
 from src import model as mdl
 from src import view as gui
@@ -18,8 +18,8 @@ from src.controller.newtermbase import NewTermbaseController
 
 class MainController(AbstractController):
     """This controller is responsible of handling the events that are generated
-    either in the application main window
-    or in the main widget that is displayed inside it.
+    either in the application main window or in the main widget that is
+    displayed inside it.
     """
 
     def __init__(self, view):
@@ -61,3 +61,25 @@ class MainController(AbstractController):
         # signal-slot connections
         new_termbase_controller.new_termbase_created.connect(
             self._handle_open_termbase)
+
+    def _handle_close_termbase(self):
+        """Closes the currently open termbase.
+
+        :rtype: None
+        """
+        if self._model:
+            self._model = None
+            # TODO: UI must be updated
+
+    def _handle_delete_termbase(self, name):
+        """Permanently deletes a termbase from disk.
+
+        :param name: name of the termbase to be deleted
+        :type name: str
+        :rtype: None
+        """
+        if self._model.name == name:
+            self._handle_close_termbase()
+        file_name = mdl.Termbase(name).get_termbase_file_name()
+        if os.path.exists(file_name):
+            os.remove(file_name)

@@ -38,9 +38,9 @@ class Termbase(object):
         session = sqlalchemy.orm.sessionmaker(self._get_engine())
         self._session = sqlalchemy.orm.scoped_session(session)
         # writes the termbase on disk (if needed)
-        sql.write_to_disk(self._get_termbase_file_name(), self._get_engine())
+        sql.write_to_disk(self.get_termbase_file_name(), self._get_engine())
 
-    def _get_termbase_file_name(self):
+    def get_termbase_file_name(self):
         """Returns the name of the file where the database is stored.
 
         :returns: name of the local file where the termbase is stored
@@ -55,7 +55,7 @@ class Termbase(object):
         :returns: string to be used to connect with the DB (through an engine)
         :rtype: str
         """
-        return 'sqlite:///{0}.sqlite'.format(self._get_termbase_file_name())
+        return 'sqlite:///{0}.sqlite'.format(self.get_termbase_file_name())
 
     def _get_engine(self):
         """Returns an engine used to create sessions and to write DB metadata to

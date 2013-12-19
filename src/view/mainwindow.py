@@ -33,10 +33,18 @@ class MainWindow(QtGui.QMainWindow):
         super(MainWindow, self).__init__()
         self.setMinimumSize(self._MIN_WIDTH, self._MIN_HEIGHT)
         # action initialization (they are member data after all, aren't they?)
-        self._new_tb_action = QtGui.QAction('New termbase...', self)
+        self._new_tb_action = QtGui.QAction('New...', self)
         self._new_tb_action.triggered.connect(self._handle_new_termbase)
-        self._open_tb_action = QtGui.QAction('Open termbase...', self)
+        self._open_tb_action = QtGui.QAction('Open...', self)
         self._open_tb_action.triggered.connect(self._handle_open_termbase)
+        self._close_tb_action = QtGui.QAction('Close...', self)
+        self._close_tb_action.triggered.connect(
+            lambda: self.fire_event.emit('close_termbase', {}))
+        self._delete_tb_action = QtGui.QAction('Delete...', self)
+        self._delete_tb_action.triggered.connect(self._handle_delete_termbase)
+        self._show_tb_properties_action = QtGui.QAction('Properties...', self)
+        self._show_tb_properties_action.triggered.connect(
+            self._handle_show_termbase_properties)
         self._about_qt_action = QtGui.QAction('About Qt', self)
         self._about_qt_action.triggered.connect(
             lambda: QtGui.QMessageBox.aboutQt(self, 'About Qt'))
@@ -49,16 +57,23 @@ class MainWindow(QtGui.QMainWindow):
 
         :rtype: None
         """
-        file_menu = QtGui.QMenu('File', self)
-        file_menu.addAction(self._new_tb_action)
-        file_menu.addAction(self._open_tb_action)
+        # termbase menu
+        termbase_menu = QtGui.QMenu('Termbase', self)
+        termbase_menu.addAction(self._new_tb_action)
+        termbase_menu.addAction(self._open_tb_action)
+        termbase_menu.addAction(self._close_tb_action)
+        termbase_menu.addAction(self._delete_tb_action)
+        termbase_menu.addAction(self._show_tb_properties_action)
+        self.menuBar().addMenu(termbase_menu)
+        # edit menu
         edit_menu = QtGui.QMenu('Edit', self)
+        self.menuBar().addMenu(edit_menu)
+        # view menu
         view_menu = QtGui.QMenu('View', self)
+        self.menuBar().addMenu(view_menu)
+        # help menu
         help_menu = QtGui.QMenu('?', self)
         help_menu.addAction(self._about_qt_action)
-        self.menuBar().addMenu(file_menu)
-        self.menuBar().addMenu(edit_menu)
-        self.menuBar().addMenu(view_menu)
         self.menuBar().addMenu(help_menu)
 
     @QtCore.pyqtSlot()
@@ -77,11 +92,26 @@ class MainWindow(QtGui.QMainWindow):
 
         :rtype: None
         """
-        open_termbase_dialog = OpenTermbaseDialog(self)
-        ret = open_termbase_dialog.exec()
+        dialog = SelectTermbaseDialog(self)
+        ret = dialog.exec()
         if ret:  # informs the controller
             self.fire_event.emit('open_termbase', {
-            'name': open_termbase_dialog.selected_termbase_name})
+                'name': dialog.selected_termbase_name})
+
+    @QtCore.pyqtSlot()
+    def _handle_delete_termbase(self):
+        dialog = SelectTermbaseDialog(self)
+        ret = dialog.exec()
+        if ret:
+            QtGui.QMessageBox.warning(self, 'Warning', 'The operation cannot '
+                                                       'be undone, do you '
+                                                       'want to proceed?')
+            self.fire_event.emit('delete_termbase', {
+                'name': dialog.selected_termbase_name})
+
+    @QtCore.pyqtSlot()
+    def _handle_show_termbase_properties(self):
+        pass
 
 
 class MainWidget(QtGui.QWidget):
@@ -102,16 +132,21 @@ class MainWidget(QtGui.QWidget):
         self.setLayout(QtGui.QVBoxLayout(self))
 
 
-class OpenTermbaseDialog(QtGui.QDialog):
+class SelectTermbaseDialog(QtGui.QDialog):
+    """Simple dialog where one among the available termbase can be chosen. It
+    must display a list of the possible termbase names depending on the content
+    of the termbase directory in the local system, and allow the user to select
+    one among them to open it.
+    """
+
     def __init__(self, parent):
-        """Creates a simple dialog where one among the available termbase can be
-        chosen by the user.
+        """Constructor method.
 
         :param parent: the dialog parent widget
-        :type parent: QWidget
-        :rtype: OpenTermbaseDialog
+        :type parent: QtCore.QWidget
+        :rtype: SelectTermbaseDialog
         """
-        super(OpenTermbaseDialog, self).__init__(parent)
+        super(SelectTermbaseDialog, self).__init__(parent)
         self.selected_termbase_name = None
         self.setLayout(QtGui.QVBoxLayout(self))
         # dialog content
@@ -145,4 +180,4 @@ class OpenTermbaseDialog(QtGui.QDialog):
             # extracts the name of the selected termbase
             self.selected_termbase_name = self._view.model().data(
                 selected_indexes[0], QtCore.Qt.DisplayRole)
-            super(OpenTermbaseDialog, self).accept()
+            super(SelectTermbaseDialog, self).accept()
