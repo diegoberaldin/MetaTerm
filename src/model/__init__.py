@@ -14,3 +14,4 @@ from src.model.sql import initialize_tb_folder, get_termbase_names
 from src.model.constants import DEFAULT_LANGUAGES
 from src.model.termbasedefinitionmodel import (TermbaseDefinitionModel,
                                                PropertyNode)
+from src.model.main import get_main_model

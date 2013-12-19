@@ -71,18 +71,15 @@ class TermbasePropertyDialog(QtGui.QDialog):
     contains and the space occupied on disk.
     """
 
-    def __init__(self, termbase, parent):
+    def __init__(self, parent):
         """Constructor method.
 
-        :param termbase: reference to the termbase to query for information
-        :type termbase: mdl.Termbase
         :param parent: reference to the parent widget
         :type parent: QtGui.QWidget
         :rtype: TermbasePropertyDialog
         """
         super(TermbasePropertyDialog, self).__init__(parent)
         self.setWindowTitle('Termbase properties')
-        self._model = termbase
         self.setLayout(QtGui.QVBoxLayout(self))
         self._populate_language_group()
         self._populate_stats_group()
@@ -95,7 +92,7 @@ class TermbasePropertyDialog(QtGui.QDialog):
         :rtype: None
         """
         language_view = QtGui.QListWidget(self)
-        for locale in self._model.get_languages():
+        for locale in mdl.get_main_model().open_termbase.get_languages():
             item = QtGui.QListWidgetItem()
             item.setText(mdl.DEFAULT_LANGUAGES[locale])
             item.setIcon(QtGui.QIcon(':/flags/{0}.png'.format(locale)))
@@ -115,13 +112,14 @@ class TermbasePropertyDialog(QtGui.QDialog):
         stats_group.setLayout(QtGui.QGridLayout(stats_group))
         stats_group.layout().addWidget(
             QtGui.QLabel('Number of entries:', stats_group), 0, 0)
+        tb = mdl.get_main_model().open_termbase
         stats_group.layout().addWidget(
-            QtGui.QLabel(str(self._model.get_entry_number()), stats_group), 0,
+            QtGui.QLabel(str(tb.get_entry_number()), stats_group), 0,
             1)
         stats_group.layout().addWidget(QtGui.QLabel('Total size:', stats_group),
                                        1, 0)
         stats_group.layout().addWidget(
-            QtGui.QLabel(self._model.get_size(), stats_group), 1, 1)
+            QtGui.QLabel(tb.get_size(), stats_group), 1, 1)
         self.layout().addWidget(stats_group)
 
     def _create_buttons(self):

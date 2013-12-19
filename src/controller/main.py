@@ -32,7 +32,6 @@ class MainController(AbstractController):
         self._view = view
         # assures events originated from the UI are handled correctly
         self._view.fire_event.connect(self.handle_event)
-        self._model = None
         # child controllers
         self._children = {}
 
@@ -43,9 +42,7 @@ class MainController(AbstractController):
         :type name: str
         :rtype: None
         """
-        self._model = mdl.Termbase(name)
-        # TODO: UI must be updated
-        self._view.model = self._model
+        mdl.get_main_model().open_termbase = mdl.Termbase(name)
         self._view.display_message('Currently working on {0}'.format(name))
 
     def _handle_new_termbase(self):
@@ -69,10 +66,8 @@ class MainController(AbstractController):
 
         :rtype: None
         """
-        if self._model:
-            self._model = None
-            self._view.update_for_termbase_closing()
-            self._view.display_message('Current termbase closed.')
+        mdl.get_main_model().open_termbase = None
+        self._view.display_message('Current termbase closed.')
 
     def _handle_delete_termbase(self, name):
         """Permanently deletes a termbase from disk.

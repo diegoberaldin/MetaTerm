@@ -9,6 +9,7 @@ central widget that is going to be displayed inside it.
 
 from PyQt4 import QtGui, QtCore
 from src.view.dialogs import SelectTermbaseDialog, TermbasePropertyDialog
+from src import model as mdl
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -31,8 +32,6 @@ class MainWindow(QtGui.QMainWindow):
         :rtype: MainWindow
         """
         super(MainWindow, self).__init__()
-        # reference to the model
-        self.model = None
         # action initialization (they are member data after all, aren't they?)
         self._new_tb_action = QtGui.QAction('New...', self)
         self._new_tb_action.triggered.connect(self._handle_new_termbase)
@@ -60,6 +59,11 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowTitle('MetaTerm')
         # displays a message in the status bar
         self.statusBar().showMessage('Started.')
+        # signal-slot connections
+        mdl.get_main_model().termbase_opened.connect(
+            self._handle_termbase_opened)
+        mdl.get_main_model().termbase_closed.connect(
+            self._handle_termbase_closed)
 
     def _create_menus(self):
         """Creates the menus displayed in the main application menu bar.
@@ -116,15 +120,25 @@ class MainWindow(QtGui.QMainWindow):
         if ret:  # informs the controller
             self.fire_event.emit('open_termbase', {
                 'name': dialog.selected_termbase_name})
-            self._show_tb_properties_action.setEnabled(True)
 
-    def update_for_termbase_closing(self):
-        """Resets the main UI when the current termbase is closed.
+    @QtCore.pyqtSlot()
+    def _handle_termbase_opened(self):
+        """This slot is activated when the view detects that in the model a
+        new termbase has been opened. In this case the correct reaction is to
+        enable the property action.
+
+        :rtype: None
+        """
+        self._show_tb_properties_action.setEnabled(True)
+
+    @QtCore.pyqtSlot()
+    def _handle_termbase_closed(self):
+        """Resets the main UI when the current termbase is closed, this slot is
+        activated when the GUI detects that the model has changed.
 
         :rtype: None
         """
         self._show_tb_properties_action.setEnabled(False)
-        # TODO: unfinished
 
     @QtCore.pyqtSlot()
     def _handle_delete_termbase(self):
@@ -153,11 +167,11 @@ class MainWindow(QtGui.QMainWindow):
 
         :rtype: None
         """
-        dialog = TermbasePropertyDialog(self.model, self)
+        dialog = TermbasePropertyDialog(self)
         dialog.exec()
 
 
-class MainWidget(QtGui.QWidget):
+class MainWidget(QtGui.QSplitter):
     """Central widget that is displayed inside the application main window.
     """
     fire_event = QtCore.pyqtSignal(str, dict)
@@ -172,4 +186,68 @@ class MainWidget(QtGui.QWidget):
             """
         super(MainWidget, self).__init__(parent)
         self.fire_event.connect(self.parent().fire_event)
+        self.addWidget(EntryList(self))
+        self.addWidget(EntryDisplay(self))
+
+
+class EntryList(QtGui.QWidget):
+    """List of all the entries that are stored in the current termbase.
+    """
+
+    def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the parent widget
+        :type parent: QtCore.QWidget
+        :rtype: EntryList
+        """
+        super(EntryList, self).__init__(parent)
+        self._view = QtGui.QListView(self)
         self.setLayout(QtGui.QVBoxLayout(self))
+        self.layout().addWidget(LanguageSelector(self))
+        self.layout().addWidget(self._view)
+
+
+class LanguageSelector(QtGui.QWidget):
+    """This widget corresponds to the upper part of the entry list and it
+    basically displays a combobox in order for the user to change the main
+    language in which the termbase is displayed.
+    """
+
+    def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the parent of the widget
+        :type parent: QtCore.QWidget
+        :rtype: LanguageSelector
+        """
+        super(LanguageSelector, self).__init__(parent)
+        self.setLayout(QtGui.QHBoxLayout(self))
+        self.layout().addWidget(QtGui.QLabel('Language', self))
+        self._language_combo = QtGui.QComboBox(self)
+        self.layout().addWidget(self._language_combo)
+        mdl.get_main_model().termbase_opened.connect(
+            self._regenerate_language_list)
+        mdl.get_main_model().termbase_closed.connect(
+            self._regenerate_language_list)
+
+    @QtCore.pyqtSlot()
+    def _regenerate_language_list(self):
+        """Updates the list of the current languages depending on the languages
+        that are available in the currently opened termbase. If the slot is
+        activated upon a termbase closure, the list of languages is emptied.
+
+        :rtype: None
+        """
+        if mdl.get_main_model().open_termbase:  # termbase opened
+            locale_list = [mdl.DEFAULT_LANGUAGES[locale] for locale in
+                           mdl.get_main_model().open_termbase.get_languages()]
+        else:  # termbase closed
+            locale_list = []
+        model = QtGui.QStringListModel(locale_list)
+        self._language_combo.setModel(model)
+
+
+class EntryDisplay(QtGui.QWidget):
+    def __init__(self, parent):
+        super(EntryDisplay, self).__init__(parent)
