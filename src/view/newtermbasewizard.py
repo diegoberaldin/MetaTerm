@@ -279,6 +279,17 @@ class DefinitionModelPage(QtGui.QWizardPage):
         """
         return self._model.get_property_number() != 0
 
+    def reset_all(self):
+        """Resets the page as if nothing were selected (useful after the
+        deletion of a property).
+
+        :rtype: None
+        """
+        current_index = [index for index in
+                         self._view.selectedIndexes() if
+                         index.column() == 0].pop()
+        self._view.pressed.emit(current_index)
+
 
 class AlterPropertyForm(QtGui.QWidget):
     """Base class for those forms having the purpose of creating or updating a
@@ -539,6 +550,8 @@ class ChangePropertyForm(AlterPropertyForm):
         self.fire_event.emit('delete_property', {'old_node': self._property})
         # notifies the wizard page that a property has been deleted
         self.parent().completeChanged.emit()
+        # completely clears the form
+        self.parent().reset_all()
 
 
 class PicklistEditor(QtGui.QWidget):
