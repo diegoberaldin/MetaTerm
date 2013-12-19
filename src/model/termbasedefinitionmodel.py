@@ -140,6 +140,25 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         """
         return sum([len(self._root.children[i].children) for i in range(3)])
 
+    def get_properties(self):
+        """Returns a list of the properties that have been configured in the
+        invocation termbase definition model. These are represented as
+        dictionaries with the ``name``, ``level``, ``prop_type`` and ``values``
+        keys designed to be compatible with the ``create_property`` method
+        of schema objects.
+
+        :returns: a list of dictionaries used to define the properties that
+        were found at the given level
+        :rtype: list
+        """
+        levels = ['E', 'L', 'T']
+        # list of dictionaries generated via double list comprehension iterating
+        # over a generator, is it readable, though?
+        return [{'name': node.name, 'level': level, 'prop_type': node.type,
+                 'values': node.values} for level, parent_node in
+                zip(levels, self._root.children) for
+                node in parent_node.children]
+
     def flags(self, index):
         """Indicates that the items of this model are selectable and enabled
         by default but they cannot be edited directly.
@@ -228,7 +247,7 @@ class TermbaseDefinitionModel(QtCore.QAbstractItemModel):
         :return: an index pointing to the parent of the given index
         :rtype: QtCore.QModelIndex
         """
-        if not index.isValid() :
+        if not index.isValid():
             return QtCore.QModelIndex()
         item = index.internalPointer()
         parent = item.parent

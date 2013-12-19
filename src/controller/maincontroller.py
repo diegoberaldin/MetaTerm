@@ -153,7 +153,16 @@ class NewTermbaseController(AbstractController):
             termbase.add_language(locale)
 
     def _populate_properties(self, termbase):
-        pass
+        """Queries the termbase definition model for the propeties that have
+        been added during configuration and adds them to the actual termbase
+        structure on disk.
+
+        :param termbase: reference to the termbase to be populated
+        :type termbase: mdl.Termbase
+        :rtype: None
+        """
+        for prop_dictionary in self._model.get_properties():
+            termbase.schema.create_property(**prop_dictionary)
 
     def _handle_new_property(self, name, prop_type, level, values=()):
         """This event handler is activated whenever the user asks to add a new
