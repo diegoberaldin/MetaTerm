@@ -67,14 +67,14 @@ class MainController(AbstractController):
         # child controllers
         self._children = {}
 
-    def _handle_open_termbase(self, termbase_name):
+    def _handle_open_termbase(self, name):
         """Opens an existing termbase.
 
-        :param termbase_name: the name of the termbase to open
-        :type termbase_name: str
+        :param name: the name of the termbase to open
+        :type name: str
         :rtype: None
         """
-        self._model = mdl.Termbase(termbase_name)
+        self._model = mdl.Termbase(name)
         # TODO: UI must be updated
 
     def _handle_new_termbase(self):
@@ -123,7 +123,7 @@ class NewTermbaseController(AbstractController):
         super(NewTermbaseController, self).__init__()
         self._view = wizard
         self._view.rejected.connect(lambda: self.wizard_canceled.emit())
-        self._view.finished.connect(self._handle_termbase_created)
+        self._view.accepted.connect(self._handle_termbase_created)
         self._view.fire_event.connect(self.handle_event)
         self._model = model
 
