@@ -6,4 +6,4 @@
 This package contains the modules which the controller is made up of.
 """
 
-from src.controller.maincontroller import MainController
+from src.controller.main import MainController
