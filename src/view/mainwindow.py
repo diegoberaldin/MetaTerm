@@ -31,7 +31,8 @@ class MainWindow(QtGui.QMainWindow):
         :rtype: MainWindow
         """
         super(MainWindow, self).__init__()
-        self.setMinimumSize(self._MIN_WIDTH, self._MIN_HEIGHT)
+        # reference to the model
+        self.model = None
         # action initialization (they are member data after all, aren't they?)
         self._new_tb_action = QtGui.QAction('New...', self)
         self._new_tb_action.triggered.connect(self._handle_new_termbase)
@@ -45,11 +46,17 @@ class MainWindow(QtGui.QMainWindow):
         self._show_tb_properties_action = QtGui.QAction('Properties...', self)
         self._show_tb_properties_action.triggered.connect(
             self._handle_show_termbase_properties)
+        self._show_tb_properties_action.setEnabled(False)
+        self._quit_action = QtGui.QAction('Quit', self)
+        self._quit_action.triggered.connect(lambda: QtGui.qApp.quit())
         self._about_qt_action = QtGui.QAction('About Qt', self)
         self._about_qt_action.triggered.connect(
             lambda: QtGui.QMessageBox.aboutQt(self, 'About Qt'))
         self._create_menus()
+        # sets the central widget
         self.setCentralWidget(MainWidget(self))
+        # window size and title
+        self.setMinimumSize(self._MIN_WIDTH, self._MIN_HEIGHT)
         self.setWindowTitle('MetaTerm')
         # displays a message in the status bar
         self.statusBar().showMessage('Started.')
@@ -66,6 +73,7 @@ class MainWindow(QtGui.QMainWindow):
         termbase_menu.addAction(self._close_tb_action)
         termbase_menu.addAction(self._delete_tb_action)
         termbase_menu.addAction(self._show_tb_properties_action)
+        termbase_menu.addAction(self._quit_action)
         self.menuBar().addMenu(termbase_menu)
         # edit menu
         edit_menu = QtGui.QMenu('Edit', self)
@@ -108,6 +116,11 @@ class MainWindow(QtGui.QMainWindow):
         if ret:  # informs the controller
             self.fire_event.emit('open_termbase', {
                 'name': dialog.selected_termbase_name})
+            self._show_tb_properties_action.setEnabled(True)
+
+    def update_for_termbase_closing(self):
+        self._show_tb_properties_action.setEnabled(False)
+        # TODO: unfinished
 
     @QtCore.pyqtSlot()
     def _handle_delete_termbase(self):
@@ -122,7 +135,8 @@ class MainWindow(QtGui.QMainWindow):
 
     @QtCore.pyqtSlot()
     def _handle_show_termbase_properties(self):
-        pass
+        dialog = TermbasePropertyDialog(self.model, self)
+        dialog.exec()
 
 
 class MainWidget(QtGui.QWidget):
@@ -189,6 +203,48 @@ class SelectTermbaseDialog(QtGui.QDialog):
             self.reject()
         else:
             # extracts the name of the selected termbase
-            self.selected_termbase_name = self._view.model().data(
-                selected_indexes[0], QtCore.Qt.DisplayRole)
+            name = self._view.model().data(selected_indexes[0],
+                                           QtCore.Qt.DisplayRole)
+            self.selected_termbase_name = '.'.join(name.split('.')[:-1])
             super(SelectTermbaseDialog, self).accept()
+
+
+class TermbasePropertyDialog(QtGui.QDialog):
+    def __init__(self, termbase, parent):
+        super(TermbasePropertyDialog, self).__init__(parent)
+        self.setWindowTitle('Termbase properties')
+        self._model = termbase
+        self.setLayout(QtGui.QVBoxLayout(self))
+        self._populate_language_group()
+        self._populate_stats_group()
+        # button box
+        button_box = QtGui.QDialogButtonBox(self)
+        ok_button = button_box.addButton(QtGui.QDialogButtonBox.Ok)
+        ok_button.clicked.connect(self.accept)
+        self.layout().addWidget(button_box)
+
+    def _populate_language_group(self):
+        language_view = QtGui.QListWidget(self)
+        for locale in self._model.get_languages():
+            item = QtGui.QListWidgetItem()
+            item.setText(mdl.DEFAULT_LANGUAGES[locale])
+            item.setIcon(QtGui.QIcon(':/flags/{0}.png'.format(locale)))
+            language_view.insertItem(language_view.count(), item)
+        language_group = QtGui.QGroupBox('Languages', self)
+        language_group.setLayout(QtGui.QVBoxLayout(language_group))
+        language_group.layout().addWidget(language_view)
+        self.layout().addWidget(language_group)
+
+    def _populate_stats_group(self):
+        stats_group = QtGui.QGroupBox('Statistics', self)
+        stats_group.setLayout(QtGui.QGridLayout(stats_group))
+        stats_group.layout().addWidget(
+            QtGui.QLabel('Number of entries:', stats_group), 0, 0)
+        stats_group.layout().addWidget(
+            QtGui.QLabel(str(self._model.get_entry_number()), stats_group), 0,
+            1)
+        stats_group.layout().addWidget(QtGui.QLabel('Total size:', stats_group),
+                                       1, 0)
+        stats_group.layout().addWidget(
+            QtGui.QLabel(self._model.get_size(), stats_group), 1, 1)
+        self.layout().addWidget(stats_group)

@@ -46,7 +46,7 @@ class Termbase(object):
         :returns: name of the local file where the termbase is stored
         :rtype: str
         """
-        return os.path.join(sql.DB_DIR, self.name)
+        return os.path.join(sql.DB_DIR, '{0}.sqlite'.format(self.name))
 
     def _get_connection_string(self):
         """Returns the connection string to be used to interact with the local
@@ -55,7 +55,7 @@ class Termbase(object):
         :returns: string to be used to connect with the DB (through an engine)
         :rtype: str
         """
-        return 'sqlite:///{0}.sqlite'.format(self.get_termbase_file_name())
+        return 'sqlite:///{0}'.format(self.get_termbase_file_name())
 
     def _get_engine(self):
         """Returns an engine used to create sessions and to write DB metadata to
@@ -117,6 +117,42 @@ class Termbase(object):
         with self.get_session() as session:
             language = mapping.Language(locale=locale)
             session.add(language)
+
+    def get_languages(self):
+        """Returns an iterable with the locales stored in the current termbase.
+
+        :returns: a list of all the termbase locales
+        :rtype: list
+        """
+        with self.get_session() as session:
+            return [l[0] for l in session.query(mapping.Language.locale)]
+
+    def get_entry_number(self):
+        with self.get_session() as session:
+            return session.query(mapping.Entry).count()
+
+    def get_size(self):
+        size = os.path.getsize(self.get_termbase_file_name())
+        return self.format_size(size)
+
+    @staticmethod
+    def format_size(space):
+        """Returns an appropriate string with human-readable information about
+        an amount of space on disk.
+
+        :param space: original size
+        :type space: int
+        :returns: a string with a human-readable size
+        :rtype: str
+        """
+        if space < 1024:
+            return '{0} bytes'.format(space)
+        elif space < 1048576:
+            return '{0:.2f} KB'.format(float(space) / 1024)
+        elif space < 1073741824:
+            return '{0:.2f} MB'.format(float(space) / 1048576)
+        else:
+            return '{0:.2f} GB'.format(float(space) / 1073741824)
 
 
 class Schema(object):

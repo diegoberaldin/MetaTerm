@@ -45,6 +45,7 @@ class MainController(AbstractController):
         """
         self._model = mdl.Termbase(name)
         # TODO: UI must be updated
+        self._view.model = self._model
         self._view.display_message('Currently working on {0}'.format(name))
 
     def _handle_new_termbase(self):
@@ -70,7 +71,7 @@ class MainController(AbstractController):
         """
         if self._model:
             self._model = None
-            # TODO: UI must be updated
+            self._view.update_for_termbase_closing()
             self._view.display_message('Current termbase closed.')
 
     def _handle_delete_termbase(self, name):
@@ -80,9 +81,10 @@ class MainController(AbstractController):
         :type name: str
         :rtype: None
         """
-        if self._model.name == name:
+        if self._model and self._model.name == name:
             self._handle_close_termbase()
         file_name = mdl.Termbase(name).get_termbase_file_name()
+        print(file_name)
         if os.path.exists(file_name):
             os.remove(file_name)
             self._view.display_message(
