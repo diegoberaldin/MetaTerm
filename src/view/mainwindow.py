@@ -51,6 +51,8 @@ class MainWindow(QtGui.QMainWindow):
         self._create_menus()
         self.setCentralWidget(MainWidget(self))
         self.setWindowTitle('MetaTerm')
+        # displays a message in the status bar
+        self.statusBar().showMessage('Started.')
 
     def _create_menus(self):
         """Creates the menus displayed in the main application menu bar.
@@ -75,6 +77,15 @@ class MainWindow(QtGui.QMainWindow):
         help_menu = QtGui.QMenu('?', self)
         help_menu.addAction(self._about_qt_action)
         self.menuBar().addMenu(help_menu)
+
+    def display_message(self, message):
+        """Displays a message in the application status bar.
+
+        :param message: the message to be displayed
+        :type message: str
+        :rtype: None
+        """
+        self.statusBar().showMessage(message)
 
     @QtCore.pyqtSlot()
     def _handle_new_termbase(self):
