@@ -89,6 +89,25 @@ class NamePage(QtGui.QWizardPage):
         # field registration
         self.registerField('termbase_name*', name_input)
 
+    def validatePage(self):
+        """Overridden in order to avoid name conflicts in the termbases, it
+        checks whether a termbase with the same name exists in the termbase
+        directory of the local system and returns False (page is invalid) in
+        the latter case, True otherwise. Moreover, it shows a warning message
+        to inform the user about the problem.
+
+        :return: True is the termbase name is not a duplicate, False otherwise
+        :rtype: bool
+        """
+        tb_name = '{0}.sqlite'.format(self.field('termbase_name'))
+        if tb_name in mdl.get_termbase_names():
+            QtGui.QMessageBox.warning(self, 'Name conflict',
+                                      'A termbase with the same name already '
+                                      'exists on the system, please choose a '
+                                      'different one.')
+            return False
+        return True
+
 
 class LanguagePage(QtGui.QWizardPage):
     """This page allows the user to choose the languages of the terms that will
