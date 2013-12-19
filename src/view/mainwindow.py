@@ -119,22 +119,40 @@ class MainWindow(QtGui.QMainWindow):
             self._show_tb_properties_action.setEnabled(True)
 
     def update_for_termbase_closing(self):
+        """Resets the main UI when the current termbase is closed.
+
+        :rtype: None
+        """
         self._show_tb_properties_action.setEnabled(False)
         # TODO: unfinished
 
     @QtCore.pyqtSlot()
     def _handle_delete_termbase(self):
+        """This slot is activated when the user requires to delete a termbase,
+        it has the responsibility of displaying a dialog to allow users to
+        select which termbase they want to be deleted and, if a valid entry is
+        selected, it displays a last warning. Only if the user confirms the
+        operation is the termbase eventually deleted (by the controller).
+
+        :rtype: None
+        """
         dialog = SelectTermbaseDialog(self)
         ret = dialog.exec()
         if ret:
-            QtGui.QMessageBox.warning(self, 'Warning', 'The operation cannot '
-                                                       'be undone, do you '
-                                                       'want to proceed?')
-            self.fire_event.emit('delete_termbase', {
-                'name': dialog.selected_termbase_name})
+            button = QtGui.QMessageBox.warning(self, 'Warning',
+                                               'The operation cannot '
+                                               'be undone, do you '
+                                               'want to proceed?')
+            if button == QtGui.QMessageBox.Ok:
+                self.fire_event.emit('delete_termbase', {
+                    'name': dialog.selected_termbase_name})
 
     @QtCore.pyqtSlot()
     def _handle_show_termbase_properties(self):
+        """Displays a dialog window with some termbase properties.
+
+        :rtype: None
+        """
         dialog = TermbasePropertyDialog(self.model, self)
         dialog.exec()
 
@@ -147,7 +165,7 @@ class MainWidget(QtGui.QWidget):
 
     def __init__(self, parent):
         """Constructor method
-    
+
             :param parent: reference to the main window
             :type parent: QWidget
             :rtype: MainWidget
@@ -210,20 +228,34 @@ class SelectTermbaseDialog(QtGui.QDialog):
 
 
 class TermbasePropertyDialog(QtGui.QDialog):
+    """Dialog window used to display read-only information about the currently
+    open termbase such as the languages involved, the number of entries it
+    contains and the space occupied on disk.
+    """
+
     def __init__(self, termbase, parent):
+        """Constructor method.
+
+        :param termbase: reference to the termbase to query for information
+        :type termbase: mdl.Termbase
+        :param parent: reference to the parent widget
+        :type parent: QtGui.QWidget
+        :rtype: TermbasePropertyDialog
+        """
         super(TermbasePropertyDialog, self).__init__(parent)
         self.setWindowTitle('Termbase properties')
         self._model = termbase
         self.setLayout(QtGui.QVBoxLayout(self))
         self._populate_language_group()
         self._populate_stats_group()
-        # button box
-        button_box = QtGui.QDialogButtonBox(self)
-        ok_button = button_box.addButton(QtGui.QDialogButtonBox.Ok)
-        ok_button.clicked.connect(self.accept)
-        self.layout().addWidget(button_box)
+        self._create_buttons()
 
     def _populate_language_group(self):
+        """Creates and fills the party of the dialog concerning the languages
+        that are involved in the termbase entries.
+
+        :rtype: None
+        """
         language_view = QtGui.QListWidget(self)
         for locale in self._model.get_languages():
             item = QtGui.QListWidgetItem()
@@ -236,6 +268,11 @@ class TermbasePropertyDialog(QtGui.QDialog):
         self.layout().addWidget(language_group)
 
     def _populate_stats_group(self):
+        """Creates and fills the statistics part of the dialog, displaying
+        the number of entries of the termbase and its total size on disk
+
+        :rtype: None
+        """
         stats_group = QtGui.QGroupBox('Statistics', self)
         stats_group.setLayout(QtGui.QGridLayout(stats_group))
         stats_group.layout().addWidget(
@@ -248,3 +285,13 @@ class TermbasePropertyDialog(QtGui.QDialog):
         stats_group.layout().addWidget(
             QtGui.QLabel(self._model.get_size(), stats_group), 1, 1)
         self.layout().addWidget(stats_group)
+
+    def _create_buttons(self):
+        """Creates the button box of the dialog.
+
+        :rtype: None
+        """
+        button_box = QtGui.QDialogButtonBox(self)
+        ok_button = button_box.addButton(QtGui.QDialogButtonBox.Ok)
+        ok_button.clicked.connect(self.accept)
+        self.layout().addWidget(button_box)

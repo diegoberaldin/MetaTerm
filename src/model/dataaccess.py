@@ -128,10 +128,21 @@ class Termbase(object):
             return [l[0] for l in session.query(mapping.Language.locale)]
 
     def get_entry_number(self):
+        """Returns the total number of entries that exist in the termbase.
+
+        :returns: number of entries of the termbase
+        :rtype: int
+        """
         with self.get_session() as session:
             return session.query(mapping.Entry).count()
 
     def get_size(self):
+        """Queries the underlying file system for the total size that the
+        currently open termbase requires.
+
+        :returns: a string representing the total size of the termbase
+        :rtype: int
+        """
         size = os.path.getsize(self.get_termbase_file_name())
         return self.format_size(size)
 
