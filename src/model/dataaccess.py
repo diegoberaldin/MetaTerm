@@ -165,6 +165,11 @@ class Termbase(object):
         else:
             return '{0:.2f} GB'.format(float(space) / 1073741824)
 
+    def get_entries(self):
+        with self.get_session() as session:
+            return [Entry(e.entry_id, self) for e in
+                    session.query(mapping.Entry)]
+
 
 class Schema(object):
     """Instances of this class are used to manipulate the information schema
@@ -254,6 +259,14 @@ class Entry(object):
         """
         self._tb = termbase
         self.entry_id = entry_id
+
+    def get_vedette(self, locale):
+        if not locale:
+            return
+        with self._tb.get_session() as session:
+            return session.query(mapping.Term.lemma).filter(
+                mapping.Term.entry_id == self.entry_id,
+                mapping.Term.vedette == True).scalar()
 
     def create_term(self, lemma, locale, vedette):
         """Adds a new term to the terminological entry.
