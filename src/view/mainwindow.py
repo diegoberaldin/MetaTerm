@@ -186,12 +186,19 @@ class MainWidget(QtGui.QSplitter):
             """
         super(MainWidget, self).__init__(parent)
         self.fire_event.connect(self.parent().fire_event)
-        self.addWidget(EntryList(self))
-        self.addWidget(EntryDisplay(self))
+        entry_list = EntryList(self)
+        entry_display = EntryDisplay(self)
+        # puts everything together
+        self.addWidget(entry_list)
+        self.addWidget(entry_display)
 
 
 class EntryList(QtGui.QWidget):
     """List of all the entries that are stored in the current termbase.
+    """
+
+    fire_event = QtCore.pyqtSignal(str, dict)
+    """Signal emitted to notify the controller about events.
     """
 
     def __init__(self, parent):
@@ -203,9 +210,13 @@ class EntryList(QtGui.QWidget):
         """
         super(EntryList, self).__init__(parent)
         self._view = QtGui.QListView(self)
+        selector = LanguageSelector(self)
+        # puts everything together
         self.setLayout(QtGui.QVBoxLayout(self))
-        self.layout().addWidget(LanguageSelector(self))
+        self.layout().addWidget(selector)
         self.layout().addWidget(self._view)
+        # signal-slot connection
+        selector.fire_event.connect(self.fire_event)
 
 
 class LanguageSelector(QtGui.QWidget):
@@ -214,8 +225,8 @@ class LanguageSelector(QtGui.QWidget):
     language in which the termbase is displayed.
     """
 
-    language_changed = QtCore.pyqtSignal(str)
-    """Signal emitted whenever the user changes the language selection.
+    fire_event = QtCore.pyqtSignal(str, dict)
+    """Signal emitted to notify the controller about events.
     """
 
     def __init__(self, parent):
@@ -267,7 +278,8 @@ class LanguageSelector(QtGui.QWidget):
         language_name = self._language_combo.currentText()
         inverted_languages = {value: key for key, value in
                               mdl.DEFAULT_LANGUAGES.items()}
-        self.language_changed.emit(inverted_languages[language_name])
+        self.fire_event.emit('language_changed',
+                             {'locale': inverted_languages[language_name]})
 
 
 class EntryDisplay(QtGui.QWidget):
