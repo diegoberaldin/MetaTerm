@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-.. currentmodule:: src.model.termbasedefinitionmodel
+.. currentmodule:: src.model.itemmodels.termbasedefinition
 
 This model contains the ``QtCore.QAbstractItemModel`` subclass that is used
 to represent the termbase definition model during termbase configuration. The
