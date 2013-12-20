@@ -40,6 +40,7 @@ class MainWindow(QtGui.QMainWindow):
         self._close_tb_action = QtGui.QAction('Close...', self)
         self._close_tb_action.triggered.connect(
             lambda: self.fire_event.emit('close_termbase', {}))
+        self._close_tb_action.setEnabled(False)
         self._delete_tb_action = QtGui.QAction('Delete...', self)
         self._delete_tb_action.triggered.connect(self._handle_delete_termbase)
         self._show_tb_properties_action = QtGui.QAction('Properties...', self)
@@ -79,8 +80,8 @@ class MainWindow(QtGui.QMainWindow):
         termbase_menu.addAction(self._show_tb_properties_action)
         termbase_menu.addAction(self._quit_action)
         self.menuBar().addMenu(termbase_menu)
-        # edit menu
-        edit_menu = QtGui.QMenu('Edit', self)
+        # entry menu
+        edit_menu = QtGui.QMenu('Entry', self)
         self.menuBar().addMenu(edit_menu)
         # view menu
         view_menu = QtGui.QMenu('View', self)
@@ -130,6 +131,7 @@ class MainWindow(QtGui.QMainWindow):
         :rtype: None
         """
         self._show_tb_properties_action.setEnabled(True)
+        self._close_tb_action.setEnabled(True)
 
     @QtCore.pyqtSlot()
     def _handle_termbase_closed(self):
@@ -139,6 +141,7 @@ class MainWindow(QtGui.QMainWindow):
         :rtype: None
         """
         self._show_tb_properties_action.setEnabled(False)
+        self._close_tb_action.setEnabled(False)
 
     @QtCore.pyqtSlot()
     def _handle_delete_termbase(self):
@@ -185,12 +188,21 @@ class MainWidget(QtGui.QSplitter):
             :rtype: MainWidget
             """
         super(MainWidget, self).__init__(parent)
+        self._model = None
         self.fire_event.connect(self.parent().fire_event)
-        entry_list = EntryList(self)
-        entry_display = EntryDisplay(self)
+        self._entry_list = EntryList(self)
+        self._entry_display = EntryDisplay(self)
         # puts everything together
-        self.addWidget(entry_list)
-        self.addWidget(entry_display)
+        self.addWidget(self._entry_list)
+        self.addWidget(self._entry_display)
+
+    @property
+    def model(self):
+        return self._model
+
+    @model.setter
+    def model(self, value):
+        self._entry_list.model = value
 
 
 class EntryList(QtGui.QWidget):
@@ -209,6 +221,7 @@ class EntryList(QtGui.QWidget):
         :rtype: EntryList
         """
         super(EntryList, self).__init__(parent)
+        self._model = None
         self._view = QtGui.QListView(self)
         selector = LanguageSelector(self)
         # puts everything together
@@ -217,6 +230,15 @@ class EntryList(QtGui.QWidget):
         self.layout().addWidget(self._view)
         # signal-slot connection
         selector.fire_event.connect(self.fire_event)
+
+    @property
+    def model(self):
+        return self._model
+
+    @model.setter
+    def model(self, value):
+        self._model = value
+        self._view.setModel(self._model)
 
 
 class LanguageSelector(QtGui.QWidget):
@@ -276,10 +298,11 @@ class LanguageSelector(QtGui.QWidget):
         :rtype: None
         """
         language_name = self._language_combo.currentText()
-        inverted_languages = {value: key for key, value in
-                              mdl.DEFAULT_LANGUAGES.items()}
-        self.fire_event.emit('language_changed',
-                             {'locale': inverted_languages[language_name]})
+        if language_name:
+            inverted_languages = {value: key for key, value in
+                                  mdl.DEFAULT_LANGUAGES.items()}
+            self.fire_event.emit('language_changed',
+                                 {'locale': inverted_languages[language_name]})
 
 
 class EntryDisplay(QtGui.QWidget):
