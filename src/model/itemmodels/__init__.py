@@ -7,3 +7,7 @@ This package contains all the ``QtCore.QAbstractItemModel`` subclasses that are
 used to those (tree and list) models which are to be connected to standard
 library view in order to reflect part of the information stored in the termbase.
 """
+
+from src.model.itemmodels.termbasedefinition import (TermbaseDefinitionModel,
+                                                     PropertyNode)
+from src.model.itemmodels.entry import EntryModel
