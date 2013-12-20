@@ -14,6 +14,7 @@ from src import model as mdl
 from src import view as gui
 from src.controller.abstract import AbstractController
 from src.controller.newtermbase import NewTermbaseController
+from src.controller.entry import EntryController
 
 
 class MainController(AbstractController):
@@ -42,8 +43,18 @@ class MainController(AbstractController):
         :type name: str
         :rtype: None
         """
-        mdl.get_main_model().open_termbase = mdl.Termbase(name)
+        # creates a termbase and saves it in the main application model
+        termbase = mdl.Termbase(name)
+        mdl.get_main_model().open_termbase = termbase
+        # prints a message in the view
         self._view.display_message('Currently working on {0}'.format(name))
+        # creates an entry model
+        entry_model = mdl.EntryModel(termbase)
+        # initializes the entry-specific part of the view with the entry model
+        entry_view = self._view.centralWidget()
+        entry_view.model = entry_model
+        # creates child controller
+        entry_controller = EntryController(entry_model, entry_view)
 
     def _handle_new_termbase(self):
         """Starts the wizard used to create a new termbase.
@@ -57,9 +68,6 @@ class MainController(AbstractController):
         # creates the controller
         new_termbase_controller = NewTermbaseController(
             termbase_definition_model, wizard)
-        # signal-slot connections
-        new_termbase_controller.new_termbase_created.connect(
-            self._handle_open_termbase)
 
     def _handle_close_termbase(self):
         """Closes the currently open termbase.
