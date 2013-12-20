@@ -214,6 +214,10 @@ class LanguageSelector(QtGui.QWidget):
     language in which the termbase is displayed.
     """
 
+    language_changed = QtCore.pyqtSignal(str)
+    """Signal emitted whenever the user changes the language selection.
+    """
+
     def __init__(self, parent):
         """Constructor method.
 
@@ -226,10 +230,13 @@ class LanguageSelector(QtGui.QWidget):
         self.layout().addWidget(QtGui.QLabel('Language', self))
         self._language_combo = QtGui.QComboBox(self)
         self.layout().addWidget(self._language_combo)
+        # signal-slot connection
         mdl.get_main_model().termbase_opened.connect(
             self._regenerate_language_list)
         mdl.get_main_model().termbase_closed.connect(
             self._regenerate_language_list)
+        self._language_combo.currentIndexChanged.connect(
+            self._handle_index_changed)
 
     @QtCore.pyqtSlot()
     def _regenerate_language_list(self):
@@ -247,7 +254,32 @@ class LanguageSelector(QtGui.QWidget):
         model = QtGui.QStringListModel(locale_list)
         self._language_combo.setModel(model)
 
+    @QtCore.pyqtSlot(int)
+    def _handle_index_changed(self, index):
+        """Determines the locale of the currently selected index in the
+        language combobox and has the language selector to emit the right
+        signal (with the current locale passed as a parameter)
+
+        :param index: index of the combobox in the language selector
+        :type index: int
+        :rtype: None
+        """
+        language_name = self._language_combo.currentText()
+        inverted_languages = {value: key for key, value in
+                              mdl.DEFAULT_LANGUAGES.items()}
+        self.language_changed.emit(inverted_languages[language_name])
+
 
 class EntryDisplay(QtGui.QWidget):
+    """This class is used to model the main part of the application GUI, where
+    terminological entries are displayed, edited and created.
+    """
+
     def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the containing (main) widget
+        :type parent: QtGui.QWidget
+        :rtype: EntryDisplay
+        """
         super(EntryDisplay, self).__init__(parent)
