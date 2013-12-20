@@ -47,6 +47,8 @@ class MainWindow(QtGui.QMainWindow):
         self._show_tb_properties_action.triggered.connect(
             self._handle_show_termbase_properties)
         self._show_tb_properties_action.setEnabled(False)
+        self._create_entry_action = QtGui.QAction('Create new', self)
+        self._create_entry_action.triggered.connect(self._handle_create_entry)
         self._quit_action = QtGui.QAction('Quit', self)
         self._quit_action.triggered.connect(lambda: QtGui.qApp.quit())
         self._about_qt_action = QtGui.QAction('About Qt', self)
@@ -173,6 +175,10 @@ class MainWindow(QtGui.QMainWindow):
         dialog = TermbasePropertyDialog(self)
         dialog.exec()
 
+    @QtCore.pyqtSlot()
+    def _handle_create_entry(self):
+        self.centralWidget().create_entry()
+
 
 class MainWidget(QtGui.QSplitter):
     """Central widget that is displayed inside the application main window.
@@ -203,6 +209,9 @@ class MainWidget(QtGui.QSplitter):
     @model.setter
     def model(self, value):
         self._entry_list.model = value
+
+    def create_entry(self):
+        pass
 
 
 class EntryList(QtGui.QWidget):
