@@ -18,3 +18,6 @@ class EntryController(AbstractController):
 
     def _handle_language_changed(self, locale):
         self._model.language = locale
+
+    def _handle_new_entry(self):
+        print('vuoi creare una nuova voce')

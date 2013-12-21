@@ -23,7 +23,7 @@ class NewTermbaseController(AbstractController):
     """
 
     def __init__(self, model, wizard):
-        """Constructor
+        """Constructor method.
 
         :param model: reference to the model
         :type model: mdl.TermbaseDefinitionModel

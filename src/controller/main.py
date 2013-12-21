@@ -10,6 +10,7 @@ processing all those events that are generated there.
 
 import os
 
+from PyQt4 import QtCore
 from src import model as mdl
 from src import view as gui
 from src.controller.abstract import AbstractController
@@ -52,9 +53,10 @@ class MainController(AbstractController):
         entry_model = mdl.EntryModel(termbase)
         # initializes the entry-specific part of the view with the entry model
         entry_view = self._view.centralWidget()
-        entry_view.model = entry_model
+        entry_view.entry_model = entry_model
         # creates child controller
-        entry_controller = EntryController(entry_model, entry_view)
+        self._children['entry'] = EntryController(entry_model, entry_view)
+        self._view.fire_event.connect(self._children['entry'].handle_event)
 
     def _handle_new_termbase(self):
         """Starts the wizard used to create a new termbase.
@@ -66,11 +68,17 @@ class MainController(AbstractController):
         # creates the view
         wizard = gui.NewTermbaseWizard(termbase_definition_model, self._view)
         # creates the controller
-        new_termbase_controller = NewTermbaseController(
+        self._children['new_termbase'] = NewTermbaseController(
             termbase_definition_model, wizard)
         # signal-slot connection
         wizard.accepted.connect(
             lambda: self._handle_open_termbase(wizard.field('termbase_name')))
+        wizard.accepted.connect(self._handle_wizard_exited)
+        wizard.rejected.connect(self._handle_wizard_exited)
+
+    @QtCore.pyqtSlot()
+    def _handle_wizard_exited(self):
+        del self._children['new_termbase']
 
     def _handle_close_termbase(self):
         """Closes the currently open termbase.
@@ -78,6 +86,7 @@ class MainController(AbstractController):
         :rtype: None
         """
         mdl.get_main_model().open_termbase = None
+        del self._children['entry']
         self._view.display_message('Current termbase closed.')
 
     def _handle_delete_termbase(self, name):
