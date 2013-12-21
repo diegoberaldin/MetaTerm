@@ -68,6 +68,9 @@ class MainController(AbstractController):
         # creates the controller
         new_termbase_controller = NewTermbaseController(
             termbase_definition_model, wizard)
+        # signal-slot connection
+        wizard.accepted.connect(
+            lambda: self._handle_open_termbase(wizard.field('termbase_name')))
 
     def _handle_close_termbase(self):
         """Closes the currently open termbase.

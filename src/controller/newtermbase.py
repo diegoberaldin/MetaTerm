@@ -21,15 +21,6 @@ class NewTermbaseController(AbstractController):
     processing the data entered by the user when they confirm that a new
     termbase must be created.
     """
-    new_termbase_created = QtCore.pyqtSignal(str)
-    """Signal emitted when a new termbase has been created. The name of the
-     newly created termbase must be passed as a parameter when the signal
-     is emitted."""
-
-    wizard_canceled = QtCore.pyqtSignal()
-    """Signal emitted whenever the uses exits the wizard abnormally (this is
-    needed by the main controller to deallocate its child controller).
-    """
 
     def __init__(self, model, wizard):
         """Constructor
@@ -42,8 +33,6 @@ class NewTermbaseController(AbstractController):
         """
         super(NewTermbaseController, self).__init__()
         self._view = wizard
-        self._view.rejected.connect(lambda: self.wizard_canceled.emit())
-        self._view.accepted.connect(self._handle_termbase_created)
         self._view.fire_event.connect(self.handle_event)
         self._model = model
 
