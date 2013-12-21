@@ -20,4 +20,4 @@ class EntryController(AbstractController):
         self._model.language = locale
 
     def _handle_new_entry(self):
-        print('vuoi creare una nuova voce')
+        self._view.entry_display.display_create_entry_form()

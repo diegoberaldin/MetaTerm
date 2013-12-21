@@ -11,6 +11,52 @@ from PyQt4 import QtCore, QtGui
 from src import model as mdl
 
 
+class EntryWidget(QtGui.QSplitter):
+    """Central widget that is displayed inside the application main window,
+    whose purpose is to display a list of the entries of the current termbase
+    (if any) and a central part which acts as a form to create/edit entries
+    or a display to show terminological information about them.
+    """
+    fire_event = QtCore.pyqtSignal(str, dict)
+    """Signal emitted when an event needs to be notified to the controller."""
+
+    def __init__(self, parent):
+        """Constructor method
+
+            :param parent: reference to the main window
+            :type parent: QtCore.QWidget
+            :rtype: EntryWidget
+            """
+        super(EntryWidget, self).__init__(parent)
+        self._entry_model = None
+        self.fire_event.connect(self.parent().fire_event)
+        self.entry_list = EntryList(self)
+        self.entry_display = EntryDisplay(self)
+        # puts everything together
+        self.addWidget(self.entry_list)
+        self.addWidget(self.entry_display)
+
+    @property
+    def entry_model(self):
+        """Returns a reference to the entry model that is currently used in
+        this widget to display the entry list.
+
+        :return: reference to the current entry model
+        """
+        return self._entry_model
+
+    @entry_model.setter
+    def entry_model(self, value):
+        """Allows the controller to inject a new reference to the model when
+        it is needed.
+
+        :param value: reference to the new model
+        :type value: QtCore.QAbstractItemModel
+        :rtype: None
+        """
+        self.entry_list.model = value
+
+
 class EntryList(QtGui.QWidget):
     """List of all the entries that are stored in the current termbase.
     """
@@ -122,3 +168,24 @@ class EntryDisplay(QtGui.QWidget):
         :rtype: EntryDisplay
         """
         super(EntryDisplay, self).__init__(parent)
+        self.setLayout(QtGui.QVBoxLayout(self))
+        self._content = None
+
+    def _clear_content(self):
+        if self._content:
+            self.layout().removeWidget(self._content)
+            self._content.deleteLater()
+
+    def _display_content(self, content):
+        self.layout().addWidget(content)
+
+    def display_create_entry_form(self):
+        self._clear_content()
+        self._display_content(CreateEntryForm(self))
+
+
+class CreateEntryForm(QtGui.QWidget):
+    def __init__(self, parent):
+        super(CreateEntryForm, self).__init__(parent)
+        self.setLayout(QtGui.QFormLayout(self))
+        self.layout().addWidget(QtGui.QLabel('Vuoi creare una voce', self))

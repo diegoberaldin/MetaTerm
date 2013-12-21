@@ -3,14 +3,15 @@
 """
 .. currentmodule:: src.view.main
 
-This module contains the definition of the application main window and  of the
-central widget that is going to be displayed inside it.
+This module contains the definition of the application main window with its
+toolbar and status bar, plus the main actions and the slot which are activated
+when the latter are triggered.
 """
 
 from PyQt4 import QtGui, QtCore
 from src.view.dialogs import SelectTermbaseDialog, TermbasePropertyDialog
+from src.view.entry import EntryWidget
 from src import model as mdl
-from src.view.entry import EntryDisplay, EntryList
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -173,49 +174,3 @@ class MainWindow(QtGui.QMainWindow):
         """
         dialog = TermbasePropertyDialog(self)
         dialog.exec()
-
-
-class EntryWidget(QtGui.QSplitter):
-    """Central widget that is displayed inside the application main window,
-    whose purpose is to display a list of the entries of the current termbase
-    (if any) and a central part which acts as a form to create/edit entries
-    or a display to show terminological information about them.
-    """
-    fire_event = QtCore.pyqtSignal(str, dict)
-    """Signal emitted when an event needs to be notified to the controller."""
-
-    def __init__(self, parent):
-        """Constructor method
-
-            :param parent: reference to the main window
-            :type parent: QtCore.QWidget
-            :rtype: EntryWidget
-            """
-        super(EntryWidget, self).__init__(parent)
-        self._entry_model = None
-        self.fire_event.connect(self.parent().fire_event)
-        self._entry_list = EntryList(self)
-        self._entry_display = EntryDisplay(self)
-        # puts everything together
-        self.addWidget(self._entry_list)
-        self.addWidget(self._entry_display)
-
-    @property
-    def entry_model(self):
-        """Returns a reference to the entry model that is currently used in
-        this widget to display the entry list.
-
-        :return: reference to the current entry model
-        """
-        return self._entry_model
-
-    @entry_model.setter
-    def entry_model(self, value):
-        """Allows the controller to inject a new reference to the model when
-        it is needed.
-
-        :param value: reference to the new model
-        :type value: QtCore.QAbstractItemModel
-        :rtype: None
-        """
-        self._entry_list.model = value
