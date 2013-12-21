@@ -35,6 +35,7 @@ class EntryWidget(QtGui.QSplitter):
         # puts everything together
         self.addWidget(self.entry_list)
         self.addWidget(self.entry_display)
+        self.setSizes([200, 400])
 
     @property
     def entry_model(self):
