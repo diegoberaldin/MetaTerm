@@ -18,14 +18,14 @@ class MainWindow(QtGui.QMainWindow):
     """
     # class-specific signals
     fire_event = QtCore.pyqtSignal(str, dict)
-    'Signal emitted whenever an event is fired in the application main window.'
+    """Signal emitted when an event is fired in the application main window."""
 
     # a couple of class constants
     _MIN_WIDTH = 500
-    'Minimum width of the application main window.'
+    """Minimum width of the application main window."""
 
     _MIN_HEIGHT = 300
-    'Minimum height of the application main window.'
+    """Minimum height of the application main window."""
 
     def __init__(self):
         """Constructor method for the main window.
@@ -35,7 +35,8 @@ class MainWindow(QtGui.QMainWindow):
         super(MainWindow, self).__init__()
         # action initialization (they are member data after all, aren't they?)
         self._new_tb_action = QtGui.QAction('New...', self)
-        self._new_tb_action.triggered.connect(self._handle_new_termbase)
+        self._new_tb_action.triggered.connect(
+            lambda: self.fire_event.emit('new_termbase', {}))
         self._open_tb_action = QtGui.QAction('Open...', self)
         self._open_tb_action.triggered.connect(self._handle_open_termbase)
         self._close_tb_action = QtGui.QAction('Close...', self)
@@ -49,7 +50,9 @@ class MainWindow(QtGui.QMainWindow):
             self._handle_show_termbase_properties)
         self._show_tb_properties_action.setEnabled(False)
         self._create_entry_action = QtGui.QAction('Create new', self)
-        self._create_entry_action.triggered.connect(self._handle_create_entry)
+        self._create_entry_action.setEnabled(False)
+        self._create_entry_action.triggered.connect(
+            lambda: self.fire_event.emit('new_entry', {}))
         self._quit_action = QtGui.QAction('Quit', self)
         self._quit_action.triggered.connect(lambda: QtGui.qApp.quit())
         self._about_qt_action = QtGui.QAction('About Qt', self)
@@ -57,7 +60,7 @@ class MainWindow(QtGui.QMainWindow):
             lambda: QtGui.QMessageBox.aboutQt(self, 'About Qt'))
         self._create_menus()
         # sets the central widget
-        self.setCentralWidget(MainWidget(self))
+        self.setCentralWidget(EntryWidget(self))
         # window size and title
         self.setMinimumSize(self._MIN_WIDTH, self._MIN_HEIGHT)
         self.setWindowTitle('MetaTerm')
@@ -84,8 +87,9 @@ class MainWindow(QtGui.QMainWindow):
         termbase_menu.addAction(self._quit_action)
         self.menuBar().addMenu(termbase_menu)
         # entry menu
-        edit_menu = QtGui.QMenu('Entry', self)
-        self.menuBar().addMenu(edit_menu)
+        entry_menu = QtGui.QMenu('Entry', self)
+        entry_menu.addAction(self._create_entry_action)
+        self.menuBar().addMenu(entry_menu)
         # view menu
         view_menu = QtGui.QMenu('View', self)
         self.menuBar().addMenu(view_menu)
@@ -102,14 +106,6 @@ class MainWindow(QtGui.QMainWindow):
         :rtype: None
         """
         self.statusBar().showMessage(message)
-
-    @QtCore.pyqtSlot()
-    def _handle_new_termbase(self):
-        """This slot does nothing except activating the new termbase wizard.
-
-        :rtype: None
-        """
-        self.fire_event.emit('new_termbase', {})
 
     @QtCore.pyqtSlot()
     def _handle_open_termbase(self):
@@ -135,6 +131,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         self._show_tb_properties_action.setEnabled(True)
         self._close_tb_action.setEnabled(True)
+        self._create_entry_action.setEnabled(True)
 
     @QtCore.pyqtSlot()
     def _handle_termbase_closed(self):
@@ -145,6 +142,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         self._show_tb_properties_action.setEnabled(False)
         self._close_tb_action.setEnabled(False)
+        self._create_entry_action.setEnabled(False)
 
     @QtCore.pyqtSlot()
     def _handle_delete_termbase(self):
@@ -176,26 +174,25 @@ class MainWindow(QtGui.QMainWindow):
         dialog = TermbasePropertyDialog(self)
         dialog.exec()
 
-    @QtCore.pyqtSlot()
-    def _handle_create_entry(self):
-        self.centralWidget().create_entry()
 
-
-class MainWidget(QtGui.QSplitter):
-    """Central widget that is displayed inside the application main window.
+class EntryWidget(QtGui.QSplitter):
+    """Central widget that is displayed inside the application main window,
+    whose purpose is to display a list of the entries of the current termbase
+    (if any) and a central part which acts as a form to create/edit entries
+    or a display to show terminological information about them.
     """
     fire_event = QtCore.pyqtSignal(str, dict)
-    'Signal emitted whenever an event needs to be notified to the controller.'
+    """Signal emitted when an event needs to be notified to the controller."""
 
     def __init__(self, parent):
         """Constructor method
 
             :param parent: reference to the main window
-            :type parent: QWidget
-            :rtype: MainWidget
+            :type parent: QtCore.QWidget
+            :rtype: EntryWidget
             """
-        super(MainWidget, self).__init__(parent)
-        self._model = None
+        super(EntryWidget, self).__init__(parent)
+        self._entry_model = None
         self.fire_event.connect(self.parent().fire_event)
         self._entry_list = EntryList(self)
         self._entry_display = EntryDisplay(self)
@@ -204,12 +201,21 @@ class MainWidget(QtGui.QSplitter):
         self.addWidget(self._entry_display)
 
     @property
-    def model(self):
-        return self._model
+    def entry_model(self):
+        """Returns a reference to the entry model that is currently used in
+        this widget to display the entry list.
 
-    @model.setter
-    def model(self, value):
+        :return: reference to the current entry model
+        """
+        return self._entry_model
+
+    @entry_model.setter
+    def entry_model(self, value):
+        """Allows the controller to inject a new reference to the model when
+        it is needed.
+
+        :param value: reference to the new model
+        :type value: QtCore.QAbstractItemModel
+        :rtype: None
+        """
         self._entry_list.model = value
-
-    def create_entry(self):
-        pass
