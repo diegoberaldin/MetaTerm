@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-.. currentmodule:: src.view.newtermbasewizard
+.. currentmodule:: src.view.newtermbase
 
 This module contains the classes used to define the wizard that will guide the
 user through the creation of a new terminological database.
