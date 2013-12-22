@@ -23,6 +23,14 @@ class NewTermbaseWizard(QtGui.QWizard):
     """Signal emitted so that events can be handled by the controller.
     """
 
+    MINIMUM_WIDTH = 500
+    """Minimum width of the wizard window.
+    """
+
+    MINIMUM_HEIGHT = 400
+    """Minimum height of the wizard window.
+    """
+
     def __init__(self, termbase_definition_model, parent):
         """Constructor method.
 
@@ -42,7 +50,7 @@ class NewTermbaseWizard(QtGui.QWizard):
         for page in self._pages:
             self.addPage(page)
         self._pages[2].fire_event.connect(self.fire_event)
-        self.setMinimumSize(500, 400)
+        self.setMinimumSize(self.MINIMUM_WIDTH, self.MINIMUM_HEIGHT)
         self.setVisible(True)
 
     def get_termbase_name(self):
@@ -237,16 +245,18 @@ class DefinitionModelPage(QtGui.QWizardPage):
         self.setSubTitle(
             'Create the structure of the termbase by specifying the set of '
             'properties that its entries will be made up of')
-        self.setLayout(QtGui.QHBoxLayout(self))
         self._view = QtGui.QTreeView(self)
         self._model = self.parent().termbase_definition_model
         self._view.setModel(self._model)
-        self._view.setFixedWidth(200)
         self._view.pressed.connect(self._handle_view_pressed)
         self._form = QtGui.QWidget(self)
-        self._form.setMinimumWidth(250)
-        self.layout().addWidget(self._view)
-        self.layout().addWidget(self._form)
+        # puts everything together
+        splitter = QtGui.QSplitter(self)
+        splitter.addWidget(self._view)
+        splitter.addWidget(self._form)
+        splitter.setSizes([200, 300])
+        self.setLayout(QtGui.QVBoxLayout(self))
+        self.layout().addWidget(splitter)
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def _handle_view_pressed(self, index):
