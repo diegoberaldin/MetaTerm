@@ -171,18 +171,49 @@ class EntryDisplay(QtGui.QWidget):
         super(EntryDisplay, self).__init__(parent)
         self.setLayout(QtGui.QVBoxLayout(self))
         self._content = None
+        # shows greeting
+        self.display_welcome_screen()
 
-    def _clear_content(self):
+    def _display_content(self, content):
         if self._content:
             self.layout().removeWidget(self._content)
             self._content.deleteLater()
-
-    def _display_content(self, content):
-        self.layout().addWidget(content)
+        self._content = content
+        self.layout().addWidget(self._content)
 
     def display_create_entry_form(self):
-        self._clear_content()
         self._display_content(CreateEntryForm(self))
+
+    def display_welcome_screen(self):
+        self._display_content(WelcomeScreen(self))
+
+
+class WelcomeScreen(QtGui.QWidget):
+    def __init__(self, parent):
+        super(WelcomeScreen, self).__init__(parent)
+        text = ('<h1>Welcome to MetaTerm!</h1>'
+                '<strong>MetaTerm</strong> is an application that helps you '
+                'creating and maintaining terminological databases .<br /> '
+                'If you want to create a new termbase go to <code>Termbase &gt;'
+                'New...</code> in order to start the creation wizard.<br />'
+                'To open an existing termbase go to <code>Termbase &gt; '
+                'Open...</code> and choose one of the available items.')
+        label = QtGui.QLabel(text, self)
+        label.setWordWrap(True)
+        self.setLayout(QtGui.QVBoxLayout(self))
+        self.layout().addWidget(label)
+
+    # def paintEvent(self, event):
+    #     """Overridden to have the stylesheet applied.
+    #
+    #     :param event: reference to the paint event (unused)
+    #     :rtype: None
+    #     """
+    #     option = QtGui.QStyleOption()
+    #     option.init(self)
+    #     painter = QtGui.QPainter(self)
+    #     style = self.style()
+    #     style.drawPrimitive(QtGui.QStyle.PE_Widget, option, painter, self)
 
 
 class CreateEntryForm(QtGui.QWidget):

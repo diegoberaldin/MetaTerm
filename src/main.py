@@ -13,6 +13,10 @@ from PyQt4 import QtGui
 
 from src import model, controller, view
 
+_CSS = 'view/res/style.qss'
+"""Location of the application stylesheet (Qt StyleSheet).
+"""
+
 
 def initialize_logging():
     """Initializes the logging module for use throughout the whole application,
@@ -41,12 +45,26 @@ class MetaTermApplication(QtGui.QApplication):
         initialize_logging()
         # initializes the termbase folder
         model.initialize_tb_folder()
+        # styles the application
+        self._apply_style()
         # creates the view
         self._view = view.MainWindow()
         # creates the controller
         self._controller = controller.MainController(self._view)
         # has the view drawn on the screen (finally)
         self._view.show()
+
+    def _apply_style(self):
+        """Applies the stylesheet to the whole application.
+
+        :rtype: None
+        """
+        try:
+            with open(_CSS, 'r') as file_handle:
+                style = file_handle.read()
+            self.setStyleSheet(style)
+        except IOError as exc:
+            print(exc.message)
 
 
 # what to to when this module is executed as the main module (which it is)

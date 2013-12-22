@@ -21,3 +21,6 @@ class EntryController(AbstractController):
 
     def _handle_new_entry(self):
         self._view.entry_display.display_create_entry_form()
+
+    def __del__(self):  # TODO: I'm not sure this is the right thing to do
+        self._view.entry_display.display_welcome_screen()
