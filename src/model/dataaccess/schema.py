@@ -76,7 +76,10 @@ class Schema(object):
         :rtype: list
         """
         assert level in ['E', 'L', 'T']
-        pass  # TODO unfinished
+        with self._tb.get_session() as session:
+            return [Property(p.prop_id, p.name, self._tb) for p in
+                    session.query(mapping.Property).filter(
+                        mapping.Property.level == level)]
 
 
 class Property(object):
@@ -97,7 +100,7 @@ class Property(object):
         """
         self.prop_id = prop_id
         self.name = name
-        self._termbase = termbase
+        self._tb = termbase
 
     @property
     def property_type(self):
@@ -107,7 +110,7 @@ class Property(object):
         :return: an indication of the type in ``['T', 'I', 'P']``
         :rtype: str
         """
-        with self._termbase.get_session() as session:
+        with self._tb.get_session() as session:
             return session.query(mapping.Property.prop_type).filter(
                 mapping.Property.prop_id == self.prop_id).scalar()
 
@@ -121,7 +124,7 @@ class Property(object):
         :return: a list (possibly empty) of all legal values
         :rtype: list
         """
-        with self._termbase.get_session() as session:
+        with self._tb.get_session() as session:
             return [v[0] for v in
                     session.query(mapping.PickListValue.value).filter(
                         mapping.PickListValue.prop_id == self.prop_id)]

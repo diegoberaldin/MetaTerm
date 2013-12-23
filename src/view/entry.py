@@ -136,7 +136,7 @@ class LanguageSelector(QtGui.QWidget):
         """
         if mdl.get_main_model().open_termbase:  # termbase opened
             locale_list = [mdl.DEFAULT_LANGUAGES[locale] for locale in
-                           mdl.get_main_model().open_termbase.get_languages()]
+                           mdl.get_main_model().open_termbase.languages]
         else:  # termbase closed
             locale_list = []
         model = QtGui.QStringListModel(locale_list)
@@ -239,7 +239,6 @@ class WelcomeScreen(QtGui.QWidget):
 
 
 class CreateEntryForm(QtGui.QWidget):
-
     fire_event = QtCore.pyqtSignal(str, dict)
     """Signal emitted to notify the controller about events.
     """
@@ -253,10 +252,37 @@ class CreateEntryForm(QtGui.QWidget):
         """
         super(CreateEntryForm, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
-        self._populate_entry_fields()
+        self._fields = {}
+        self._populate_fields('E')
+        for locale in mdl.get_main_model().open_termbase.languages:
+            flag = QtGui.QLabel(self)
+            flag.setPixmap(
+                QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
+                    15))
+            label = QtGui.QLabel(
+                '<strong>{0}</strong>'.format(mdl.DEFAULT_LANGUAGES[locale]),
+                self)
+            self.layout().addRow(flag, label)
 
-    def _populate_entry_fields(self):
-        pass
+    def _populate_fields(self, level):
+        for prop in mdl.get_main_model().open_termbase.schema.get_properties(
+                level):
+            label = QtGui.QLabel(prop.name, self)
+            property_type = prop.property_type
+            if property_type == 'T':
+                field = QtGui.QTextEdit(self)
+                field.setMaximumHeight(30)
+                field.textChanged.connect(self._handle_entry_changed)
+            elif property_type == 'I':
+                field = QtGui.QLabel('da cambiare', self)
+            else:  # picklist
+                field = QtGui.QComboBox(self)
+                model = QtGui.QStringListModel(prop.values)
+                field.setModel(model)
+                field.currentIndexChanged(
+                    lambda unused_idx: self._handle_entry_changed())
+            self._fields[prop.prop_id] = field
+            self.layout().addRow(label, self._fields[prop.prop_id])
 
     @QtCore.pyqtSlot()
     def _handle_entry_changed(self):
