@@ -8,6 +8,10 @@ the application, which is the responsible of the event handling mechanisms.
 """
 
 from PyQt4 import QtCore
+import logging
+
+# reference to the logger for the controller package
+_LOG = logging.getLogger('src.controller')
 
 
 class AbstractController(QtCore.QObject):
@@ -40,4 +44,4 @@ class AbstractController(QtCore.QObject):
             try:  # this is the first and last little bit of black magic
                 getattr(self, method_name)(**params)
             except TypeError as exc:  # incorrect parameters
-                print(exc)
+                _LOG.exception(exc)
