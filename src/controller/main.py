@@ -104,3 +104,6 @@ class MainController(AbstractController):
             os.remove(file_name)
             self._view.display_message(
                 'Termbase {0} has been deleted.'.format(name))
+
+    def _handle_entry_changed(self):
+        print('the entry has been changed')

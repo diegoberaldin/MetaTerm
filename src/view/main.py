@@ -61,13 +61,15 @@ class MainWindow(QtGui.QMainWindow):
             lambda: QtGui.QMessageBox.aboutQt(self, 'About Qt'))
         self._create_menus()
         # sets the central widget
-        self.setCentralWidget(EntryWidget(self))
+        main_widget = EntryWidget(self)
+        self.setCentralWidget(main_widget)
         # window size and title
         self.setMinimumSize(self._MIN_WIDTH, self._MIN_HEIGHT)
         self.setWindowTitle('MetaTerm')
         # displays a message in the status bar
         self.statusBar().showMessage('Started.')
         # signal-slot connections
+        main_widget.fire_event.connect(self.fire_event)
         mdl.get_main_model().termbase_opened.connect(
             self._handle_termbase_opened)
         mdl.get_main_model().termbase_closed.connect(

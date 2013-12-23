@@ -29,13 +29,15 @@ class EntryWidget(QtGui.QSplitter):
             """
         super(EntryWidget, self).__init__(parent)
         self._entry_model = None
-        self.fire_event.connect(self.parent().fire_event)
         self.entry_list = EntryList(self)
         self.entry_display = EntryDisplay(self)
         # puts everything together
         self.addWidget(self.entry_list)
         self.addWidget(self.entry_display)
         self.setSizes([200, 400])
+        # signal-slot connection
+        self.entry_list.fire_event.connect(self.fire_event)
+        self.entry_display.fire_event.connect(self.fire_event)
 
     @property
     def entry_model(self):
@@ -161,6 +163,8 @@ class EntryDisplay(QtGui.QWidget):
     terminological entries are displayed, edited and created.
     """
 
+    fire_event = QtCore.pyqtSignal(str, dict)
+
     def __init__(self, parent):
         """Constructor method.
 
@@ -185,7 +189,9 @@ class EntryDisplay(QtGui.QWidget):
         self.layout().addWidget(self._content)
 
     def display_create_entry_form(self):
-        self._display_content(CreateEntryForm(self))
+        form = CreateEntryForm(self)
+        form.fire_event.connect(self.fire_event)
+        self._display_content(form)
 
     @QtCore.pyqtSlot()
     def display_welcome_screen(self):
@@ -221,7 +227,13 @@ class WelcomeScreen(QtGui.QWidget):
 
 
 class CreateEntryForm(QtGui.QWidget):
+
+    fire_event = QtCore.pyqtSignal(str, dict)
+
     def __init__(self, parent):
         super(CreateEntryForm, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
-        self.layout().addWidget(QtGui.QLabel('Vuoi creare una voce', self))
+
+    @QtCore.pyqtSlot()
+    def _handle_entry_changed(self):
+        self.fire_event.emit('entry_changed', {})
