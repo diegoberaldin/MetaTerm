@@ -164,11 +164,13 @@ class EntryDisplay(QtGui.QWidget):
     """
 
     fire_event = QtCore.pyqtSignal(str, dict)
+    """Signal emitted to notify the controller about events.
+    """
 
     def __init__(self, parent):
         """Constructor method.
 
-        :param parent: reference to the containing (main) widget
+        :param parent: reference to the container widget (the central widget)
         :type parent: QtGui.QWidget
         :rtype: EntryDisplay
         """
@@ -199,7 +201,17 @@ class EntryDisplay(QtGui.QWidget):
 
 
 class WelcomeScreen(QtGui.QWidget):
+    """This class is used to present a welcome screen in the ``EntryDisplay``
+    each time the application is started and a termbase is closed.
+    """
+
     def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the container widget
+        :type parent: QtGui.QWidget
+        :rtype: CreateEntryForm
+        """
         super(WelcomeScreen, self).__init__(parent)
         text = ('<h1>Welcome to MetaTerm!</h1>'
                 '<strong>MetaTerm</strong> is an application that helps you '
@@ -229,11 +241,24 @@ class WelcomeScreen(QtGui.QWidget):
 class CreateEntryForm(QtGui.QWidget):
 
     fire_event = QtCore.pyqtSignal(str, dict)
+    """Signal emitted to notify the controller about events.
+    """
 
     def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the container widget
+        :type parent: QtGui.QWidget
+        :rtype: CreateEntryForm
+        """
         super(CreateEntryForm, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
+        self._populate_entry_fields()
+
+    def _populate_entry_fields(self):
+        pass
 
     @QtCore.pyqtSlot()
     def _handle_entry_changed(self):
         self.fire_event.emit('entry_changed', {})
+
