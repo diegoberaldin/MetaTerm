@@ -27,7 +27,7 @@ class Schema(object):
         """
         self._tb = termbase
 
-    def create_property(self, name, level, prop_type='T', values=()):
+    def add_property(self, name, level, prop_type='T', values=()):
         """Adds a new property to the termbase.
 
         :param name: name of the property
@@ -39,7 +39,7 @@ class Schema(object):
         :param values: list of possible picklist values
         :type values: tuple
         :returns: the newly created property
-        :rtype: Property
+        :rtype: None
         """
         # it is impossible to create empty picklists
         assert prop_type != 'P' or values
@@ -53,7 +53,6 @@ class Schema(object):
                 value = mapping.PickListValue(prop_id=prop_id,
                                               value=picklist_value)
                 session.add(value)
-        return Property(prop_id, name)
 
     def delete_property(self, prop_id):
         """Deletes of a property from the termbase schema.

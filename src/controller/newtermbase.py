@@ -71,7 +71,7 @@ class NewTermbaseController(AbstractController):
         :rtype: None
         """
         for prop_dictionary in self._model.get_properties():
-            termbase.schema.create_property(**prop_dictionary)
+            termbase.schema.add_property(**prop_dictionary)
 
     def _handle_new_property(self, name, prop_type, level, values=()):
         """This event handler is activated whenever the user asks to add a new
