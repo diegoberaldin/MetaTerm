@@ -173,6 +173,9 @@ class EntryDisplay(QtGui.QWidget):
         self._content = None
         # shows greeting
         self.display_welcome_screen()
+        # signal-slot connection
+        mdl.get_main_model().termbase_closed.connect(
+            self.display_welcome_screen)
 
     def _display_content(self, content):
         if self._content:
@@ -184,6 +187,7 @@ class EntryDisplay(QtGui.QWidget):
     def display_create_entry_form(self):
         self._display_content(CreateEntryForm(self))
 
+    @QtCore.pyqtSlot()
     def display_welcome_screen(self):
         self._display_content(WelcomeScreen(self))
 
@@ -203,17 +207,17 @@ class WelcomeScreen(QtGui.QWidget):
         self.setLayout(QtGui.QVBoxLayout(self))
         self.layout().addWidget(label)
 
-    # def paintEvent(self, event):
-    #     """Overridden to have the stylesheet applied.
-    #
-    #     :param event: reference to the paint event (unused)
-    #     :rtype: None
-    #     """
-    #     option = QtGui.QStyleOption()
-    #     option.init(self)
-    #     painter = QtGui.QPainter(self)
-    #     style = self.style()
-    #     style.drawPrimitive(QtGui.QStyle.PE_Widget, option, painter, self)
+        # def paintEvent(self, event):
+        #     """Overridden to have the stylesheet applied.
+        #
+        #     :param event: reference to the paint event (unused)
+        #     :rtype: None
+        #     """
+        #     option = QtGui.QStyleOption()
+        #     option.init(self)
+        #     painter = QtGui.QPainter(self)
+        #     style = self.style()
+        #     style.drawPrimitive(QtGui.QStyle.PE_Widget, option, painter, self)
 
 
 class CreateEntryForm(QtGui.QWidget):
