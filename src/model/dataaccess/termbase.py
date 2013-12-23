@@ -123,7 +123,8 @@ class Termbase(object):
             language = mapping.Language(locale=locale)
             session.add(language)
 
-    def get_languages(self):
+    @property
+    def languages(self):
         """Returns an iterable with the locales stored in the current termbase.
 
         :returns: a list of all the termbase locales
@@ -132,7 +133,8 @@ class Termbase(object):
         with self.get_session() as session:
             return [l[0] for l in session.query(mapping.Language.locale)]
 
-    def get_entry_number(self):
+    @property
+    def entry_number(self):
         """Returns the total number of entries that exist in the termbase.
 
         :returns: number of entries of the termbase
@@ -141,7 +143,8 @@ class Termbase(object):
         with self.get_session() as session:
             return session.query(mapping.Entry).count()
 
-    def get_size(self):
+    @property
+    def size(self):
         """Queries the underlying file system for the total size that the
         currently open termbase requires.
 
@@ -170,7 +173,8 @@ class Termbase(object):
         else:
             return '{0:.2f} GB'.format(float(space) / 1073741824)
 
-    def get_entries(self):
+    @property
+    def entries(self):
         with self.get_session() as session:
             return [Entry(e.entry_id, self) for e in
                     session.query(mapping.Entry)]

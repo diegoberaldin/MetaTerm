@@ -6,7 +6,7 @@ from PyQt4 import QtCore
 class EntryModel(QtCore.QAbstractListModel):
     def __init__(self, termbase):
         super(EntryModel, self).__init__()
-        self._entries = termbase.get_entries()
+        self._entries = termbase.entries
         self._language = None
 
     @property

@@ -92,7 +92,7 @@ class TermbasePropertyDialog(QtGui.QDialog):
         :rtype: None
         """
         language_view = QtGui.QListWidget(self)
-        for locale in mdl.get_main_model().open_termbase.get_languages():
+        for locale in mdl.get_main_model().open_termbase.languages:
             item = QtGui.QListWidgetItem()
             item.setText(mdl.DEFAULT_LANGUAGES[locale])
             item.setIcon(QtGui.QIcon(':/flags/{0}.png'.format(locale)))
@@ -114,12 +114,12 @@ class TermbasePropertyDialog(QtGui.QDialog):
             QtGui.QLabel('Number of entries:', stats_group), 0, 0)
         tb = mdl.get_main_model().open_termbase
         stats_group.layout().addWidget(
-            QtGui.QLabel(str(tb.get_entry_number()), stats_group), 0,
+            QtGui.QLabel(str(tb.entry_number), stats_group), 0,
             1)
         stats_group.layout().addWidget(QtGui.QLabel('Total size:', stats_group),
                                        1, 0)
         stats_group.layout().addWidget(
-            QtGui.QLabel(tb.get_size(), stats_group), 1, 1)
+            QtGui.QLabel(tb.size, stats_group), 1, 1)
         self.layout().addWidget(stats_group)
 
     def _create_buttons(self):
