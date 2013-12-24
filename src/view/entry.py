@@ -252,9 +252,11 @@ class CreateEntryForm(QtGui.QWidget):
         """
         super(CreateEntryForm, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
-        self._fields = {}
+        self._fields = []
+        self._terms = {}
         self._populate_fields('E')
         for locale in mdl.get_main_model().open_termbase.languages:
+            # adds flag and language name
             flag = QtGui.QLabel(self)
             flag.setPixmap(
                 QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
@@ -263,28 +265,40 @@ class CreateEntryForm(QtGui.QWidget):
                 '<strong>{0}</strong>'.format(mdl.DEFAULT_LANGUAGES[locale]),
                 self)
             self.layout().addRow(flag, label)
+            self._populate_fields('L', locale)
+            term_label = QtGui.QLabel('<strong>Term</strong>', self)
+            self._terms[locale] = QtGui.QLineEdit(self)
+            self.layout().addRow(term_label, self._terms[locale])
+            self._populate_fields('T', locale)
 
-    def _populate_fields(self, level):
+    def _populate_fields(self, level, locale=None):
         for prop in mdl.get_main_model().open_termbase.schema.get_properties(
                 level):
             label = QtGui.QLabel(prop.name, self)
             property_type = prop.property_type
             if property_type == 'T':
-                field = QtGui.QTextEdit(self)
-                field.setMaximumHeight(30)
-                field.textChanged.connect(self._handle_entry_changed)
+                widget = QtGui.QTextEdit(self)
+                widget.setMaximumHeight(30)
+                widget.textChanged.connect(self._handle_entry_changed)
             elif property_type == 'I':
-                field = QtGui.QLabel('da cambiare', self)
+                widget = QtGui.QLabel('da cambiare', self)
             else:  # picklist
-                field = QtGui.QComboBox(self)
+                widget = QtGui.QComboBox(self)
                 model = QtGui.QStringListModel(prop.values)
-                field.setModel(model)
-                field.currentIndexChanged(
+                widget.setModel(model)
+                widget.currentIndexChanged.connect(
                     lambda unused_idx: self._handle_entry_changed())
-            self._fields[prop.prop_id] = field
-            self.layout().addRow(label, self._fields[prop.prop_id])
+            field = FormField(prop, locale, widget)
+            self._fields.append(field)
+            self.layout().addRow(label, widget)
 
     @QtCore.pyqtSlot()
     def _handle_entry_changed(self):
         self.fire_event.emit('entry_changed', {})
 
+
+class FormField(object):
+    def __init__(self, prop, locale, widget):
+        self.property = prop
+        self.locale = locale
+        self._widget = widget
