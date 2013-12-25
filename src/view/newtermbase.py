@@ -53,6 +53,10 @@ class NewTermbaseWizard(QtGui.QWizard):
         self.setMinimumSize(self.MINIMUM_WIDTH, self.MINIMUM_HEIGHT)
         self.setVisible(True)
 
+    def accept(self):
+        self.fire_event.emit('termbase_created', {})
+        super(NewTermbaseWizard, self).accept()
+
     def get_termbase_name(self):
         """Returns the name of the new termbase chosen by the user.
 
@@ -251,12 +255,12 @@ class DefinitionModelPage(QtGui.QWizardPage):
         self._view.pressed.connect(self._handle_view_pressed)
         self._form = QtGui.QWidget(self)
         # puts everything together
-        splitter = QtGui.QSplitter(self)
-        splitter.addWidget(self._view)
-        splitter.addWidget(self._form)
-        splitter.setSizes([200, 300])
+        self._splitter = QtGui.QSplitter(self)
+        self._splitter.addWidget(self._view)
+        self._splitter.addWidget(self._form)
+        self._splitter.setSizes([200, 300])
         self.setLayout(QtGui.QVBoxLayout(self))
-        self.layout().addWidget(splitter)
+        self.layout().addWidget(self._splitter)
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def _handle_view_pressed(self, index):
@@ -279,7 +283,7 @@ class DefinitionModelPage(QtGui.QWizardPage):
             self._form = ChangePropertyForm(item, self)
         self._form.fire_event.connect(self.fire_event)
         self._form.setMinimumWidth(250)
-        self.layout().addWidget(self._form)
+        self._splitter.addWidget(self._form)
         old_form.deleteLater()
 
     def get_level(self):
@@ -313,10 +317,12 @@ class DefinitionModelPage(QtGui.QWizardPage):
 
         :rtype: None
         """
-        current_index = [index for index in
-                         self._view.selectedIndexes() if
-                         index.column() == 0].pop()
-        self._view.pressed.emit(current_index)
+        selected_indexes = [index for index in
+                            self._view.selectedIndexes() if
+                            index.column() == 0]
+        if selected_indexes:
+            current_index = selected_indexes.pop()
+            self._view.pressed.emit(current_index)
 
 
 class AlterPropertyForm(QtGui.QWidget):
@@ -330,15 +336,18 @@ class AlterPropertyForm(QtGui.QWidget):
     """Signal emitted to dispatch event to the controller.
     """
 
-    def __init__(self, parent):
+    def __init__(self, page, parent):
         """Constructor method
 
-        :param parent: reference to the containing wizard page
+        :param parent: reference to the widget parent
         :type parent: QtGui.QWidget
+        :param page: reference to the container wizard page
+        :type page: QtGui.QWizardPage
         :rtype: AlterPropertyForm
         """
         super(AlterPropertyForm, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
+        self._page = page
         self._name_input = None
         self._type_input = None
         self._value_label = None
@@ -423,7 +432,7 @@ class AlterPropertyForm(QtGui.QWidget):
         """
         property_data = {
             'name': self._name_input.text(),
-            'level': self.parent().get_level()
+            'level': self._page.get_level()
         }
         if self._type_input.currentIndex() == 0:
             property_data['prop_type'] = 'T'
@@ -466,7 +475,7 @@ class NewPropertyForm(AlterPropertyForm):
         :type parent: QtCore.QWidget
         :rtype: NewPropertyForm
         """
-        super(NewPropertyForm, self).__init__(parent)
+        super(NewPropertyForm, self).__init__(parent, parent)
 
     def _create_toolbar(self):
         """Overridden in order to create a toolbar with an 'add property' tool
@@ -490,7 +499,7 @@ class NewPropertyForm(AlterPropertyForm):
                                  self.extract_property_data())
             self.clear()
             # notifies the wizard page that a property has been added
-            self.parent().completeChanged.emit()
+            self._page.completeChanged.emit()
 
 
 class ChangePropertyForm(AlterPropertyForm):
@@ -508,7 +517,7 @@ class ChangePropertyForm(AlterPropertyForm):
         :rtype: ChangePropertyForm
         """
         self._property = prop  # used in constructor hook
-        super(ChangePropertyForm, self).__init__(parent)
+        super(ChangePropertyForm, self).__init__(parent, parent)
 
     def _create_form_fields(self):
         super(ChangePropertyForm, self)._create_form_fields()
@@ -568,7 +577,7 @@ class ChangePropertyForm(AlterPropertyForm):
             prop_data['old_node'] = self._property
             self.fire_event.emit('change_property', prop_data)
             # puts the form back in a consistent state (_property reference)
-            self.parent().reset_all()
+            self._page.reset_all()
 
     @QtCore.pyqtSlot()
     def _handle_delete_property(self):
@@ -579,9 +588,9 @@ class ChangePropertyForm(AlterPropertyForm):
         """
         self.fire_event.emit('delete_property', {'old_node': self._property})
         # notifies the wizard page that a property has been deleted
-        self.parent().completeChanged.emit()
+        self._page.completeChanged.emit()
         # completely clears the form
-        self.parent().reset_all()
+        self._page.reset_all()
 
 
 class PicklistEditor(QtGui.QWidget):

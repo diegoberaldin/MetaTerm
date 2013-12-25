@@ -20,6 +20,10 @@ class AbstractController(QtCore.QObject):
     in order to be able to react to events originated in the GUI.
     """
 
+    finished = QtCore.pyqtSignal()
+    """Signal emitted by all controllers when they have finished their work.
+    """
+
     def __init__(self):
         """Constructor method (to be called in subclass constructors).
 

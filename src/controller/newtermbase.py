@@ -35,6 +35,7 @@ class NewTermbaseController(AbstractController):
         self._view = wizard
         self._view.fire_event.connect(self.handle_event)
         self._model = model
+        self._view.rejected.connect(self.finished)
 
     @QtCore.pyqtSlot()
     def _handle_termbase_created(self):
@@ -47,7 +48,7 @@ class NewTermbaseController(AbstractController):
         new_tb = mdl.Termbase(termbase_name)
         self._populate_languages(new_tb)
         self._populate_properties(new_tb)
-        self.new_termbase_created.emit(termbase_name)
+        self.finished.emit()
 
     def _populate_languages(self, termbase):
         """Adds the languages that have been chosen in the UI to the newly

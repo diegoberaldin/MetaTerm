@@ -71,14 +71,14 @@ class MainController(AbstractController):
         self._children['new_termbase'] = NewTermbaseController(
             termbase_definition_model, wizard)
         # signal-slot connection
+        self._children['new_termbase'].finished.connect(
+            lambda: self._finalize_child_controller('new_termbase'))
         wizard.accepted.connect(
             lambda: self._handle_open_termbase(wizard.field('termbase_name')))
-        wizard.accepted.connect(self._handle_wizard_exited)
-        wizard.rejected.connect(self._handle_wizard_exited)
 
-    @QtCore.pyqtSlot()
-    def _handle_wizard_exited(self):
-        del self._children['new_termbase']
+    @QtCore.pyqtSlot(str)
+    def _finalize_child_controller(self, child_name):
+        del self._children[child_name]
 
     def _handle_close_termbase(self):
         """Closes the currently open termbase.
@@ -86,8 +86,8 @@ class MainController(AbstractController):
         :rtype: None
         """
         mdl.get_main_model().open_termbase = None
-        del self._children['entry']
         self._view.display_message('Current termbase closed.')
+        self._children['entry'].finished.emit()
 
     def _handle_delete_termbase(self, name):
         """Permanently deletes a termbase from disk.
@@ -96,10 +96,10 @@ class MainController(AbstractController):
         :type name: str
         :rtype: None
         """
-        if self._model and self._model.name == name:
+        model = mdl.get_main_model().open_termbase
+        if model and model.name == name:
             self._handle_close_termbase()
         file_name = mdl.Termbase(name).get_termbase_file_name()
-        print(file_name)
         if os.path.exists(file_name):
             os.remove(file_name)
             self._view.display_message(
