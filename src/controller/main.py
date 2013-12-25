@@ -56,6 +56,7 @@ class MainController(AbstractController):
         entry_view.entry_model = entry_model
         # creates child controller
         self._children['entry'] = EntryController(entry_model, entry_view)
+        # signal-slot connections
         self._view.fire_event.connect(self._children['entry'].handle_event)
 
     def _handle_new_termbase(self):
@@ -106,4 +107,4 @@ class MainController(AbstractController):
                 'Termbase {0} has been deleted.'.format(name))
 
     def _handle_entry_changed(self):
-        pass
+        self._view.enable_save_entry_action()

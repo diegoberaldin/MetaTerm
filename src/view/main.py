@@ -50,10 +50,14 @@ class MainWindow(QtGui.QMainWindow):
         self._show_tb_properties_action.triggered.connect(
             self._handle_show_termbase_properties)
         self._show_tb_properties_action.setEnabled(False)
-        self._create_entry_action = QtGui.QAction('Create new', self)
+        self._create_entry_action = QtGui.QAction('Insert', self)
         self._create_entry_action.setEnabled(False)
         self._create_entry_action.triggered.connect(
             lambda: self.fire_event.emit('new_entry', {}))
+        self._save_entry_action = QtGui.QAction('Save', self)
+        self._save_entry_action.setEnabled(False)
+        self._save_entry_action.triggered.connect(
+            lambda: self.fire_event.emit('save_entry', {}))
         self._quit_action = QtGui.QAction('Quit', self)
         self._quit_action.triggered.connect(lambda: QtGui.qApp.quit())
         self._about_qt_action = QtGui.QAction('About Qt', self)
@@ -92,6 +96,7 @@ class MainWindow(QtGui.QMainWindow):
         # entry menu
         entry_menu = QtGui.QMenu('Entry', self)
         entry_menu.addAction(self._create_entry_action)
+        entry_menu.addAction(self._save_entry_action)
         self.menuBar().addMenu(entry_menu)
         # view menu
         view_menu = QtGui.QMenu('View', self)
@@ -176,3 +181,6 @@ class MainWindow(QtGui.QMainWindow):
         """
         dialog = TermbasePropertyDialog(self)
         dialog.exec()
+
+    def enable_save_entry_action(self):
+        self._save_entry_action.setEnabled(True)

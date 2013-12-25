@@ -190,7 +190,7 @@ class EntryDisplay(QtGui.QWidget):
         """
         super(EntryDisplay, self).__init__(parent)
         self.setLayout(QtGui.QVBoxLayout(self))
-        self._content = None
+        self.content = None
         # shows greeting
         self.display_welcome_screen()
         # signal-slot connection
@@ -206,11 +206,11 @@ class EntryDisplay(QtGui.QWidget):
         :type content: QtGui.QWidget
         :rtype: None
         """
-        if self._content:
-            self.layout().removeWidget(self._content)
-            self._content.deleteLater()
-        self._content = content
-        self.layout().addWidget(self._content)
+        if self.content:
+            self.layout().removeWidget(self.content)
+            self.content.deleteLater()
+        self.content = content
+        self.layout().addWidget(self.content)
 
     def display_create_entry_form(self):
         """Displays the form for the creation of a new terminological entry in
