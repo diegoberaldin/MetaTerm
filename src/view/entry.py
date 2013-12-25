@@ -300,8 +300,8 @@ class CreateEntryForm(QtGui.QWidget):
         """
         super(CreateEntryForm, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
-        self._fields = []
-        self._terms = {}
+        self.fields = []
+        self.terms = {}
         self._populate_fields('E')
         for locale in mdl.get_main_model().open_termbase.languages:
             # adds flag and language name
@@ -315,8 +315,8 @@ class CreateEntryForm(QtGui.QWidget):
             self.layout().addRow(flag, label)
             self._populate_fields('L', locale)
             term_label = QtGui.QLabel('<strong>Term</strong>', self)
-            self._terms[locale] = QtGui.QLineEdit(self)
-            self.layout().addRow(term_label, self._terms[locale])
+            self.terms[locale] = QtGui.QLineEdit(self)
+            self.layout().addRow(term_label, self.terms[locale])
             self._populate_fields('T', locale)
 
     def _populate_fields(self, level, locale=None):
@@ -355,7 +355,7 @@ class CreateEntryForm(QtGui.QWidget):
                     lambda unused_idx: self._handle_entry_changed())
                 field = PicklistField(prop, locale, widget)
                 # keeps the _fields property up-to-date with the changes
-            self._fields.append(field)
+            self.fields.append(field)
             # finally appends the widgets to the form layout
             self.layout().addRow(label, widget)
 
