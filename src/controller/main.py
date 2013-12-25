@@ -106,4 +106,4 @@ class MainController(AbstractController):
                 'Termbase {0} has been deleted.'.format(name))
 
     def _handle_entry_changed(self):
-        print('the entry has been changed')
+        pass

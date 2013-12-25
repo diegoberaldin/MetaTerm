@@ -91,10 +91,21 @@ class EntryList(QtGui.QWidget):
 
     @property
     def model(self):
+        """Returns a reference to the entry model which the view is bound to.
+
+        :returns: a reference to the current entry model
+        """
         return self._model
 
     @model.setter
     def model(self, value):
+        """Allows to change the model that the entry list is bound to, namely
+        altering the model that is connected to the internal list view.
+
+        :param value: reference to the new model
+        :type value: EntryModel
+        :rtype: None
+        """
         self._model = value
         self._view.setModel(self._model)
 
@@ -187,6 +198,14 @@ class EntryDisplay(QtGui.QWidget):
             self.display_welcome_screen)
 
     def _display_content(self, content):
+        """Eases the change of content that is displayed inside the entry view
+        by discarding the previous internal widget (and removing it completely)
+        while inserting the new one in the widget layout.
+
+        :param content: reference to the new inner widget
+        :type content: QtGui.QWidget
+        :rtype: None
+        """
         if self._content:
             self.layout().removeWidget(self._content)
             self._content.deleteLater()
@@ -194,18 +213,29 @@ class EntryDisplay(QtGui.QWidget):
         self.layout().addWidget(self._content)
 
     def display_create_entry_form(self):
+        """Displays the form for the creation of a new terminological entry in
+        the entry view of the main widget.
+
+        :rtype: None
+        """
         form = CreateEntryForm(self)
+        # this is needed for event propagation
         form.fire_event.connect(self.fire_event)
         self._display_content(form)
 
     @QtCore.pyqtSlot()
     def display_welcome_screen(self):
+        """Displays the initial welcome screen inside the entry display.
+
+        :rtype: None
+        """
         self._display_content(WelcomeScreen(self))
 
 
 class WelcomeScreen(QtGui.QWidget):
     """This class is used to present a welcome screen in the ``EntryDisplay``
-    each time the application is started and a termbase is closed.
+    each time the application is started and a termbase is closed. The content
+    of such a widget is statically determined at compile time.
     """
 
     def __init__(self, parent):
@@ -242,6 +272,21 @@ class WelcomeScreen(QtGui.QWidget):
 
 
 class CreateEntryForm(QtGui.QWidget):
+    """Widget used to represent the form which is to be displayed whenever the
+    user asks to create a new terminological entry. It must contain an
+    indication of the languages (with the corresponding flags) that are stored
+    in the termbase and just one term input field for each language in order
+    to insert the lemma.
+
+    As far as properties are concerned, it must display a set of input fields,
+    namely:
+    - all entry level properties must have the corresponding field shown once;
+    - language level properties must appear once for every language in the
+      termbase, under the corresponding flag;
+    - term level properties are displayed once for every term under the term
+      lemma.
+    """
+
     fire_event = QtCore.pyqtSignal(str, dict)
     """Signal emitted to notify the controller about events.
     """
@@ -275,16 +320,30 @@ class CreateEntryForm(QtGui.QWidget):
             self._populate_fields('T', locale)
 
     def _populate_fields(self, level, locale=None):
+        """This method is designed to be called several times in the form
+        constructor in order to create the parts of the user interface which
+        depend on the termbase properties of some level.
+
+        It has the responsibility of extracting the desired set of properties
+        from the termbase (model) and create for each and every one of them a
+        label with the property name and a suitable input field depending on the
+        property type.
+
+        :param level: level of the properties to be queried
+        :type level: str
+        :param locale: locale of the language (if any) the property refers to
+        :type locale: str
+        :rtype: None
+        """
         for prop in mdl.get_main_model().open_termbase.schema.get_properties(
                 level):
             label = QtGui.QLabel(prop.name, self)
-            property_type = prop.property_type
-            if property_type == 'T':
+            if prop.property_type == 'T':  # text property
                 widget = QtGui.QTextEdit(self)
                 widget.setMaximumHeight(30)
                 widget.textChanged.connect(self._handle_entry_changed)
                 field = TextField(prop, locale, widget)
-            elif property_type == 'I':
+            elif prop.property_type == 'I':  # image property
                 widget = SelectFileInput(self)
                 field = FileField(prop, locale, widget)
                 widget.path_changed.connect(self._handle_entry_changed)
@@ -295,21 +354,39 @@ class CreateEntryForm(QtGui.QWidget):
                 widget.currentIndexChanged.connect(
                     lambda unused_idx: self._handle_entry_changed())
                 field = PicklistField(prop, locale, widget)
+                # keeps the _fields property up-to-date with the changes
             self._fields.append(field)
+            # finally appends the widgets to the form layout
             self.layout().addRow(label, widget)
 
     @QtCore.pyqtSlot()
     def _handle_entry_changed(self):
+        """ This slot is called to inform the controller that some input field
+        has been filled or that its content has changed.
+
+        :rtype: None
+        """
         self.fire_event.emit('entry_changed', {})
 
 
 class SelectFileInput(QtGui.QWidget):
+    """Input widget used to select a resource from the local file system which
+    basically consists of a disabled text field where the path is displayed
+    and a browsing button. When the latter is clicked a dialog is opened to
+    pick a resource from the local file system.
+    """
 
     path_changed = QtCore.pyqtSignal()
     """Signal emitted when the path of the selected resource has changed.
     """
 
     def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the parent widget
+        :type parent: QtCore.QWidget
+        :rtype: SelectFileInput
+        """
         super(SelectFileInput, self).__init__(parent)
         self.setLayout(QtGui.QHBoxLayout(self))
         self._text_input = QtGui.QLineEdit(self)
@@ -321,6 +398,12 @@ class SelectFileInput(QtGui.QWidget):
 
     @QtCore.pyqtSlot()
     def _handle_button_clicked(self):
+        """Private slot to be called when the button is clicked, after asking
+        the user for a path to a local resource this is shown in the text
+        input field and the ``path_changed`` signal is emitted.
+
+        :rtype: None
+        """
         file_path = QtGui.QFileDialog.getOpenFileName(self, 'Choose file',
                                                       os.path.expanduser('~'))
         if file_path:
@@ -331,21 +414,60 @@ class SelectFileInput(QtGui.QWidget):
 
     @property
     def value(self):
+        """Allows for subsequent form fields to access the selected value, i.e.
+        the path that is shown in the text input field of the widget.
+
+        :return: the selected (absolute) path to the resource
+        :rtype: str
+        """
         return self._text_input.text()
 
 
 class AbstractFormField(object):
+    """This class is used as an abstraction mechanism for all the fields that
+    are displayed in the form for the creation of a new terminological entry, no
+    matter whether they are implemented using custom or library classes.
+
+    Fields are characterized by the defined property and the locale (which is
+    vital for language-level and term-level properties) and hold a reference
+    to the graphical widget used to collect the user input needed for their
+    definition.
+
+    All such fields must implement the ``value`` property, allowing a caller
+    to access the value of the property that has been specified by the user
+    through the GUI.
+    """
+
     def __init__(self, prop, locale, widget):
+        """Constructor method.
+
+        :param prop: reference to the property to be defined
+        :type prop: Property
+        :param locale: representation of the locale of the language
+        :type locale: str
+        :param widget: reference to the graphical input widget
+        :type widget: QtGui.QWidget
+        :rtype: AbstractFormField
+        """
         self.property = prop
         self.locale = locale
         self._widget = widget
 
     @property
     def value(self):
+        """This must be implemented by all subclasses to retrieve the property
+        definition as it has been set by the end user via some GUI mechanism.
+
+        :returns: the value of the property in the current field
+        :rtype: object
+        """
         raise NotImplementedError('Override me')
 
 
 class TextField(AbstractFormField):
+    """Textual field to define simple textual properties.
+    """
+
     def __init__(self, prop, locale, widget):
         super(TextField, self).__init__(prop, locale, widget)
 
@@ -355,6 +477,10 @@ class TextField(AbstractFormField):
 
 
 class PicklistField(AbstractFormField):
+    """Field used to represent picklist properties, where the internal widget
+    is a library combo box.
+    """
+
     def __init__(self, prop, locale, widget):
         super(PicklistField, self).__init__(prop, locale, widget)
 
@@ -364,6 +490,10 @@ class PicklistField(AbstractFormField):
 
 
 class FileField(AbstractFormField):
+    """Field used to represent resources whose value is the path on the local
+    system where such a resource can be found.
+    """
+
     def __init__(self, prop, locale, widget):
         super(FileField, self).__init__(prop, locale, widget)
 
