@@ -7,7 +7,10 @@ This module contains the definition of the classes that are used to display
 and manipulate entries in the application main window.
 """
 
+import os
+
 from PyQt4 import QtCore, QtGui
+
 from src import model as mdl
 
 
@@ -280,15 +283,18 @@ class CreateEntryForm(QtGui.QWidget):
                 widget = QtGui.QTextEdit(self)
                 widget.setMaximumHeight(30)
                 widget.textChanged.connect(self._handle_entry_changed)
+                field = TextField(prop, locale, widget)
             elif property_type == 'I':
-                widget = QtGui.QLabel('da cambiare', self)
+                widget = SelectFileInput(self)
+                field = FileField(prop, locale, widget)
+                widget.path_changed.connect(self._handle_entry_changed)
             else:  # picklist
                 widget = QtGui.QComboBox(self)
                 model = QtGui.QStringListModel(prop.values)
                 widget.setModel(model)
                 widget.currentIndexChanged.connect(
                     lambda unused_idx: self._handle_entry_changed())
-            field = FormField(prop, locale, widget)
+                field = PicklistField(prop, locale, widget)
             self._fields.append(field)
             self.layout().addRow(label, widget)
 
@@ -297,8 +303,70 @@ class CreateEntryForm(QtGui.QWidget):
         self.fire_event.emit('entry_changed', {})
 
 
-class FormField(object):
+class SelectFileInput(QtGui.QWidget):
+
+    path_changed = QtCore.pyqtSignal()
+    """Signal emitted when the path of the selected resource has changed.
+    """
+
+    def __init__(self, parent):
+        super(SelectFileInput, self).__init__(parent)
+        self.setLayout(QtGui.QHBoxLayout(self))
+        self._text_input = QtGui.QLineEdit(self)
+        self._text_input.setEnabled(False)
+        browse_button = QtGui.QPushButton('Browse', self)
+        browse_button.clicked.connect(self._handle_button_clicked)
+        self.layout().addWidget(self._text_input)
+        self.layout().addWidget(browse_button)
+
+    @QtCore.pyqtSlot()
+    def _handle_button_clicked(self):
+        file_path = QtGui.QFileDialog.getOpenFileName(self, 'Choose file',
+                                                      os.path.expanduser('~'))
+        if file_path:
+            self._text_input.setText(file_path)
+        else:
+            self._text_input.setText('')
+        self.path_changed.emit()
+
+    @property
+    def value(self):
+        return self._text_input.text()
+
+
+class AbstractFormField(object):
     def __init__(self, prop, locale, widget):
         self.property = prop
         self.locale = locale
         self._widget = widget
+
+    @property
+    def value(self):
+        raise NotImplementedError('Override me')
+
+
+class TextField(AbstractFormField):
+    def __init__(self, prop, locale, widget):
+        super(TextField, self).__init__(prop, locale, widget)
+
+    @property
+    def value(self):
+        return self._widget.text()
+
+
+class PicklistField(AbstractFormField):
+    def __init__(self, prop, locale, widget):
+        super(PicklistField, self).__init__(prop, locale, widget)
+
+    @property
+    def value(self):
+        return self._widget.currentText()
+
+
+class FileField(AbstractFormField):
+    def __init__(self, prop, locale, widget):
+        super(FileField, self).__init__(prop, locale, widget)
+
+    @property
+    def value(self):
+        return self._widget.value

@@ -35,6 +35,7 @@ class NewTermbaseController(AbstractController):
         self._view = wizard
         self._view.fire_event.connect(self.handle_event)
         self._model = model
+        # signal-slot connection
         self._view.rejected.connect(self.finished)
 
     @QtCore.pyqtSlot()

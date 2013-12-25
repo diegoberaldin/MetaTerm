@@ -22,10 +22,10 @@ class MainWindow(QtGui.QMainWindow):
     """Signal emitted when an event is fired in the application main window."""
 
     # a couple of class constants
-    _MIN_WIDTH = 500
+    _MIN_WIDTH = 800
     """Minimum width of the application main window."""
 
-    _MIN_HEIGHT = 300
+    _MIN_HEIGHT = 600
     """Minimum height of the application main window."""
 
     def __init__(self):
