@@ -40,6 +40,7 @@ class Entry(object):
         with self._tb.get_session() as session:
             return session.query(mapping.Term.lemma).filter(
                 mapping.Term.entry_id == self.entry_id,
+                mapping.Term.lang_id == locale,
                 mapping.Term.vedette == True).scalar()
 
     def add_term(self, lemma, locale, vedette):
