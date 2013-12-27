@@ -88,6 +88,9 @@ class EntryList(QtGui.QWidget):
         self.layout().addWidget(self._view)
         # signal-slot connection
         self._selector.fire_event.connect(self.fire_event)
+        self._view.clicked.connect(
+            lambda index: self.fire_event.emit('entry_index_changed',
+                                               {'index': index}))
 
     @property
     def model(self):
@@ -239,6 +242,48 @@ class EntryDisplay(QtGui.QWidget):
         :rtype: None
         """
         self._display_content(WelcomeScreen(self))
+
+    def display_entry(self, entry):
+        self._display_content(EntryScreen(entry, self))
+
+
+class EntryScreen(QtGui.QWidget):
+    def __init__(self, entry, parent):
+        super(EntryScreen, self).__init__(parent)
+        self.setLayout(QtGui.QFormLayout(self))
+        self._entry = entry
+        entry_id_label = QtGui.QLabel(
+            '<small>Entry ID: {0}</small>'.format(self._entry.entry_id))
+        self.layout().addWidget(entry_id_label)
+        schema = mdl.get_main_model().open_termbase.schema
+        for prop in schema.get_properties('E'):
+            # shows entry-level properties
+            prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(prop.name),
+                                      self)
+            value_label = QtGui.QLabel(
+                self._entry.get_property(prop.prop_id), self)
+            self.layout().addRow(prop_label, value_label)
+        for locale in mdl.get_main_model().open_termbase.languages:
+            # adds flag and language name
+            flag = QtGui.QLabel(self)
+            flag.setPixmap(
+                QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
+                    15))
+            label = QtGui.QLabel(
+                '<strong>{0}</strong>'.format(mdl.DEFAULT_LANGUAGES[locale]),
+                self)
+            self.layout().addRow(flag, label)
+            for prop in schema.get_properties('L'):
+                # shows language-level properties
+                prop_label = QtGui.QLabel(
+                    '<strong>{0}:</strong>'.format(prop.name),
+                    self)
+                value_label = QtGui.QLabel(
+                    self._entry.get_language_property(locale, prop.prop_id),
+                    self)
+                self.layout().addRow(prop_label, value_label)
+            for term in self._entry.get_terms(locale):
+                pass
 
 
 class WelcomeScreen(QtGui.QWidget):

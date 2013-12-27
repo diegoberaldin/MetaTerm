@@ -49,5 +49,7 @@ class EntryController(AbstractController):
             term.set_property(property_id, value)
         self._view.entry_display.display_welcome_screen()
 
-
+    def _handle_entry_index_changed(self, index):
+        selected_entry = self._model.get_entry(index)
+        self._view.entry_display.display_entry(selected_entry)
 
