@@ -14,6 +14,7 @@ import sqlalchemy
 import sqlalchemy.orm
 
 from src.model import mapping
+from src.model.dataaccess.term import Term
 
 
 class Entry(object):
@@ -55,7 +56,7 @@ class Entry(object):
         """
         term_id = str(uuid.uuid4())
         with self._tb.get_session() as session:
-            term = mapping.Term(term_id=self.entry_id, lemma=lemma,
+            term = mapping.Term(term_id=term_id, lemma=lemma,
                                 lang_id=locale, vedette=vedette,
                                 entry_id=self.entry_id)
             session.add(term)
@@ -155,3 +156,25 @@ class Entry(object):
                                                                 prop_id=prop_id,
                                                                 value=value)
                 session.add(prop)
+
+    def get_term(self, locale, lemma):
+        """Returns a Term (dataaccess) object corresponding to the term that is
+        contained in the invocation entry having the given locale and the given
+        lemma.
+
+        :param locale: ID of the language of the desired term
+        :param lemma: lemma of the desired term
+        :returns: a (dataaccess) Term object to manipulate the term if some
+        term exists corresponding to the given criteria, None otherwise
+        :rtype: Term
+        """
+        with self._tb.get_session() as session:
+            try:
+                term = session.query(mapping.Term).filter(
+                    mapping.Term.lang_id == locale,
+                    mapping.Term.lemma == lemma).one()
+                return Term(term.term_id, term.lemma, term.lang_id,
+                            term.vedette,
+                            self._tb)
+            except sqlalchemy.orm.exc.NoResultFound:
+                return None
