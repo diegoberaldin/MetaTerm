@@ -22,6 +22,7 @@ class EntryModel(QtCore.QAbstractListModel):
         return len(self._entries)
 
     def data(self, index=QtCore.QModelIndex(), role=QtCore.Qt.DisplayRole):
-        if index.isValid() and role == QtCore.Qt.DisplayRole:
-            entry = index.internalPointer()
-            return entry.get_vedette(self.language)
+        if index.isValid():
+            entry = self._entries[index.row()]
+            if role == QtCore.Qt.DisplayRole:
+                return entry.get_vedette(self.language)
