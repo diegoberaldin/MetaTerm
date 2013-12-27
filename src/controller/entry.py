@@ -23,4 +23,5 @@ class EntryController(AbstractController):
         self._view.entry_display.display_create_entry_form()
 
     def _handle_save_entry(self):
-        print('entry would have been saved')
+        form = self._view.entry_display.content
+

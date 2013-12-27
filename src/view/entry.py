@@ -301,7 +301,8 @@ class CreateEntryForm(QtGui.QWidget):
         super(CreateEntryForm, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
         self._fields = []
-        self.terms = {}
+        self._terms = {locale: [] for locale in
+                       mdl.get_main_model().open_termbase.languages}
         self._populate_fields('E')
         for locale in mdl.get_main_model().open_termbase.languages:
             # adds flag and language name
@@ -315,8 +316,9 @@ class CreateEntryForm(QtGui.QWidget):
             self.layout().addRow(flag, label)
             self._populate_fields('L', locale)
             term_label = QtGui.QLabel('<strong>Term</strong>', self)
-            self.terms[locale] = QtGui.QLineEdit(self)
-            self.layout().addRow(term_label, self.terms[locale])
+            term_input = QtGui.QLineEdit(self)
+            self._terms[locale].append(term_input)
+            self.layout().addRow(term_label, term_input)
             self._populate_fields('T', locale)
 
     def _populate_fields(self, level, locale=None):
@@ -342,10 +344,10 @@ class CreateEntryForm(QtGui.QWidget):
                 widget = QtGui.QTextEdit(self)
                 widget.setMaximumHeight(30)
                 widget.textChanged.connect(self._handle_entry_changed)
-                field = TextField(prop, widget)
+                field = TextField(prop, level, widget)
             elif prop.property_type == 'I':  # image property
                 widget = SelectFileInput(self)
-                field = FileField(prop, widget)
+                field = FileField(prop, level, widget)
                 widget.path_changed.connect(self._handle_entry_changed)
             else:  # picklist
                 widget = QtGui.QComboBox(self)
@@ -353,10 +355,10 @@ class CreateEntryForm(QtGui.QWidget):
                 widget.setModel(model)
                 widget.currentIndexChanged.connect(
                     lambda unused_idx: self._handle_entry_changed())
-                field = PicklistField(prop, widget)
+                field = PicklistField(prop, level, widget)
             if level in ['L', 'T']:
                 field.locale = locale
-            # keeps the _fields property up-to-date with the changes
+                # keeps the _fields property up-to-date with the changes
             self._fields.append(field)
             # finally appends the widgets to the form layout
             self.layout().addRow(label, widget)
@@ -369,6 +371,57 @@ class CreateEntryForm(QtGui.QWidget):
         :rtype: None
         """
         self.fire_event.emit('entry_changed', {})
+
+    # @property unsupported in QtCore.QWidget subclasses :(
+    def get_entry_level_property_values(self):
+        """Allows the controller to access the information inserted in the
+        form by the user for entry-level properties.
+
+        :returns: a dictionary keyed by property IDs containing the values
+        specified for entry-level properties
+        :rtype: dict
+        """
+        return {f.property.prop_id: f.value
+                for f in self._fields if f.level == 'E'}
+
+    def get_language_level_property_values(self):
+        """Allows the controller to access the information inserted in the form
+        by the user for language-level properties.
+
+        :returns: a dictionary whose keys are (locale, property-ID) 2-tuples,
+        containing the values specified for language-level properties
+        :rtype: dict
+        """
+        return {(locale, f.property.prop_id): f.value
+                for locale in mdl.get_main_model().open_termbase.languages
+                for f in self._fields if f.level == 'L' and f.locale == locale}
+
+    def get_term_level_property_values(self):
+        """ Allows the controller to access the information specified by the
+        user for term-level properties.
+
+        :returns: a dictionary whose keys are (locale, lemma, property-ID)
+        3-tuples containing the values specified for term-level properties.
+        :rtype: dict
+        """
+        # dictcomp with triple nested for loops, because READABILITY COUNTS...
+        return {(locale, lemma, f.property.prop_id): f.value
+                for locale in mdl.get_main_model().open_termbase.languages
+                for lemma in self.get_terms()[locale]
+                for f in self._fields if f.level == 'T' and f.locale == locale}
+
+    def get_terms(self):
+        """Allows to access the terms that have been inserted in the form for
+        the currently displayed entry. Since more than one term can appear for
+        each language, every locale is associated with a list of lemmata.
+
+        :returns: a dictionary keyed by locale IDs containing for each language
+        the list of terms that the entry contains.
+        :rtype: dict
+        """
+        return {locale: f.text()
+                for locale in mdl.get_main_model().open_termbase.languages
+                for f in self._terms[locale]}
 
 
 class SelectFileInput(QtGui.QWidget):
@@ -407,7 +460,8 @@ class SelectFileInput(QtGui.QWidget):
         :rtype: None
         """
         file_path = QtGui.QFileDialog.getOpenFileName(self, 'Choose file',
-                                                      os.path.expanduser('~'))
+                                                      os.path.expanduser(
+                                                          '~'))
         if file_path:
             self._text_input.setText(file_path)
         else:
@@ -440,11 +494,13 @@ class AbstractFormField(object):
     through the GUI.
     """
 
-    def __init__(self, prop, widget, locale, lemma):
+    def __init__(self, prop, level, widget, locale, lemma):
         """Constructor method.
 
         :param prop: reference to the property to be defined
         :type prop: Property
+        :param level: level of the defined property
+        :type level: str
         :param widget: reference to the graphical input widget
         :type widget: QtGui.QWidget
         :param locale: representation of the locale of the language
@@ -455,6 +511,7 @@ class AbstractFormField(object):
         """
         self.property = prop
         self.locale = locale
+        self.level = level
         self.lemma = lemma
         self._widget = widget
 
@@ -473,12 +530,12 @@ class TextField(AbstractFormField):
     """Textual field to define simple textual properties.
     """
 
-    def __init__(self, prop, widget, locale=None, lemma=None):
-        super(TextField, self).__init__(prop, widget, locale, lemma)
+    def __init__(self, prop, level, widget, locale=None, lemma=None):
+        super(TextField, self).__init__(prop, level, widget, locale, lemma)
 
     @property
     def value(self):
-        return self._widget.text()
+        return self._widget.toPlainText()
 
 
 class PicklistField(AbstractFormField):
@@ -486,8 +543,9 @@ class PicklistField(AbstractFormField):
     is a library combo box.
     """
 
-    def __init__(self, prop, widget, locale=None, lemma=None):
-        super(PicklistField, self).__init__(prop, widget, locale, lemma)
+    def __init__(self, prop, level, widget, locale=None, lemma=None):
+        super(PicklistField, self).__init__(prop, level, widget, locale,
+                                            lemma)
 
     @property
     def value(self):
@@ -499,8 +557,8 @@ class FileField(AbstractFormField):
     system where such a resource can be found.
     """
 
-    def __init__(self, prop, widget, locale=None, lemma=None):
-        super(FileField, self).__init__(prop, widget, locale, lemma)
+    def __init__(self, prop, level, widget, locale=None, lemma=None):
+        super(FileField, self).__init__(prop, level, widget, locale, lemma)
 
     @property
     def value(self):
