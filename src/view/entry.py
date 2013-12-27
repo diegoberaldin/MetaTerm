@@ -300,7 +300,7 @@ class CreateEntryForm(QtGui.QWidget):
         """
         super(CreateEntryForm, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
-        self.fields = []
+        self._fields = []
         self.terms = {}
         self._populate_fields('E')
         for locale in mdl.get_main_model().open_termbase.languages:
@@ -342,10 +342,10 @@ class CreateEntryForm(QtGui.QWidget):
                 widget = QtGui.QTextEdit(self)
                 widget.setMaximumHeight(30)
                 widget.textChanged.connect(self._handle_entry_changed)
-                field = TextField(prop, locale, widget)
+                field = TextField(prop, widget)
             elif prop.property_type == 'I':  # image property
                 widget = SelectFileInput(self)
-                field = FileField(prop, locale, widget)
+                field = FileField(prop, widget)
                 widget.path_changed.connect(self._handle_entry_changed)
             else:  # picklist
                 widget = QtGui.QComboBox(self)
@@ -353,9 +353,11 @@ class CreateEntryForm(QtGui.QWidget):
                 widget.setModel(model)
                 widget.currentIndexChanged.connect(
                     lambda unused_idx: self._handle_entry_changed())
-                field = PicklistField(prop, locale, widget)
-                # keeps the _fields property up-to-date with the changes
-            self.fields.append(field)
+                field = PicklistField(prop, widget)
+            if level in ['L', 'T']:
+                field.locale = locale
+            # keeps the _fields property up-to-date with the changes
+            self._fields.append(field)
             # finally appends the widgets to the form layout
             self.layout().addRow(label, widget)
 
@@ -428,29 +430,32 @@ class AbstractFormField(object):
     are displayed in the form for the creation of a new terminological entry, no
     matter whether they are implemented using custom or library classes.
 
-    Fields are characterized by the defined property and the locale (which is
-    vital for language-level and term-level properties) and hold a reference
-    to the graphical widget used to collect the user input needed for their
-    definition.
+    Fields are characterized by the defined property the locale (which is
+    needed for language-level and term-level properties) and the defined lemma,
+    moreover they hold a reference to the graphical widget used to collect the
+    user input needed for their definition.
 
     All such fields must implement the ``value`` property, allowing a caller
     to access the value of the property that has been specified by the user
     through the GUI.
     """
 
-    def __init__(self, prop, locale, widget):
+    def __init__(self, prop, widget, locale, lemma):
         """Constructor method.
 
         :param prop: reference to the property to be defined
         :type prop: Property
-        :param locale: representation of the locale of the language
-        :type locale: str
         :param widget: reference to the graphical input widget
         :type widget: QtGui.QWidget
+        :param locale: representation of the locale of the language
+        :type locale: str
+        :param lemma: lemma of the defined term
+        :type lemma: str
         :rtype: AbstractFormField
         """
         self.property = prop
         self.locale = locale
+        self.lemma = lemma
         self._widget = widget
 
     @property
@@ -468,8 +473,8 @@ class TextField(AbstractFormField):
     """Textual field to define simple textual properties.
     """
 
-    def __init__(self, prop, locale, widget):
-        super(TextField, self).__init__(prop, locale, widget)
+    def __init__(self, prop, widget, locale=None, lemma=None):
+        super(TextField, self).__init__(prop, widget, locale, lemma)
 
     @property
     def value(self):
@@ -481,8 +486,8 @@ class PicklistField(AbstractFormField):
     is a library combo box.
     """
 
-    def __init__(self, prop, locale, widget):
-        super(PicklistField, self).__init__(prop, locale, widget)
+    def __init__(self, prop, widget, locale=None, lemma=None):
+        super(PicklistField, self).__init__(prop, widget, locale, lemma)
 
     @property
     def value(self):
@@ -494,8 +499,8 @@ class FileField(AbstractFormField):
     system where such a resource can be found.
     """
 
-    def __init__(self, prop, locale, widget):
-        super(FileField, self).__init__(prop, locale, widget)
+    def __init__(self, prop, widget, locale=None, lemma=None):
+        super(FileField, self).__init__(prop, widget, locale, lemma)
 
     @property
     def value(self):
