@@ -14,11 +14,13 @@ class EntryController(AbstractController):
         super(EntryController, self).__init__()
         self._model = entry_model
         self._view = entry_view
+        # sets the language of the entry model
+        self._model.language = self._view.entry_list.current_language
         # signal-slot connections
         self._view.fire_event.connect(self.handle_event)
 
-    def _handle_language_changed(self, locale):
-        self._model.language = locale
+    def _handle_language_changed(self):
+        self._model.language = self._view.entry_list.current_language
 
     def _handle_new_entry(self):
         self._view.entry_display.display_create_entry_form()

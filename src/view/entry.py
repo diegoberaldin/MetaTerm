@@ -81,13 +81,13 @@ class EntryList(QtGui.QWidget):
         super(EntryList, self).__init__(parent)
         self._model = None
         self._view = QtGui.QListView(self)
-        selector = LanguageSelector(self)
+        self._selector = LanguageSelector(self)
         # puts everything together
         self.setLayout(QtGui.QVBoxLayout(self))
-        self.layout().addWidget(selector)
+        self.layout().addWidget(self._selector)
         self.layout().addWidget(self._view)
         # signal-slot connection
-        selector.fire_event.connect(self.fire_event)
+        self._selector.fire_event.connect(self.fire_event)
 
     @property
     def model(self):
@@ -108,6 +108,16 @@ class EntryList(QtGui.QWidget):
         """
         self._model = value
         self._view.setModel(self._model)
+
+    @property
+    def current_language(self):
+        """Returns the locale of the language that is currently selected in the
+        entry list ``LanguageSelector`` internal instance.
+
+        :returns: the locale of the currently selected language
+        :rtype: str
+        """
+        return self._selector.current_language
 
 
 class LanguageSelector(QtGui.QWidget):
@@ -138,7 +148,7 @@ class LanguageSelector(QtGui.QWidget):
         mdl.get_main_model().termbase_closed.connect(
             self._regenerate_language_list)
         self._language_combo.currentIndexChanged.connect(
-            self._handle_index_changed)
+            lambda: self.fire_event.emit('language_changed', {}))
 
     @QtCore.pyqtSlot()
     def _regenerate_language_list(self):
@@ -156,20 +166,19 @@ class LanguageSelector(QtGui.QWidget):
         model = QtGui.QStringListModel(locale_list)
         self._language_combo.setModel(model)
 
-    @QtCore.pyqtSlot(int)
-    def _handle_index_changed(self, unused_index):
+    @property
+    def current_language(self):
         """Determines the locale of the currently selected index in the
-        language combobox and has the language selector to emit the right
-        signal (with the current locale passed as a parameter)
+        language combobox returns it as a string.
 
-        :rtype: None
+        :returns: the locale of the currently selected language or None
+        :rtype: str
         """
         language_name = self._language_combo.currentText()
         if language_name:
             inverted_languages = {value: key for key, value in
                                   mdl.DEFAULT_LANGUAGES.items()}
-            self.fire_event.emit('language_changed',
-                                 {'locale': inverted_languages[language_name]})
+            return inverted_languages[language_name]
 
 
 class EntryDisplay(QtGui.QWidget):
