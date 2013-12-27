@@ -419,9 +419,8 @@ class CreateEntryForm(QtGui.QWidget):
         the list of terms that the entry contains.
         :rtype: dict
         """
-        return {locale: f.text()
-                for locale in mdl.get_main_model().open_termbase.languages
-                for f in self._terms[locale]}
+        return {locale: [f.text() for f in self._terms[locale]]
+                for locale in mdl.get_main_model().open_termbase.languages}
 
 
 class SelectFileInput(QtGui.QWidget):
