@@ -68,7 +68,7 @@ class MainWindow(QtGui.QMainWindow):
         main_widget = EntryWidget(self)
         self.setCentralWidget(main_widget)
         # window size and title
-        self.setMinimumSize(self._MIN_WIDTH, self._MIN_HEIGHT)
+        self.setBaseSize(self._MIN_WIDTH, self._MIN_HEIGHT)
         self.setWindowTitle('MetaTerm')
         # displays a message in the status bar
         self.statusBar().showMessage('Started.')

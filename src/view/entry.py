@@ -283,7 +283,21 @@ class EntryScreen(QtGui.QWidget):
                     self)
                 self.layout().addRow(prop_label, value_label)
             for term in self._entry.get_terms(locale):
-                pass
+                if term.vedette:
+                    # if the term is the vedette, it must be printed in bold
+                    term_label = QtGui.QLabel(
+                        '<strong>{0}</strong>'.format(term.lemma), self)
+                else:
+                    term_label = QtGui.QLabel(term.lemma, self)
+                self.layout().addWidget(term_label)
+                for prop in schema.get_properties('T'):
+                    # adds term-level properties
+                    prop_label = QtGui.QLabel(
+                        '<strong>{0}:</strong>'.format(prop.name),
+                        self)
+                    value_label = QtGui.QLabel(term.get_property(prop.prop_id),
+                                               self)
+                    self.layout().addRow(prop_label, value_label)
 
 
 class WelcomeScreen(QtGui.QWidget):

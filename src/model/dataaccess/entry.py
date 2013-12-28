@@ -179,3 +179,10 @@ class Entry(object):
                             self._tb)
             except sqlalchemy.orm.exc.NoResultFound:
                 return None
+
+    def get_terms(self, locale):
+        with self._tb.get_session() as session:
+            return [Term(t.term_id, t.lemma, t.lang_id, t.vedette, self._tb) for
+                    t in session.query(mapping.Term).filter(
+                    mapping.Term.entry_id == self.entry_id,
+                    mapping.Term.lang_id == locale)]
