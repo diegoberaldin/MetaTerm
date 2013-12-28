@@ -35,33 +35,37 @@ class MainWindow(QtGui.QMainWindow):
         """
         super(MainWindow, self).__init__()
         # action initialization (they are member data after all, aren't they?)
-        self._new_tb_action = QtGui.QAction('New...', self)
-        self._new_tb_action.triggered.connect(
+        self.new_tb_action = QtGui.QAction('New...', self)
+        self.new_tb_action.triggered.connect(
             lambda: self.fire_event.emit('new_termbase', {}))
-        self._open_tb_action = QtGui.QAction('Open...', self)
-        self._open_tb_action.triggered.connect(self._handle_open_termbase)
-        self._close_tb_action = QtGui.QAction('Close...', self)
-        self._close_tb_action.triggered.connect(
+        self.open_tb_action = QtGui.QAction('Open...', self)
+        self.open_tb_action.triggered.connect(self._handle_open_termbase)
+        self.close_tb_action = QtGui.QAction('Close...', self)
+        self.close_tb_action.triggered.connect(
             lambda: self.fire_event.emit('close_termbase', {}))
-        self._close_tb_action.setEnabled(False)
-        self._delete_tb_action = QtGui.QAction('Delete...', self)
-        self._delete_tb_action.triggered.connect(self._handle_delete_termbase)
-        self._show_tb_properties_action = QtGui.QAction('Properties...', self)
-        self._show_tb_properties_action.triggered.connect(
+        self.close_tb_action.setEnabled(False)
+        self.delete_tb_action = QtGui.QAction('Delete...', self)
+        self.delete_tb_action.triggered.connect(self._handle_delete_termbase)
+        self.show_tb_properties_action = QtGui.QAction('Properties...', self)
+        self.show_tb_properties_action.triggered.connect(
             self._handle_show_termbase_properties)
-        self._show_tb_properties_action.setEnabled(False)
-        self._create_entry_action = QtGui.QAction('Insert', self)
-        self._create_entry_action.setEnabled(False)
-        self._create_entry_action.triggered.connect(
+        self.show_tb_properties_action.setEnabled(False)
+        self.create_entry_action = QtGui.QAction('Insert', self)
+        self.create_entry_action.setEnabled(False)
+        self.create_entry_action.triggered.connect(
             lambda: self.fire_event.emit('new_entry', {}))
-        self._save_entry_action = QtGui.QAction('Save', self)
-        self._save_entry_action.setEnabled(False)
-        self._save_entry_action.triggered.connect(
+        self.save_entry_action = QtGui.QAction('Save', self)
+        self.save_entry_action.setEnabled(False)
+        self.save_entry_action.triggered.connect(
             lambda: self.fire_event.emit('save_entry', {}))
-        self._quit_action = QtGui.QAction('Quit', self)
-        self._quit_action.triggered.connect(lambda: QtGui.qApp.quit())
-        self._about_qt_action = QtGui.QAction('About Qt', self)
-        self._about_qt_action.triggered.connect(
+        self.edit_entry_action = QtGui.QAction('Edit', self)
+        self.edit_entry_action.setEnabled(False)
+        self.edit_entry_action.triggered.connect(
+            lambda: self.fire_event.emit('edit_entry', {}))
+        self.quit_action = QtGui.QAction('Quit', self)
+        self.quit_action.triggered.connect(lambda: QtGui.qApp.quit())
+        self.about_qt_action = QtGui.QAction('About Qt', self)
+        self.about_qt_action.triggered.connect(
             lambda: QtGui.QMessageBox.aboutQt(self, 'About Qt'))
         self._create_menus()
         # sets the central widget
@@ -86,24 +90,25 @@ class MainWindow(QtGui.QMainWindow):
         """
         # termbase menu
         termbase_menu = QtGui.QMenu('Termbase', self)
-        termbase_menu.addAction(self._new_tb_action)
-        termbase_menu.addAction(self._open_tb_action)
-        termbase_menu.addAction(self._close_tb_action)
-        termbase_menu.addAction(self._delete_tb_action)
-        termbase_menu.addAction(self._show_tb_properties_action)
-        termbase_menu.addAction(self._quit_action)
+        termbase_menu.addAction(self.new_tb_action)
+        termbase_menu.addAction(self.open_tb_action)
+        termbase_menu.addAction(self.close_tb_action)
+        termbase_menu.addAction(self.delete_tb_action)
+        termbase_menu.addAction(self.show_tb_properties_action)
+        termbase_menu.addAction(self.quit_action)
         self.menuBar().addMenu(termbase_menu)
         # entry menu
         entry_menu = QtGui.QMenu('Entry', self)
-        entry_menu.addAction(self._create_entry_action)
-        entry_menu.addAction(self._save_entry_action)
+        entry_menu.addAction(self.create_entry_action)
+        entry_menu.addAction(self.save_entry_action)
+        entry_menu.addAction(self.edit_entry_action)
         self.menuBar().addMenu(entry_menu)
         # view menu
         view_menu = QtGui.QMenu('View', self)
         self.menuBar().addMenu(view_menu)
         # help menu
         help_menu = QtGui.QMenu('?', self)
-        help_menu.addAction(self._about_qt_action)
+        help_menu.addAction(self.about_qt_action)
         self.menuBar().addMenu(help_menu)
 
     def display_message(self, message):
@@ -137,9 +142,9 @@ class MainWindow(QtGui.QMainWindow):
 
         :rtype: None
         """
-        self._show_tb_properties_action.setEnabled(True)
-        self._close_tb_action.setEnabled(True)
-        self._create_entry_action.setEnabled(True)
+        self.show_tb_properties_action.setEnabled(True)
+        self.close_tb_action.setEnabled(True)
+        self.create_entry_action.setEnabled(True)
 
     @QtCore.pyqtSlot()
     def _handle_termbase_closed(self):
@@ -148,9 +153,9 @@ class MainWindow(QtGui.QMainWindow):
 
         :rtype: None
         """
-        self._show_tb_properties_action.setEnabled(False)
-        self._close_tb_action.setEnabled(False)
-        self._create_entry_action.setEnabled(False)
+        self.show_tb_properties_action.setEnabled(False)
+        self.close_tb_action.setEnabled(False)
+        self.create_entry_action.setEnabled(False)
 
     @QtCore.pyqtSlot()
     def _handle_delete_termbase(self):
@@ -181,6 +186,3 @@ class MainWindow(QtGui.QMainWindow):
         """
         dialog = TermbasePropertyDialog(self)
         dialog.exec()
-
-    def enable_save_entry_action(self):
-        self._save_entry_action.setEnabled(True)
