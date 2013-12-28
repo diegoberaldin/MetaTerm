@@ -251,6 +251,7 @@ class EntryDisplay(QtGui.QWidget):
         :rtype: None
         """
         self._display_content(WelcomeScreen(self))
+        self.fire_event.emit('ui_reset', {})
 
     def display_entry(self, entry):
         """Displays the given entry in a suitable widget in the main area of

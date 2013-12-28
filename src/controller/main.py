@@ -111,3 +111,9 @@ class MainController(AbstractController):
 
     def _handle_entry_displayed(self):
         self._view.edit_entry_action.setEnabled(True)
+        self._view.delete_entry_action.setEnabled(True)
+
+    def _handle_ui_reset(self):
+        self._view.save_entry_action.setEnabled(False)
+        self._view.edit_entry_action.setEnabled(False)
+        self._view.delete_entry_action.setEnabled(False)
