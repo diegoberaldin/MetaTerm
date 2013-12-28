@@ -62,7 +62,7 @@ class SelectFileInput(QtGui.QWidget):
         """Allows for subsequent form fields to access the selected value, i.e.
         the path that is shown in the text input field of the widget.
 
-        :returns: the selected (absolute) path to the resource
+        :return: the selected (absolute) path to the resource
         :rtype: str
         """
         return self._text_input.text()
