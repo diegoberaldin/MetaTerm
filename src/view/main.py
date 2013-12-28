@@ -22,11 +22,11 @@ class MainWindow(QtGui.QMainWindow):
     """Signal emitted when an event is fired in the application main window."""
 
     # a couple of class constants
-    _MIN_WIDTH = 800
-    """Minimum width of the application main window."""
+    _WIDTH = 800
+    """Width of the application main window at startup."""
 
-    _MIN_HEIGHT = 600
-    """Minimum height of the application main window."""
+    _HEIGHT = 600
+    """Height of the application main window at startup."""
 
     def __init__(self):
         """Constructor method for the main window.
@@ -68,7 +68,7 @@ class MainWindow(QtGui.QMainWindow):
         main_widget = EntryWidget(self)
         self.setCentralWidget(main_widget)
         # window size and title
-        self.setBaseSize(self._MIN_WIDTH, self._MIN_HEIGHT)
+        self.resize(self._WIDTH, self._HEIGHT)
         self.setWindowTitle('MetaTerm')
         # displays a message in the status bar
         self.statusBar().showMessage('Started.')
