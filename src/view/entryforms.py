@@ -386,15 +386,18 @@ class CreateEntryForm(AbstractEntryForm):
 
 
 class UpdateEntryForm(AbstractEntryForm):
-    """
+    """This form is used to update an existing entry in the currently opened
+    termbase, it shows all properties in editable fields (in a suitable widget
+    according to the property type) and initializes their content depending on
+    the values stored in the termbase.
     """
 
     def __init__(self, entry, parent):
         """Constructor method.
 
-        :param parent:
+        :param parent: reference to the parent widget
         :type parent: QtCore.QWidget
-        :param entry:
+        :param entry: terminological Entry that is being edited
         :type entry: Entry
         :rtype: UpdateEntryForm
         """
@@ -415,7 +418,15 @@ class UpdateEntryForm(AbstractEntryForm):
                 self._populate_fields('T', locale, term.lemma)
 
     def _fill_field(self, prop, field):
-        """
+        """Fills the field of the form with the value that is stored in the
+        currently opened termbase, getting the value from the data access layer
+        and calling the setter on the field.
+
+        :param prop: property that is being accessed
+        :type prop: Property
+        :param field: field that must be filled
+        :type field: AbstractFormField
+        :rtype: None
         """
         if field.level == 'E':  # entry-level field
             value = self._entry.get_property(prop.prop_id)
