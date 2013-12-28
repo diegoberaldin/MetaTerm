@@ -244,11 +244,30 @@ class EntryDisplay(QtGui.QWidget):
         self._display_content(WelcomeScreen(self))
 
     def display_entry(self, entry):
+        """Displays the given entry in a suitable widget in the main area of
+        the central widget of the application.
+
+        :param entry: reference to the entry to be displayed
+        :type entry: Entry
+        :rtype: None
+        """
         self._display_content(EntryScreen(entry, self))
 
 
 class EntryScreen(QtGui.QWidget):
+    """Widget that is shown in the central part of the ``EntryDisplay`` to fully
+    show a terminological entry without allowing any modification to it.
+    """
+
     def __init__(self, entry, parent):
+        """Constructor method.
+
+        :param entry: entry to be displayed
+        :type entry: Entry
+        :param parent: reference to the parent widget
+        :type parent: QtGui.QWidget
+        :rtype: EntryScreen
+        """
         super(EntryScreen, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
         self._entry = entry
@@ -258,11 +277,8 @@ class EntryScreen(QtGui.QWidget):
         schema = mdl.get_main_model().open_termbase.schema
         for prop in schema.get_properties('E'):
             # shows entry-level properties
-            prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(prop.name),
-                                      self)
-            value_label = QtGui.QLabel(
-                self._entry.get_property(prop.prop_id), self)
-            self.layout().addRow(prop_label, value_label)
+            self._show_property(prop.name,
+                                self._entry.get_property(prop.prop_id))
         for locale in mdl.get_main_model().open_termbase.languages:
             # adds flag and language name
             flag = QtGui.QLabel(self)
@@ -275,13 +291,8 @@ class EntryScreen(QtGui.QWidget):
             self.layout().addRow(flag, label)
             for prop in schema.get_properties('L'):
                 # shows language-level properties
-                prop_label = QtGui.QLabel(
-                    '<strong>{0}:</strong>'.format(prop.name),
-                    self)
-                value_label = QtGui.QLabel(
-                    self._entry.get_language_property(locale, prop.prop_id),
-                    self)
-                self.layout().addRow(prop_label, value_label)
+                value = self._entry.get_language_property(locale, prop.prop_id)
+                self._show_property(prop.name, value)
             for term in self._entry.get_terms(locale):
                 if term.vedette:
                     # if the term is the vedette, it must be printed in bold
@@ -292,12 +303,22 @@ class EntryScreen(QtGui.QWidget):
                 self.layout().addWidget(term_label)
                 for prop in schema.get_properties('T'):
                     # adds term-level properties
-                    prop_label = QtGui.QLabel(
-                        '<strong>{0}:</strong>'.format(prop.name),
-                        self)
-                    value_label = QtGui.QLabel(term.get_property(prop.prop_id),
-                                               self)
-                    self.layout().addRow(prop_label, value_label)
+                    self._show_property(prop.name,
+                                        term.get_property(prop.prop_id))
+
+    def _show_property(self, name, value):
+        """Displays a given row in the entry screen, containing the name of the
+        property on the left side and the corresponding value on the right side.
+
+        :param name: name of the property to be displayed
+        :type name: str
+        :param value: value of the property to be displayed
+        :type value: str
+        :rtype: None
+        """
+        prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(name), self)
+        value_label = QtGui.QLabel(value, self)
+        self.layout().addRow(prop_label, value_label)
 
 
 class WelcomeScreen(QtGui.QWidget):
