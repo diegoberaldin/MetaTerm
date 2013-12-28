@@ -54,3 +54,7 @@ class EntryController(AbstractController):
     def _handle_edit_entry(self):
         entry = self._view.entry_display.current_entry
         self._view.entry_display.display_update_entry_form(entry)
+
+    def _handle_delete_entry(self):
+        entry = self._view.entry_display.current_entry
+        mdl.get_main_model().open_termbase.delete_entry(entry)

@@ -112,6 +112,17 @@ class Termbase(object):
             session.add(entry)
         return Entry(entry_id, self)
 
+    def delete_entry(self, entry):
+        """Deletes the given entry from the terminological database.
+
+        :param entry: reference to the Entry to be deleted
+        :type entry: Entry
+        :rtype: None
+        """
+        with self.get_session() as session:
+            session.query(mapping.Entry).filter(
+                mapping.Entry.entry_id == entry.entry_id).delete()
+
     def add_language(self, locale):
         """Adds the language with the given locale to the termbase languages.
 
