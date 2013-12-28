@@ -14,20 +14,12 @@ from PyQt4 import QtCore, QtGui
 from src import model as mdl
 
 
-class CreateEntryForm(QtGui.QWidget):
-    """Widget used to represent the form which is to be displayed whenever the
-    user asks to create a new terminological entry. It must contain an
-    indication of the languages (with the corresponding flags) that are stored
-    in the termbase and just one term input field for each language in order
-    to insert the lemma.
-
-    As far as properties are concerned, it must display a set of input fields,
-    namely:
-    - all entry level properties must have the corresponding field shown once;
-    - language level properties must appear once for every language in the
-      termbase, under the corresponding flag;
-    - term level properties are displayed once for every term under the term
-      lemma.
+class AbstractEntryForm(QtGui.QWidget):
+    """Base class used for entry creation and update forms, providing the
+    common part of the constructor, a couple of utility methods used in both
+    kinds of forms, a hook method used to fill-in data with already stored
+    terminological information and the signal to emit whenever some part of the
+    entry form gets filled.
     """
 
     fire_event = QtCore.pyqtSignal(str, dict)
@@ -37,74 +29,32 @@ class CreateEntryForm(QtGui.QWidget):
     def __init__(self, parent):
         """Constructor method.
 
-        :param parent: reference to the container widget
-        :type parent: QtGui.QWidget
-        :rtype: CreateEntryForm
+        :param parent: reference to the parent widget
+        :type parent: QtCore.QWidget
+        :rtype: AbstractEntryForm
         """
-        super(CreateEntryForm, self).__init__(parent)
+        super(AbstractEntryForm, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
         self._fields = []
         self._terms = {locale: [] for locale in
                        mdl.get_main_model().open_termbase.languages}
-        self._populate_fields('E')
-        for locale in mdl.get_main_model().open_termbase.languages:
-            # adds flag and language name
-            flag = QtGui.QLabel(self)
-            flag.setPixmap(
-                QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
-                    15))
-            label = QtGui.QLabel(
-                '<strong>{0}</strong>'.format(mdl.DEFAULT_LANGUAGES[locale]),
-                self)
-            self.layout().addRow(flag, label)
-            self._populate_fields('L', locale)
-            term_label = QtGui.QLabel('<strong>Term</strong>', self)
-            term_input = QtGui.QLineEdit(self)
-            self._terms[locale].append(term_input)
-            self.layout().addRow(term_label, term_input)
-            self._populate_fields('T', locale)
 
-    def _populate_fields(self, level, locale=None):
-        """This method is designed to be called several times in the form
-        constructor in order to create the parts of the user interface which
-        depend on the termbase properties of some level.
+    def _append_language_flag(self, locale):
+        """Appends a read-only row to the form displaying the national flag of
+        the language with the given locale as well as its name.
 
-        It has the responsibility of extracting the desired set of properties
-        from the termbase (model) and create for each and every one of them a
-        label with the property name and a suitable input field depending on the
-        property type.
-
-        :param level: level of the properties to be queried
-        :type level: str
-        :param locale: locale of the language (if any) the property refers to
+        :param locale: locale of the language being displayed
         :type locale: str
         :rtype: None
         """
-        for prop in mdl.get_main_model().open_termbase.schema.get_properties(
-                level):
-            label = QtGui.QLabel(prop.name, self)
-            if prop.property_type == 'T':  # text property
-                widget = QtGui.QTextEdit(self)
-                widget.setMaximumHeight(30)
-                widget.textChanged.connect(self._handle_entry_changed)
-                field = TextField(prop, level, widget)
-            elif prop.property_type == 'I':  # image property
-                widget = SelectFileInput(self)
-                field = FileField(prop, level, widget)
-                widget.path_changed.connect(self._handle_entry_changed)
-            else:  # picklist
-                widget = QtGui.QComboBox(self)
-                model = QtGui.QStringListModel(prop.values)
-                widget.setModel(model)
-                widget.currentIndexChanged.connect(
-                    lambda unused_idx: self._handle_entry_changed())
-                field = PicklistField(prop, level, widget)
-            if level in ['L', 'T']:
-                field.locale = locale
-                # keeps the _fields property up-to-date with the changes
-            self._fields.append(field)
-            # finally appends the widgets to the form layout
-            self.layout().addRow(label, widget)
+        flag = QtGui.QLabel(self)
+        flag.setPixmap(
+            QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
+                15))
+        label = QtGui.QLabel(
+            '<strong>{0}</strong>'.format(mdl.DEFAULT_LANGUAGES[locale]),
+            self)
+        self.layout().addRow(flag, label)
 
     @QtCore.pyqtSlot()
     def _handle_entry_changed(self):
@@ -115,7 +65,6 @@ class CreateEntryForm(QtGui.QWidget):
         """
         self.fire_event.emit('entry_changed', {})
 
-    # @property unsupported in QtCore.QWidget subclasses :(
     def get_entry_level_property_values(self):
         """Allows the controller to access the information inserted in the
         form by the user for entry-level properties.
@@ -165,6 +114,108 @@ class CreateEntryForm(QtGui.QWidget):
         return {locale: [f.text() for f in self._terms[locale]]
                 for locale in mdl.get_main_model().open_termbase.languages}
 
+    def _fill_field(self, prop, field):
+        """Fills a given form field with the information that is currently
+        stored in the terminological database in the given property. Particular
+        attention must be payed to account for the *type* of the property in
+        order to correctly display the information in the GUI and the *level*
+        of the property in order to query the right data access layer object.
+
+        :param prop: property whose value must be retrieved and displayed
+        :type prop: Property
+        :param field: reference to the field to be filled
+        :type field: AbstractFormField
+        :rtype: None
+        """
+        raise NotImplementedError('Implement me!')
+
+    def _populate_fields(self, level, locale=None, lemma=None):
+        """This method is designed to be called several times in the form
+        constructor in order to create the parts of the user interface which
+        depend on the termbase properties of some level.
+
+        It has the responsibility of extracting the desired set of properties
+        from the termbase (model) and create for each and every one of them a
+        label with the property name and a suitable input field depending on the
+        property type.
+
+        :param level: level of the properties to be queried
+        :type level: str
+        :param locale: locale of the language (if any) the property refers to
+        :type locale: str
+        :rtype: None
+        """
+        for prop in mdl.get_main_model().open_termbase.schema.get_properties(
+                level):
+            label = QtGui.QLabel(prop.name, self)
+            if prop.property_type == 'T':  # text property
+                widget = QtGui.QTextEdit(self)
+                widget.setMaximumHeight(30)
+                widget.textChanged.connect(self._handle_entry_changed)
+                field = TextField(prop, level, widget)
+            elif prop.property_type == 'I':  # image property
+                widget = SelectFileInput(self)
+                field = FileField(prop, level, widget)
+                widget.path_changed.connect(self._handle_entry_changed)
+            else:  # picklist
+                widget = QtGui.QComboBox(self)
+                model = QtGui.QStringListModel(prop.values)
+                widget.setModel(model)
+                widget.currentIndexChanged.connect(
+                    lambda unused_idx: self._handle_entry_changed())
+                field = PicklistField(prop, level, widget)
+            if level in ['L', 'T'] and locale:
+                field.locale = locale
+            if level == 'T' and lemma:
+                field.lemma = lemma
+            self._fields.append(field)
+            # fills-in the widget
+            self._fill_field(prop, field)
+            # finally appends the widgets to the form layout
+            self.layout().addRow(label, widget)
+
+
+class CreateEntryForm(AbstractEntryForm):
+    """Widget used to represent the form which is to be displayed whenever the
+    user asks to create a new terminological entry. It must contain an
+    indication of the languages (with the corresponding flags) that are stored
+    in the termbase and just one term input field for each language in order
+    to insert the lemma.
+
+    As far as properties are concerned, it must display a set of input fields,
+    namely:
+    - all entry level properties must have the corresponding field shown once;
+    - language level properties must appear once for every language in the
+      termbase, under the corresponding flag;
+    - term level properties are displayed once for every term under the term
+      lemma.
+    """
+
+    def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the container widget
+        :type parent: QtGui.QWidget
+        :rtype: CreateEntryForm
+        """
+        super(CreateEntryForm, self).__init__(parent)
+        self._populate_fields('E')
+        for locale in mdl.get_main_model().open_termbase.languages:
+            # adds flag and language name
+            self._append_language_flag(locale)
+            self._populate_fields('L', locale)
+            # field for the term
+            term_label = QtGui.QLabel('<strong>Term</strong>', self)
+            term_input = QtGui.QLineEdit(self)
+            self._terms[locale].append(term_input)
+            self.layout().addRow(term_label, term_input)
+            self._populate_fields('T', locale)
+
+    def _fill_field(self, prop, field):
+        """In entry creation forms nothing has to be done in this step.
+        """
+        pass
+
 
 class SelectFileInput(QtGui.QWidget):
     """Input widget used to select a resource from the local file system which
@@ -202,8 +253,7 @@ class SelectFileInput(QtGui.QWidget):
         :rtype: None
         """
         file_path = QtGui.QFileDialog.getOpenFileName(self, 'Choose file',
-                                                      os.path.expanduser(
-                                                          '~'))
+                                                      os.path.expanduser('~'))
         if file_path:
             self._text_input.setText(file_path)
         else:

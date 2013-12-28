@@ -315,9 +315,10 @@ class EntryScreen(QtGui.QWidget):
         :type value: str
         :rtype: None
         """
-        prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(name), self)
-        value_label = QtGui.QLabel(value, self)
-        self.layout().addRow(prop_label, value_label)
+        if value:
+            prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(name), self)
+            value_label = QtGui.QLabel(value, self)
+            self.layout().addRow(prop_label, value_label)
 
 
 class WelcomeScreen(QtGui.QWidget):
