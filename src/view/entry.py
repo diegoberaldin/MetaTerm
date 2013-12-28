@@ -10,7 +10,7 @@ and manipulate entries in the application main window.
 from PyQt4 import QtCore, QtGui
 
 from src import model as mdl
-from src.view.entryforms import CreateEntryForm
+from src.view.entryforms import CreateEntryForm, UpdateEntryForm
 
 
 class EntryWidget(QtGui.QSplitter):
@@ -208,6 +208,11 @@ class EntryDisplay(QtGui.QWidget):
         mdl.get_main_model().termbase_closed.connect(
             self.display_welcome_screen)
 
+    @property
+    def current_entry(self):
+        if hasattr(self.content, 'entry'):
+            return self.content.entry
+
     def _display_content(self, content):
         """Eases the change of content that is displayed inside the entry view
         by discarding the previous internal widget (and removing it completely)
@@ -234,6 +239,11 @@ class EntryDisplay(QtGui.QWidget):
         form.fire_event.connect(self.fire_event)
         self._display_content(form)
 
+    def display_update_entry_form(self, entry):
+        form = UpdateEntryForm(entry, self)
+        form.fire_event.connect(self.fire_event)
+        self._display_content(form)
+
     @QtCore.pyqtSlot()
     def display_welcome_screen(self):
         """Displays the initial welcome screen inside the entry display.
@@ -251,6 +261,7 @@ class EntryDisplay(QtGui.QWidget):
         :rtype: None
         """
         self._display_content(EntryScreen(entry, self))
+        self.fire_event.emit('entry_displayed', {})
 
 
 class EntryScreen(QtGui.QWidget):
@@ -269,15 +280,15 @@ class EntryScreen(QtGui.QWidget):
         """
         super(EntryScreen, self).__init__(parent)
         self.setLayout(QtGui.QFormLayout(self))
-        self._entry = entry
+        self.entry = entry
         entry_id_label = QtGui.QLabel(
-            '<small>Entry ID: {0}</small>'.format(self._entry.entry_id))
+            '<small>Entry ID: {0}</small>'.format(self.entry.entry_id))
         self.layout().addWidget(entry_id_label)
         schema = mdl.get_main_model().open_termbase.schema
         for prop in schema.get_properties('E'):
             # shows entry-level properties
             self._show_property(prop.name,
-                                self._entry.get_property(prop.prop_id))
+                                self.entry.get_property(prop.prop_id))
         for locale in mdl.get_main_model().open_termbase.languages:
             # adds flag and language name
             flag = QtGui.QLabel(self)
@@ -290,9 +301,9 @@ class EntryScreen(QtGui.QWidget):
             self.layout().addRow(flag, label)
             for prop in schema.get_properties('L'):
                 # shows language-level properties
-                value = self._entry.get_language_property(locale, prop.prop_id)
+                value = self.entry.get_language_property(locale, prop.prop_id)
                 self._show_property(prop.name, value)
-            for term in self._entry.get_terms(locale):
+            for term in self.entry.get_terms(locale):
                 if term.vedette:
                     # if the term is the vedette, it must be printed in bold
                     term_label = QtGui.QLabel(

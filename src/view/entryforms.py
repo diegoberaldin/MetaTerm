@@ -67,6 +67,10 @@ class SelectFileInput(QtGui.QWidget):
         """
         return self._text_input.text()
 
+    @value.setter
+    def value(self, value):
+        self._text_input.setText(value)
+
 
 class AbstractFormField(object):
     """This class is used as an abstraction mechanism for all the fields that
@@ -114,6 +118,17 @@ class AbstractFormField(object):
         """
         raise NotImplementedError('Override me')
 
+    @value.setter
+    def value(self, value):
+        """This must be implemented by all subclasses to set the property
+        value via some GUI mechanism (depending on the widget).
+
+        :param value: the new value of the property
+        :type value: object
+        :rtype: None
+        """
+        raise NotImplementedError('Override me')
+
 
 class TextField(AbstractFormField):
     """Textual field to define simple textual properties.
@@ -125,6 +140,10 @@ class TextField(AbstractFormField):
     @property
     def value(self):
         return self._widget.toPlainText()
+
+    @value.setter
+    def value(self, value):
+        self._widget.setPlainText(value)
 
 
 class PicklistField(AbstractFormField):
@@ -140,6 +159,11 @@ class PicklistField(AbstractFormField):
     def value(self):
         return self._widget.currentText()
 
+    @value.setter
+    def value(self, value):
+        index = self._widget.model().stringList().index(value)
+        self._widget.setCurrentIndex(index)
+
 
 class FileField(AbstractFormField):
     """Field used to represent resources whose value is the path on the local
@@ -152,6 +176,10 @@ class FileField(AbstractFormField):
     @property
     def value(self):
         return self._widget.value
+
+    @value.setter
+    def value(self, value):
+        self._widget.value = value
 
 
 class AbstractEntryForm(QtGui.QWidget):
@@ -355,3 +383,47 @@ class CreateEntryForm(AbstractEntryForm):
         """In entry creation forms nothing has to be done in this step.
         """
         pass
+
+
+class UpdateEntryForm(AbstractEntryForm):
+    """
+    """
+
+    def __init__(self, entry, parent):
+        """Constructor method.
+
+        :param parent:
+        :type parent: QtCore.QWidget
+        :param entry:
+        :type entry: Entry
+        :rtype: UpdateEntryForm
+        """
+        super(UpdateEntryForm, self).__init__(parent)
+        self._entry = entry
+        self._populate_fields('E')
+        for locale in mdl.get_main_model().open_termbase.languages:
+            # adds flag and language name
+            self._append_language_flag(locale)
+            self._populate_fields('L', locale)
+            # fields for the terms (possibly more than one)
+            for term in self._entry.get_terms(locale):
+                term_label = QtGui.QLabel('<strong>Term</strong>', self)
+                term_input = QtGui.QLineEdit(self)
+                term_input.setText(term.lemma)
+                self._terms[locale].append(term_input)
+                self.layout().addRow(term_label, term_input)
+                self._populate_fields('T', locale, term.lemma)
+
+    def _fill_field(self, prop, field):
+        """
+        """
+        if field.level == 'E':  # entry-level field
+            value = self._entry.get_property(prop.prop_id)
+        elif field.level == 'L':  # language-level field
+            value = self._entry.get_language_property(field.locale,
+                                                      prop.prop_id)
+        else:  # term-level field
+            term = self._entry.get_term(field.locale, field.lemma)
+            value = term.get_property(prop.prop_id)
+        if value:
+            field.value = value

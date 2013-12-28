@@ -107,4 +107,7 @@ class MainController(AbstractController):
                 'Termbase {0} has been deleted.'.format(name))
 
     def _handle_entry_changed(self):
-        self._view.enable_save_entry_action()
+        self._view.save_entry_action.setEnabled(True)
+
+    def _handle_entry_displayed(self):
+        self._view.edit_entry_action.setEnabled(True)

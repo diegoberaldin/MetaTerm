@@ -16,8 +16,6 @@ class EntryController(AbstractController):
         self._view = entry_view
         # sets the language of the entry model
         self._model.language = self._view.entry_list.current_language
-        # signal-slot connections
-        self._view.fire_event.connect(self.handle_event)
 
     def _handle_language_changed(self):
         self._model.language = self._view.entry_list.current_language
@@ -53,3 +51,6 @@ class EntryController(AbstractController):
         selected_entry = self._model.get_entry(index)
         self._view.entry_display.display_entry(selected_entry)
 
+    def _handle_edit_entry(self):
+        entry = self._view.entry_display.current_entry
+        self._view.entry_display.display_update_entry_form(entry)
