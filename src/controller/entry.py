@@ -46,6 +46,8 @@ class EntryController(AbstractController):
             term = new_entry.get_term(locale, lemma)
             term.set_property(property_id, value)
         self._view.entry_display.display_welcome_screen()
+        # updates the entry model
+        self._model.add_entry(new_entry)
 
     def _handle_entry_index_changed(self, index):
         selected_entry = self._model.get_entry(index)
@@ -58,3 +60,5 @@ class EntryController(AbstractController):
     def _handle_delete_entry(self):
         entry = self._view.entry_display.current_entry
         mdl.get_main_model().open_termbase.delete_entry(entry)
+        self._model.delete_entry(entry)
+        self._view.entry_display.display_welcome_screen()

@@ -79,7 +79,8 @@ class EntryModel(QtCore.QAbstractListModel):
         """
         if index.isValid():
             entry = self.get_entry(index)
-            if role == QtCore.Qt.DisplayRole:
+            if entry and role == QtCore.Qt.DisplayRole:
+                # FIXME: first check should not be needed
                 return entry.get_vedette(self.language)
 
     def get_entry(self, index):
@@ -93,3 +94,30 @@ class EntryModel(QtCore.QAbstractListModel):
         """
         if index.row() < self.rowCount():
             return self._entries[index.row()]
+
+    def add_entry(self, entry):
+        """Adds the given entry to the internal data structure and notifies all
+        the attached views by emitting the proper signals.
+
+        :param entry: entry to be added
+        :type entry: Entry
+        :rtype: None
+        """
+        self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(),
+                             self.rowCount())
+        self._entries.append(entry)
+        self.endInsertRows()
+
+    def delete_entry(self, entry):
+        """Removes the given entry to the internal data structure and notifies
+        all the attached views by emitting the proper signals.
+
+        :param entry: entry to be deleted
+        :type entry: Entry
+        :rtype: None
+        """
+        position = self._entries.index(entry)
+        self.beginRemoveRows(self.createIndex(position, 0, entry), position,
+                             position)
+        self._entries.remove(entry)
+        self.endRemoveRows()
