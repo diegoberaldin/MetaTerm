@@ -25,29 +25,37 @@ class EntryController(AbstractController):
 
     def _handle_save_entry(self):
         form = self._view.entry_display.content
-        # creates the new entry
-        new_entry = mdl.get_main_model().open_termbase.create_entry()
+        if form.is_new:
+            # creates the new entry
+            entry = mdl.get_main_model().open_termbase.create_entry()
+            # inserts all terms
+            for (locale, lemmata) in form.get_terms().items():
+                assert len(lemmata) == 1
+                lemma = lemmata.pop()
+                entry.add_term(lemma, locale, True)
+        else:  # manipulating an existing entry
+            entry = form.entry
         for (property_id,
              value) in form.get_entry_level_property_values().items():
             # inserts entry-level properties
-            new_entry.set_property(property_id, value)
+            entry.set_property(property_id, value)
         for ((language_id, property_id),
              value) in form.get_language_level_property_values().items():
             # insert language-level properties
-            new_entry.set_language_property(language_id, property_id, value)
-        for (locale, lemmata) in form.get_terms().items():
-            # inserts all terms
-            assert len(lemmata) == 1
-            lemma = lemmata.pop()
-            new_entry.add_term(lemma, locale, True)
+            entry.set_language_property(language_id, property_id, value)
+
         for ((locale, lemma, property_id),
              value) in form.get_term_level_property_values().items():
             # inserts term properties
-            term = new_entry.get_term(locale, lemma)
+            term = entry.get_term(locale, lemma)
             term.set_property(property_id, value)
-        self._view.entry_display.display_welcome_screen()
         # updates the entry model
-        self._model.add_entry(new_entry)
+        if form.is_new:
+            self._model.add_entry(entry)
+        else:
+            self._model.update_entry(entry)
+        # updates the UI
+        self._view.entry_display.display_entry(entry)
 
     def _handle_entry_index_changed(self, index):
         selected_entry = self._model.get_entry(index)

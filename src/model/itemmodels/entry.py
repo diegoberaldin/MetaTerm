@@ -121,3 +121,16 @@ class EntryModel(QtCore.QAbstractListModel):
                              position)
         self._entries.remove(entry)
         self.endRemoveRows()
+
+    def update_entry(self, entry):
+        """Has the model to react properly when the data stored inside an entry
+        change, which is useful if the lemma of the vedette term for the main
+        language in the entry gets changed by the user. In this case the label
+        of the entry in the list model must be updated to reflect the change.
+
+        :param entry: entry that has been changed
+        :type entry: Entry
+        :rtype: None
+        """
+        entry_index = self.createIndex(self._entries.index(entry), 0, entry)
+        self.dataChanged.emit(entry_index, entry_index)
