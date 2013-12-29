@@ -342,6 +342,17 @@ class AbstractEntryForm(QtGui.QWidget):
             # finally appends the widgets to the form layout
             self.layout().addRow(label, widget)
 
+    @property
+    def is_new(self):
+        """This property must be overridden by subclasses to help the controller
+        determine whether the entry being manipulated in the form is a totally
+        new entry or an existing entry in the currently opened termbase.
+
+        :returns: True is the entry is new, False if it already exists
+        :rtype: bool
+        """
+        raise NotImplementedError('Override me!')
+
 
 class CreateEntryForm(AbstractEntryForm):
     """Widget used to represent the form which is to be displayed whenever the
@@ -384,6 +395,15 @@ class CreateEntryForm(AbstractEntryForm):
         """
         pass
 
+    @property
+    def is_new(self):
+        """Overridden to correctly implement superclass interface.
+
+        :returns: True since this model is used to create a brand new entry
+        :rtype: bool
+        """
+        return True
+
 
 class UpdateEntryForm(AbstractEntryForm):
     """This form is used to update an existing entry in the currently opened
@@ -402,14 +422,14 @@ class UpdateEntryForm(AbstractEntryForm):
         :rtype: UpdateEntryForm
         """
         super(UpdateEntryForm, self).__init__(parent)
-        self._entry = entry
+        self.entry = entry
         self._populate_fields('E')
         for locale in mdl.get_main_model().open_termbase.languages:
             # adds flag and language name
             self._append_language_flag(locale)
             self._populate_fields('L', locale)
             # fields for the terms (possibly more than one)
-            for term in self._entry.get_terms(locale):
+            for term in self.entry.get_terms(locale):
                 term_label = QtGui.QLabel('<strong>Term</strong>', self)
                 term_input = QtGui.QLineEdit(self)
                 term_input.setText(term.lemma)
@@ -429,12 +449,21 @@ class UpdateEntryForm(AbstractEntryForm):
         :rtype: None
         """
         if field.level == 'E':  # entry-level field
-            value = self._entry.get_property(prop.prop_id)
+            value = self.entry.get_property(prop.prop_id)
         elif field.level == 'L':  # language-level field
-            value = self._entry.get_language_property(field.locale,
+            value = self.entry.get_language_property(field.locale,
                                                       prop.prop_id)
         else:  # term-level field
-            term = self._entry.get_term(field.locale, field.lemma)
+            term = self.entry.get_term(field.locale, field.lemma)
             value = term.get_property(prop.prop_id)
         if value:
             field.value = value
+
+    @property
+    def is_new(self):
+        """Overridden to correctly implement superclass interface.
+
+        :returns: False since this model is used to manipulate existing entries
+        :rtype: bool
+        """
+        return False
