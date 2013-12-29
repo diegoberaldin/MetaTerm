@@ -79,6 +79,14 @@ class MainController(AbstractController):
 
     @QtCore.pyqtSlot(str)
     def _finalize_child_controller(self, child_name):
+        """This slot is used as a means by the main controller to observe its
+        child controllers and safely delete (causing them to be garbage
+        collected) them when they inform it that they are done with their tasks.
+
+        :param child_name: key to be used in the children dictionary
+        :type child_name: str
+        :rtype: None
+        """
         del self._children[child_name]
 
     def _handle_close_termbase(self):
@@ -107,13 +115,39 @@ class MainController(AbstractController):
                 'Termbase {0} has been deleted.'.format(name))
 
     def _handle_entry_changed(self):
+        """When the content of an entry manipulator form gets changed, the
+        current entry can be saved so this event handler activates the
+        corresponding action in the main view.
+
+        :rtype: None
+        """
         self._view.save_entry_action.setEnabled(True)
 
     def _handle_entry_displayed(self):
+        """When an entry is displayed in the entry view, that entry can be
+        edited or deleted, so this event handler activates the corresponding
+        actions in the main view.
+
+        :rtype: None
+        """
         self._view.edit_entry_action.setEnabled(True)
         self._view.delete_entry_action.setEnabled(True)
 
     def _handle_ui_reset(self):
+        """When the UI is reset no entry can be manipulated, so this event
+        handler prevents the entry manipulation actions from being triggered.
+
+        :rtype: None
+        """
         self._view.save_entry_action.setEnabled(False)
         self._view.edit_entry_action.setEnabled(False)
         self._view.delete_entry_action.setEnabled(False)
+
+    def _handle_save_entry(self):
+        """When an entry gets inserted or updated in the currently opened
+        termbase, it cannot be saved any more until it is edited and modified
+        once again, so this handler prevents that action from being triggered.
+
+        :rtype: None
+        """
+        self._view.save_entry_action.setEnabled(False)
