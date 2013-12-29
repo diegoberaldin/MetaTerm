@@ -172,6 +172,7 @@ class Entry(object):
         with self._tb.get_session() as session:
             try:
                 term = session.query(mapping.Term).filter(
+                    mapping.Term.entry_id == self.entry_id,
                     mapping.Term.lang_id == locale,
                     mapping.Term.lemma == lemma).one()
                 return Term(term.term_id, term.lemma, term.lang_id,
