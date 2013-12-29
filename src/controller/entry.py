@@ -3,6 +3,8 @@
 """
 .. currentmodule:: src.controller.entry
 
+This module contains the controller that governs entry creation, update and
+deletion and manages entry visualization in the graphical user interface.
 """
 
 from src.controller.abstract import AbstractController
@@ -10,6 +12,15 @@ from src import model as mdl
 
 
 class EntryController(AbstractController):
+    """Controller that is responsible for entry visualization and manipulation.
+    It has two reference models: the 'global' main model with its open termbase
+    and a specific instance of ``model.itemmodels.entry.EntryModel`` that is
+    manipulated via a set of accessor methods. The governed view corresponds to
+    the main widget of the application with its entry list and entry display,
+    but the events to which it reacts *can be originated everywhere in the UI*
+    even in the main window and outside the entry display/manipulation area.
+    """
+
     def __init__(self, entry_model, entry_view):
         super(EntryController, self).__init__()
         self._model = entry_model
