@@ -129,6 +129,17 @@ class AbstractFormField(object):
         """
         raise NotImplementedError('Override me')
 
+    @QtCore.pyqtSlot(str)
+    def update_lemma(self, lemma):
+        """Use to automatically update the lemma of the field when a text input
+        gets edited by the user via signal-slot mechanism.
+
+        :param lemma: new lemma of the field
+        :type lemma: str
+        :rtype: None
+        """
+        self.lemma = lemma
+
 
 class TextField(AbstractFormField):
     """Textual field to define simple textual properties.
@@ -278,7 +289,8 @@ class AbstractEntryForm(QtGui.QWidget):
         return {(locale, lemma, f.property.prop_id): f.value
                 for locale in mdl.get_main_model().open_termbase.languages
                 for lemma in self.get_terms()[locale]
-                for f in self._fields if f.level == 'T' and f.locale == locale}
+                for f in self._fields
+                if f.level == 'T' and f.locale == locale and f.lemma == lemma}
 
     def get_terms(self):
         """Allows to access the terms that have been inserted in the form for
@@ -413,6 +425,11 @@ class CreateEntryForm(AbstractEntryForm):
             self._terms[locale].append(term_input)
             term_layout.addRow(term_label, term_input)
             self._populate_fields('T', term_layout, locale)
+            for field in [f for f in self._fields if
+                          f.level == 'T' and f.locale == locale
+                          and f.lemma is None]:
+                # needed to keep field bound to the term in the input field
+                term_input.textEdited.connect(field.update_lemma)
             self._language_layouts[locale].addLayout(term_layout)
             self.layout().addLayout(self._language_layouts[locale])
         self.layout().addStretch()
@@ -467,6 +484,11 @@ class UpdateEntryForm(AbstractEntryForm):
                 self._terms[locale].append(term_input)
                 term_layout.addRow(term_label, term_input)
                 self._populate_fields('T', term_layout, locale, term.lemma)
+                for field in [f for f in self._fields if
+                              f.level == 'T' and f.locale == locale
+                              and f.lemma == term.lemma]:
+                    # needed to keep field bound to the term in the input field
+                    term_input.textEdited.connect(field.update_lemma)
                 self._language_layouts[locale].addLayout(term_layout)
             self.layout().addLayout(self._language_layouts[locale])
         self.layout().addStretch()
@@ -521,6 +543,11 @@ class UpdateEntryForm(AbstractEntryForm):
         term_layout.addRow(term_label, term_input)
         self._terms[locale].append(term_input)
         self._populate_fields('T', term_layout, locale)
+        for field in [f for f in self._fields if
+                      f.level == 'T' and f.locale == locale
+                      and f.lemma is None]:
+            # needed to keep field bound to the term in the input field
+            term_input.textEdited.connect(field.update_lemma)
         self._language_layouts[locale].addLayout(term_layout)
 
 
