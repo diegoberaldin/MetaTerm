@@ -429,7 +429,7 @@ class CreateEntryForm(AbstractEntryForm):
                           f.level == 'T' and f.locale == locale
                           and f.lemma is None]:
                 # needed to keep field bound to the term in the input field
-                term_input.textEdited.connect(field.update_lemma)
+                term_input.textChanged.connect(field.update_lemma)
             self._language_layouts[locale].addLayout(term_layout)
             self.layout().addLayout(self._language_layouts[locale])
         self.layout().addStretch()
@@ -488,7 +488,7 @@ class UpdateEntryForm(AbstractEntryForm):
                               f.level == 'T' and f.locale == locale
                               and f.lemma == term.lemma]:
                     # needed to keep field bound to the term in the input field
-                    term_input.textEdited.connect(field.update_lemma)
+                    term_input.textChanged.connect(field.update_lemma)
                 self._language_layouts[locale].addLayout(term_layout)
             self.layout().addLayout(self._language_layouts[locale])
         self.layout().addStretch()
@@ -547,7 +547,8 @@ class UpdateEntryForm(AbstractEntryForm):
                       f.level == 'T' and f.locale == locale
                       and f.lemma is None]:
             # needed to keep field bound to the term in the input field
-            term_input.textEdited.connect(field.update_lemma)
+            term_input.textChanged.connect(field.update_lemma)
+        term_input.setText('')
         self._language_layouts[locale].addLayout(term_layout)
 
 
