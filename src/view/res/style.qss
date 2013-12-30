@@ -6,3 +6,11 @@ COLORS:
     light cyan: #8dc0f3;
     light gray: #f0f0f0;
 ******************************************************************************/
+
+EntryScreen {
+  background-color: white;
+}
+
+WelcomeScreen {
+  background-color: white;
+}

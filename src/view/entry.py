@@ -229,6 +229,7 @@ class EntryDisplay(QtGui.QWidget):
             old_widget.deleteLater()
         self.content = content
         self._scroll_area.setWidget(self.content)
+        self._scroll_area.setWidgetResizable(True)
 
     def display_create_entry_form(self):
         """Displays the form for the creation of a new terminological entry in
@@ -338,7 +339,8 @@ class EntryScreen(QtGui.QWidget):
         :rtype: None
         """
         if value:
-            prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(name), self)
+            prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(name),
+                                      self)
             value_label = QtGui.QLabel(value, self)
             self.layout().addRow(prop_label, value_label)
 
