@@ -83,11 +83,13 @@ class EntryController(AbstractController):
              value) in form.get_language_level_property_values().items():
             # insert language-level properties
             entry.set_language_property(language_id, property_id, value)
-
         for ((locale, lemma, property_id),
              value) in form.get_term_level_property_values().items():
             # inserts term properties
             term = entry.get_term(locale, lemma)
+            if not term:  # term has been added during entry edit
+                entry.add_term(lemma, locale, False)
+                term = entry.get_term(locale, lemma)  # now it is there!
             term.set_property(property_id, value)
             # updates the entry model
         if form.is_new:  # insertion

@@ -202,15 +202,18 @@ class AbstractEntryForm(QtGui.QWidget):
         :rtype: AbstractEntryForm
         """
         super(AbstractEntryForm, self).__init__(parent)
-        self.setLayout(QtGui.QFormLayout(self))
+        self.setLayout(QtGui.QVBoxLayout(self))
         self._fields = []
         self._terms = {locale: [] for locale in
                        mdl.get_main_model().open_termbase.languages}
+        self._language_layouts = {}
 
-    def _append_language_flag(self, locale):
-        """Appends a read-only row to the form displaying the national flag of
-        the language with the given locale as well as its name.
+    def _append_language_flag(self, locale, child_layout):
+        """Appends to the provided child layout a couple of labels in order to
+        display the national flag of the language and its name.
 
+        :param child_layout: layout where the new items are to be added
+        :type child_layout: QtGui.QBoxLayout
         :param locale: locale of the language being displayed
         :type locale: str
         :rtype: None
@@ -219,9 +222,17 @@ class AbstractEntryForm(QtGui.QWidget):
         flag.setPixmap(
             QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
                 15))
-        label = QtGui.QLabel('<strong>{0}</strong>'.format(
-            mdl.DEFAULT_LANGUAGES[locale]), self)
-        self.layout().addRow(flag, label)
+        label_text = '<strong>{0}</strong>'.format(
+            mdl.DEFAULT_LANGUAGES[locale])
+        label = LanguageLabel(locale, label_text, self)
+        # enables the flag context menu
+        flag.contextMenuEvent = label.contextMenuEvent
+        # creates a sublayout
+        flag_sublayout = QtGui.QHBoxLayout()
+        flag_sublayout.addWidget(flag)
+        flag_sublayout.addWidget(label)
+        flag_sublayout.addStretch()
+        child_layout.addLayout(flag_sublayout)
 
     @QtCore.pyqtSlot()
     def _handle_entry_changed(self):
@@ -296,7 +307,7 @@ class AbstractEntryForm(QtGui.QWidget):
         """
         raise NotImplementedError('Implement me!')
 
-    def _populate_fields(self, level, locale=None, lemma=None):
+    def _populate_fields(self, level, child_layout, locale=None, lemma=None):
         """This method is designed to be called several times in the form
         constructor in order to create the parts of the user interface which
         depend on the termbase properties of some level.
@@ -306,8 +317,13 @@ class AbstractEntryForm(QtGui.QWidget):
         label with the property name and a suitable input field depending on the
         property type.
 
+        The label and the input field are eventually added to the passed-in
+        child layout.
+
         :param level: level of the properties to be queried
         :type level: str
+        :param child_layout: layout where the fields must be added
+        :type child_layout: QtGui.QFormLayout
         :param locale: locale of the language (if any) the property refers to
         :type locale: str
         :rtype: None
@@ -339,7 +355,8 @@ class AbstractEntryForm(QtGui.QWidget):
             # fills-in the widget
             self._fill_field(prop, field)
             # finally appends the widgets to the form layout
-            self.layout().addRow(label, widget)
+            label.setWordWrap(True)
+            child_layout.addRow(label, widget)
 
     @property
     def is_new(self):
@@ -377,17 +394,28 @@ class CreateEntryForm(AbstractEntryForm):
         :rtype: CreateEntryForm
         """
         super(CreateEntryForm, self).__init__(parent)
-        self._populate_fields('E')
+        # inserts entry-level properties
+        entry_property_layout = QtGui.QFormLayout()
+        self._populate_fields('E', entry_property_layout)
+        self.layout().addLayout(entry_property_layout)
         for locale in mdl.get_main_model().open_termbase.languages:
             # adds flag and language name
-            self._append_language_flag(locale)
-            self._populate_fields('L', locale)
-            # field for the term
+            self._language_layouts[locale] = QtGui.QVBoxLayout()
+            self._append_language_flag(locale, self._language_layouts[locale])
+            # inserts language-level properties
+            language_property_layout = QtGui.QFormLayout()
+            self._populate_fields('L', language_property_layout, locale)
+            self._language_layouts[locale].addLayout(language_property_layout)
+            # inserts term-level fields
+            term_layout = QtGui.QFormLayout()
             term_label = QtGui.QLabel('<strong>Term</strong>', self)
             term_input = QtGui.QLineEdit(self)
             self._terms[locale].append(term_input)
-            self.layout().addRow(term_label, term_input)
-            self._populate_fields('T', locale)
+            term_layout.addRow(term_label, term_input)
+            self._populate_fields('T', term_layout, locale)
+            self._language_layouts[locale].addLayout(term_layout)
+            self.layout().addLayout(self._language_layouts[locale])
+        self.layout().addStretch()
 
     def _fill_field(self, prop, field):
         """In entry creation forms nothing has to be done in this step.
@@ -422,19 +450,26 @@ class UpdateEntryForm(AbstractEntryForm):
         """
         super(UpdateEntryForm, self).__init__(parent)
         self.entry = entry
-        self._populate_fields('E')
+        entry_property_layout = QtGui.QFormLayout()
+        self._populate_fields('E', entry_property_layout)
+        self.layout().addLayout(entry_property_layout)
         for locale in mdl.get_main_model().open_termbase.languages:
             # adds flag and language name
-            self._append_language_flag(locale)
-            self._populate_fields('L', locale)
+            self._language_layouts[locale] = QtGui.QVBoxLayout()
+            self._append_language_flag(locale, self._language_layouts[locale])
+            self._populate_fields('L', self._language_layouts[locale], locale)
             # fields for the terms (possibly more than one)
             for term in self.entry.get_terms(locale):
+                term_layout = QtGui.QFormLayout()
                 term_label = QtGui.QLabel('<strong>Term</strong>', self)
                 term_input = QtGui.QLineEdit(self)
                 term_input.setText(term.lemma)
                 self._terms[locale].append(term_input)
-                self.layout().addRow(term_label, term_input)
-                self._populate_fields('T', locale, term.lemma)
+                term_layout.addRow(term_label, term_input)
+                self._populate_fields('T', term_layout, locale, term.lemma)
+                self._language_layouts[locale].addLayout(term_layout)
+            self.layout().addLayout(self._language_layouts[locale])
+        self.layout().addStretch()
 
     def _fill_field(self, prop, field):
         """Fills the field of the form with the value that is stored in the
@@ -447,6 +482,7 @@ class UpdateEntryForm(AbstractEntryForm):
         :type field: AbstractFormField
         :rtype: None
         """
+        value = None
         if field.level == 'E':  # entry-level field
             value = self.entry.get_property(prop.prop_id)
         elif field.level == 'L':  # language-level field
@@ -454,7 +490,8 @@ class UpdateEntryForm(AbstractEntryForm):
                                                      prop.prop_id)
         else:  # term-level field
             term = self.entry.get_term(field.locale, field.lemma)
-            value = term.get_property(prop.prop_id)
+            if term:
+                value = term.get_property(prop.prop_id)
         if value:
             field.value = value
 
@@ -467,29 +504,59 @@ class UpdateEntryForm(AbstractEntryForm):
         """
         return False
 
-    def _append_language_flag(self, locale):
-        flag = QtGui.QLabel(self)
-        flag.setPixmap(
-            QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
-                15))
-        label_text = '<strong>{0}</strong>'.format(
-            mdl.DEFAULT_LANGUAGES[locale])
-        label = LanguageLabel(locale, label_text, self)
-        self.layout().addRow(flag, label)
-
+    @QtCore.pyqtSlot(str)
     def handle_add_term_for_language(self, locale):
-        print('You wanted to add a term for {0}'.format(locale))
+        """This slot is activated when the action to add a new term to the
+        language with the given locale is triggered. It has the responsibility
+        of creating the new input fields and appending them in the correct part
+        of the entry update form.
+
+        :param locale: locale of the language where the term must be added
+        :type locale: str
+        :rtype: None
+        """
+        term_layout = QtGui.QFormLayout()
+        term_label = QtGui.QLabel('<strong>Term</strong>', self)
+        term_input = QtGui.QLineEdit(self)
+        term_layout.addRow(term_label, term_input)
+        self._terms[locale].append(term_input)
+        self._populate_fields('T', term_layout, locale)
+        self._language_layouts[locale].addLayout(term_layout)
 
 
 class LanguageLabel(QtGui.QLabel):
+    """This is basically a library QLabel with just one difference: when the
+    context menu is requested, a custom QMenu is provided in order to allow
+    users to add new terms for the given language when operating on an entry.
+    """
+
     def __init__(self, locale, text, parent):
+        """Constructor method.
+
+        :param locale: ID of the language the label is for
+        :type locale: str
+        :param text: text to be shown in the label
+        :type text: str
+        :param parent: reference *to the container form*
+        :type parent: AbstractEntryForm
+        :rtype: LanguageLabel
+        """
         super(LanguageLabel, self).__init__(text, parent)
-        self._locale = locale
         self._add_term_action = QtGui.QAction('Add term', self)
+        if parent.is_new:  # when the entry is new just one term is allowed
+            self._add_term_action.setEnabled(False)
         self._add_term_action.triggered.connect(
-            lambda: parent.handle_add_term_for_language(self._locale))
+            lambda: parent.handle_add_term_for_language(locale))
 
     def contextMenuEvent(self, event):
+        """Overridden in order to display a context menu which allows new terms
+        to be added to the terminological entry for the given language.
+
+        :param event: this is basically used to determine where to show the menu
+        :type event: QtGui.QContextMenuEvent
+        :rtype: None
+        """
+        super(LanguageLabel, self).contextMenuEvent(event)
         context_menu = QtGui.QMenu('Language menu', self)
         context_menu.addAction(self._add_term_action)
         context_menu.show()
