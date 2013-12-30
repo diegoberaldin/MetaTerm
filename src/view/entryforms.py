@@ -219,9 +219,8 @@ class AbstractEntryForm(QtGui.QWidget):
         flag.setPixmap(
             QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
                 15))
-        label = QtGui.QLabel(
-            '<strong>{0}</strong>'.format(mdl.DEFAULT_LANGUAGES[locale]),
-            self)
+        label = QtGui.QLabel('<strong>{0}</strong>'.format(
+            mdl.DEFAULT_LANGUAGES[locale]), self)
         self.layout().addRow(flag, label)
 
     @QtCore.pyqtSlot()
@@ -452,7 +451,7 @@ class UpdateEntryForm(AbstractEntryForm):
             value = self.entry.get_property(prop.prop_id)
         elif field.level == 'L':  # language-level field
             value = self.entry.get_language_property(field.locale,
-                                                      prop.prop_id)
+                                                     prop.prop_id)
         else:  # term-level field
             term = self.entry.get_term(field.locale, field.lemma)
             value = term.get_property(prop.prop_id)
@@ -467,3 +466,31 @@ class UpdateEntryForm(AbstractEntryForm):
         :rtype: bool
         """
         return False
+
+    def _append_language_flag(self, locale):
+        flag = QtGui.QLabel(self)
+        flag.setPixmap(
+            QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
+                15))
+        label_text = '<strong>{0}</strong>'.format(
+            mdl.DEFAULT_LANGUAGES[locale])
+        label = LanguageLabel(locale, label_text, self)
+        self.layout().addRow(flag, label)
+
+    def handle_add_term_for_language(self, locale):
+        print('You wanted to add a term for {0}'.format(locale))
+
+
+class LanguageLabel(QtGui.QLabel):
+    def __init__(self, locale, text, parent):
+        super(LanguageLabel, self).__init__(text, parent)
+        self._locale = locale
+        self._add_term_action = QtGui.QAction('Add term', self)
+        self._add_term_action.triggered.connect(
+            lambda: parent.handle_add_term_for_language(self._locale))
+
+    def contextMenuEvent(self, event):
+        context_menu = QtGui.QMenu('Language menu', self)
+        context_menu.addAction(self._add_term_action)
+        context_menu.show()
+        context_menu.move(event.globalPos())
