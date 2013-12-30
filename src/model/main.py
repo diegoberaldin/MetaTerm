@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 
+"""
+.. currentmodule:: src.model.main
+
+This module contains the implementation of the main model, which is a Singleton
+class used to store information about the shared state of the  application model
+such as the currently opened (main) termbase.
+"""
+
 from PyQt4 import QtCore
 
 _MAIN_MODEL = None

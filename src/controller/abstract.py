@@ -5,6 +5,11 @@
 
 This module contains the base class for all the controllers that are used in
 the application, which is the responsible of the event handling mechanisms.
+
+Subclasses of this controller inherit the generic handler (``handle_event``
+method) and must provide more specific handlers as instance methods, in the form
+of ``_handle_[EVENT_NAME]`` where ``[EVENT_NAME]`` must be changed according to
+the name of the specific event being handled.
 """
 
 from PyQt4 import QtCore
