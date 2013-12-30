@@ -291,17 +291,22 @@ class EntryScreen(QtGui.QWidget):
         :rtype: EntryScreen
         """
         super(EntryScreen, self).__init__(parent)
-        self.setLayout(QtGui.QFormLayout(self))
+        self.setLayout(QtGui.QVBoxLayout(self))
         self.entry = entry
         entry_id_label = QtGui.QLabel(
             '<small>Entry ID: {0}</small>'.format(self.entry.entry_id))
         self.layout().addWidget(entry_id_label)
+        self.layout().addStretch()
         schema = mdl.get_main_model().open_termbase.schema
+        entry_property_layout = QtGui.QFormLayout()
         for prop in schema.get_properties('E'):
             # shows entry-level properties
             self._show_property(prop.name,
-                                self.entry.get_property(prop.prop_id))
+                                self.entry.get_property(prop.prop_id),
+                                entry_property_layout)
+        self.layout().addLayout(entry_property_layout)
         for locale in mdl.get_main_model().open_termbase.languages:
+            language_layout = QtGui.QVBoxLayout()
             # adds flag and language name
             flag = QtGui.QLabel(self)
             flag.setPixmap(
@@ -310,25 +315,37 @@ class EntryScreen(QtGui.QWidget):
             label = QtGui.QLabel(
                 '<strong>{0}</strong>'.format(mdl.DEFAULT_LANGUAGES[locale]),
                 self)
-            self.layout().addRow(flag, label)
+            language_flag_layout = QtGui.QHBoxLayout()
+            language_flag_layout.addWidget(flag)
+            language_flag_layout.addWidget(label)
+            language_flag_layout.addStretch()
+            language_layout.addLayout(language_flag_layout)
+            language_property_layout = QtGui.QFormLayout()
             for prop in schema.get_properties('L'):
                 # shows language-level properties
                 value = self.entry.get_language_property(locale, prop.prop_id)
-                self._show_property(prop.name, value)
+                self._show_property(prop.name, value, language_property_layout)
+            language_layout.addLayout(language_property_layout)
             for term in self.entry.get_terms(locale):
+                term_layout = QtGui.QFormLayout()
                 if term.vedette:
                     # if the term is the vedette, it must be printed in bold
                     term_label = QtGui.QLabel(
                         '<strong>{0}</strong>'.format(term.lemma), self)
                 else:
                     term_label = QtGui.QLabel(term.lemma, self)
-                self.layout().addWidget(term_label)
+                term_label.setStyleSheet('QLabel { color:blue; }')
+                term_layout.addWidget(term_label)
                 for prop in schema.get_properties('T'):
                     # adds term-level properties
                     self._show_property(prop.name,
-                                        term.get_property(prop.prop_id))
+                                        term.get_property(prop.prop_id),
+                                        term_layout)
+                language_layout.addLayout(term_layout)
+            self.layout().addLayout(language_layout)
+            self.layout().addStretch()
 
-    def _show_property(self, name, value):
+    def _show_property(self, name, value, child_layout):
         """Displays a given row in the entry screen, containing the name of the
         property on the left side and the corresponding value on the right side.
 
@@ -336,13 +353,15 @@ class EntryScreen(QtGui.QWidget):
         :type name: str
         :param value: value of the property to be displayed
         :type value: str
+        :param child_layout: sub-layout where the property must be shown
+        :type child_layout: QtGui.QFormLayout
         :rtype: None
         """
         if value:
             prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(name),
                                       self)
             value_label = QtGui.QLabel(value, self)
-            self.layout().addRow(prop_label, value_label)
+            child_layout.addRow(prop_label, value_label)
 
 
 class WelcomeScreen(QtGui.QWidget):
