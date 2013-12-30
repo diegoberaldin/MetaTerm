@@ -201,6 +201,8 @@ class EntryDisplay(QtGui.QWidget):
         """
         super(EntryDisplay, self).__init__(parent)
         self.setLayout(QtGui.QVBoxLayout(self))
+        self._scroll_area = QtGui.QScrollArea(self)
+        self.layout().addWidget(self._scroll_area)
         self.content = None
         # shows greeting
         self.display_welcome_screen()
@@ -223,10 +225,10 @@ class EntryDisplay(QtGui.QWidget):
         :rtype: None
         """
         if self.content:
-            self.layout().removeWidget(self.content)
-            self.content.deleteLater()
+            old_widget = self._scroll_area.takeWidget()
+            old_widget.deleteLater()
         self.content = content
-        self.layout().addWidget(self.content)
+        self._scroll_area.setWidget(self.content)
 
     def display_create_entry_form(self):
         """Displays the form for the creation of a new terminological entry in
@@ -240,6 +242,14 @@ class EntryDisplay(QtGui.QWidget):
         self._display_content(form)
 
     def display_update_entry_form(self, entry):
+        """Displays a form that can be used to edit the given (data access)
+        entry, i.e. a form where all fields are already filled with the data
+        stored in the termbase and can be changed by the user.
+
+        :param entry: entry to be edited in the form
+        :type entry: Entry
+        :rtype: None
+        """
         form = UpdateEntryForm(entry, self)
         form.fire_event.connect(self.fire_event)
         self._display_content(form)
