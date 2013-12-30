@@ -62,6 +62,10 @@ class MainWindow(QtGui.QMainWindow):
         self.edit_entry_action.setEnabled(False)
         self.edit_entry_action.triggered.connect(
             lambda: self.fire_event.emit('edit_entry', {}))
+        self.cancel_edit_action = QtGui.QAction('Cancel edit', self)
+        self.cancel_edit_action.setEnabled(False)
+        self.cancel_edit_action.triggered.connect(
+            lambda: self.fire_event.emit('edit_canceled', {}))
         self.delete_entry_action = QtGui.QAction('Delete', self)
         self.delete_entry_action.setEnabled(False)
         self.delete_entry_action.triggered.connect(
@@ -106,6 +110,7 @@ class MainWindow(QtGui.QMainWindow):
         entry_menu.addAction(self.create_entry_action)
         entry_menu.addAction(self.save_entry_action)
         entry_menu.addAction(self.edit_entry_action)
+        entry_menu.addAction(self.cancel_edit_action)
         entry_menu.addAction(self.delete_entry_action)
         self.menuBar().addMenu(entry_menu)
         # view menu

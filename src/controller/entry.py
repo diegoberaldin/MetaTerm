@@ -132,3 +132,16 @@ class EntryController(AbstractController):
         mdl.get_main_model().open_termbase.delete_entry(entry)
         self._model.delete_entry(entry)
         self._view.entry_display.display_welcome_screen()
+
+    def _handle_edit_canceled(self):
+        """When the user cancels an entry creation or update operation, the
+        UI must be put in a consistent state by deleting the current form and
+        showing either the entry information or the welcome screen.
+
+        :rtype: None
+        """
+        entry = self._view.entry_display.current_entry
+        if entry:
+            self._view.entry_display.display_entry(entry)
+        else:
+            self._view.entry_display.display_welcome_screen()
