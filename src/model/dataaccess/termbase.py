@@ -20,7 +20,7 @@ import sqlalchemy.orm
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.model import sql
-from src.model import mapping
+from src.model import mapping as orm
 from src.model.dataaccess.entry import Entry
 from src.model.dataaccess.schema import Schema
 
@@ -108,7 +108,7 @@ class Termbase(object):
         entry_id = str(uuid.uuid4())
         # adds a new entry into the termbase
         with self.get_session() as session:
-            entry = mapping.Entry(entry_id=entry_id)
+            entry = orm.Entry(entry_id=entry_id)
             session.add(entry)
         return Entry(entry_id, self)
 
@@ -120,8 +120,37 @@ class Termbase(object):
         :rtype: None
         """
         with self.get_session() as session:
-            session.query(mapping.Entry).filter(
-                mapping.Entry.entry_id == entry.entry_id).delete()
+            # deletes the entry
+            session.query(orm.Entry).filter(
+                orm.Entry.entry_id == entry.entry_id).delete()
+            # deletes entry-level properties
+            session.query(orm.EntryPropertyAssociation).filter(
+                orm.EntryPropertyAssociation.entry_id == entry.entry_id
+            ).delete()
+            # deletes language-level properties
+            for ela_id in session.query(
+                    orm.EntryLanguageAssociation.ela_id
+            ).filter(
+                orm.EntryLanguageAssociation.entry_id == entry.entry_id
+            ):
+                session.query(
+                    orm.EntryLanguagePropertyAssociation
+                ).filter(
+                    orm.EntryLanguagePropertyAssociation.ela_id == ela_id[0]
+                ).delete()
+                # deletes association objects for language-level properties
+            session.query(orm.EntryLanguageAssociation).filter(
+                orm.EntryLanguageAssociation.entry_id == entry.entry_id
+            ).delete()
+            # deletes term properties
+            for term_id in session.query(orm.Term.term_id).filter(
+                orm.Term.entry_id == entry.entry_id
+            ):
+                session.query(orm.TermPropertyAssociation).filter(
+                    orm.TermPropertyAssociation.term_id == term_id[0]).delete()
+                # deletes terms
+            session.query(orm.Term).filter(
+                orm.Term.entry_id == entry.entry_id).delete()
 
     def add_language(self, locale):
         """Adds the language with the given locale to the termbase languages.
@@ -131,7 +160,7 @@ class Termbase(object):
         :rtype: None
         """
         with self.get_session() as session:
-            language = mapping.Language(locale=locale)
+            language = orm.Language(locale=locale)
             session.add(language)
 
     @property
@@ -142,7 +171,7 @@ class Termbase(object):
         :rtype: list
         """
         with self.get_session() as session:
-            return [l[0] for l in session.query(mapping.Language.locale)]
+            return [l[0] for l in session.query(orm.Language.locale)]
 
     @property
     def entry_number(self):
@@ -152,7 +181,7 @@ class Termbase(object):
         :rtype: int
         """
         with self.get_session() as session:
-            return session.query(mapping.Entry).count()
+            return session.query(orm.Entry).count()
 
     @property
     def size(self):
@@ -188,4 +217,4 @@ class Termbase(object):
     def entries(self):
         with self.get_session() as session:
             return [Entry(e.entry_id, self) for e in
-                    session.query(mapping.Entry)]
+                    session.query(orm.Entry)]

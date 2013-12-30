@@ -9,7 +9,7 @@ This module contains the classes used to represent terms inside a termbase.
 import sqlalchemy
 import sqlalchemy.orm
 
-from src.model import mapping
+from src.model import mapping as orm
 
 
 class Term(object):
@@ -46,9 +46,9 @@ class Term(object):
         :rtype: str
         """
         with self._tb.get_session() as session:
-            return session.query(mapping.TermPropertyAssociation.value).filter(
-                mapping.TermPropertyAssociation.term_id == self.term_id,
-                mapping.TermPropertyAssociation.prop_id == prop_id).scalar()
+            return session.query(orm.TermPropertyAssociation.value).filter(
+                orm.TermPropertyAssociation.term_id == self.term_id,
+                orm.TermPropertyAssociation.prop_id == prop_id).scalar()
 
     def set_property(self, prop_id, value):
         """Changes the current value of a given property.
@@ -59,13 +59,13 @@ class Term(object):
         """
         with self._tb.get_session() as session:
             try:
-                prop = session.query(mapping.TermPropertyAssociation).filter(
-                    mapping.TermPropertyAssociation.term_id == self.term_id,
-                    mapping.TermPropertyAssociation.prop_id == prop_id).one()
+                prop = session.query(orm.TermPropertyAssociation).filter(
+                    orm.TermPropertyAssociation.term_id == self.term_id,
+                    orm.TermPropertyAssociation.prop_id == prop_id).one()
                 prop.value = value
             except sqlalchemy.orm.exc.NoResultFound:
                 # the property had not been set previously
-                prop = mapping.TermPropertyAssociation(term_id=self.term_id,
-                                                       prop_id=prop_id,
-                                                       value=value)
+                prop = orm.TermPropertyAssociation(term_id=self.term_id,
+                                                   prop_id=prop_id,
+                                                   value=value)
                 session.add(prop)

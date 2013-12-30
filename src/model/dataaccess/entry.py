@@ -13,7 +13,7 @@ import uuid
 import sqlalchemy
 import sqlalchemy.orm
 
-from src.model import mapping
+from src.model import mapping as orm
 from src.model.dataaccess.term import Term
 
 
@@ -38,10 +38,10 @@ class Entry(object):
         if not locale:
             return
         with self._tb.get_session() as session:
-            return session.query(mapping.Term.lemma).filter(
-                mapping.Term.entry_id == self.entry_id,
-                mapping.Term.lang_id == locale,
-                mapping.Term.vedette == True).scalar()
+            return session.query(orm.Term.lemma).filter(
+                orm.Term.entry_id == self.entry_id,
+                orm.Term.lang_id == locale,
+                orm.Term.vedette == True).scalar()
 
     def add_term(self, lemma, locale, vedette):
         """Adds a new term to the terminological entry.
@@ -57,10 +57,25 @@ class Entry(object):
         """
         term_id = str(uuid.uuid4())
         with self._tb.get_session() as session:
-            term = mapping.Term(term_id=term_id, lemma=lemma,
-                                lang_id=locale, vedette=vedette,
-                                entry_id=self.entry_id)
+            term = orm.Term(term_id=term_id, lemma=lemma,
+                            lang_id=locale, vedette=vedette,
+                            entry_id=self.entry_id)
             session.add(term)
+
+    def delete_term(self, term):
+        """Deletes a term from the given terminological entry.
+
+        :param term: term to remove from the entry
+        :type term: Term
+        :return:
+        """
+        with self._tb.get_session() as session:
+            # deletes term properties
+            session.query(orm.TermPropertyAssociation).filter(
+                orm.TermPropertyAssociation.term_id == term.term_id).delete()
+            # actual term deletion
+            session.query(orm.Term).filter(
+                orm.Term.term_id == term.term_id).delete()
 
     def get_property(self, prop_id):
         """Gets the value of a given property for the invocation entry.
@@ -71,9 +86,9 @@ class Entry(object):
         :rtype: str
         """
         with self._tb.get_session() as session:
-            return session.query(mapping.EntryPropertyAssociation.value).filter(
-                mapping.EntryPropertyAssociation.prop_id == prop_id,
-                mapping.EntryPropertyAssociation.entry_id == self.entry_id
+            return session.query(orm.EntryPropertyAssociation.value).filter(
+                orm.EntryPropertyAssociation.prop_id == prop_id,
+                orm.EntryPropertyAssociation.entry_id == self.entry_id
             ).scalar()
 
     def set_property(self, prop_id, value):
@@ -87,16 +102,16 @@ class Entry(object):
         """
         with self._tb.get_session() as session:
             try:
-                prop = session.query(mapping.EntryPropertyAssociation).filter(
-                    mapping.EntryPropertyAssociation.prop_id == prop_id,
-                    mapping.EntryPropertyAssociation.entry_id == self.entry_id
+                prop = session.query(orm.EntryPropertyAssociation).filter(
+                    orm.EntryPropertyAssociation.prop_id == prop_id,
+                    orm.EntryPropertyAssociation.entry_id == self.entry_id
                 ).one()
                 prop.value = value
             except sqlalchemy.orm.exc.NoResultFound:
                 # the property had not been set previously
-                prop = mapping.EntryPropertyAssociation(entry_id=self.entry_id,
-                                                        prop_id=prop_id,
-                                                        value=value)
+                prop = orm.EntryPropertyAssociation(entry_id=self.entry_id,
+                                                    prop_id=prop_id,
+                                                    value=value)
                 session.add(prop)
 
     def get_language_property(self, lang_id, prop_id):
@@ -112,13 +127,13 @@ class Entry(object):
         """
         with self._tb.get_session() as session:
             ela_id = session.query(
-                mapping.EntryLanguageAssociation.ela_id).filter(
-                mapping.EntryLanguageAssociation.entry_id == self.entry_id,
-                mapping.EntryLanguageAssociation.lang_id == lang_id).scalar()
+                orm.EntryLanguageAssociation.ela_id).filter(
+                orm.EntryLanguageAssociation.entry_id == self.entry_id,
+                orm.EntryLanguageAssociation.lang_id == lang_id).scalar()
             return session.query(
-                mapping.EntryLanguagePropertyAssociation.value).filter(
-                mapping.EntryLanguagePropertyAssociation.ela_id == ela_id,
-                mapping.EntryLanguagePropertyAssociation.prop_id == prop_id
+                orm.EntryLanguagePropertyAssociation.value).filter(
+                orm.EntryLanguagePropertyAssociation.ela_id == ela_id,
+                orm.EntryLanguagePropertyAssociation.prop_id == prop_id
             ).scalar()
 
     def set_language_property(self, lang_id, prop_id, value):
@@ -135,27 +150,27 @@ class Entry(object):
         """
         with self._tb.get_session() as session:
             ela_id = session.query(
-                mapping.EntryLanguageAssociation.ela_id).filter(
-                mapping.EntryLanguageAssociation.entry_id == self.entry_id,
-                mapping.EntryLanguageAssociation.lang_id == lang_id).scalar()
+                orm.EntryLanguageAssociation.ela_id).filter(
+                orm.EntryLanguageAssociation.entry_id == self.entry_id,
+                orm.EntryLanguageAssociation.lang_id == lang_id).scalar()
             if not ela_id:  # the association had not been created previously
                 ela_id = str(uuid.uuid4())
-                ela = mapping.EntryLanguageAssociation(ela_id=ela_id,
-                                                       entry_id=self.entry_id,
-                                                       lang_id=lang_id)
+                ela = orm.EntryLanguageAssociation(ela_id=ela_id,
+                                                   entry_id=self.entry_id,
+                                                   lang_id=lang_id)
                 session.add(ela)
             try:
                 prop = session.query(
-                    mapping.EntryLanguagePropertyAssociation).filter(
-                    mapping.EntryLanguagePropertyAssociation.ela_id == ela_id,
-                    mapping.EntryLanguagePropertyAssociation.prop_id == prop_id
+                    orm.EntryLanguagePropertyAssociation).filter(
+                    orm.EntryLanguagePropertyAssociation.ela_id == ela_id,
+                    orm.EntryLanguagePropertyAssociation.prop_id == prop_id
                 ).one()
                 prop.value = value
             except sqlalchemy.orm.exc.NoResultFound:
                 # the property had not been set previously
-                prop = mapping.EntryLanguagePropertyAssociation(ela_id=ela_id,
-                                                                prop_id=prop_id,
-                                                                value=value)
+                prop = orm.EntryLanguagePropertyAssociation(ela_id=ela_id,
+                                                            prop_id=prop_id,
+                                                            value=value)
                 session.add(prop)
 
     def get_term(self, locale, lemma):
@@ -171,10 +186,10 @@ class Entry(object):
         """
         with self._tb.get_session() as session:
             try:
-                term = session.query(mapping.Term).filter(
-                    mapping.Term.entry_id == self.entry_id,
-                    mapping.Term.lang_id == locale,
-                    mapping.Term.lemma == lemma).one()
+                term = session.query(orm.Term).filter(
+                    orm.Term.entry_id == self.entry_id,
+                    orm.Term.lang_id == locale,
+                    orm.Term.lemma == lemma).one()
                 return Term(term.term_id, term.lemma, term.lang_id,
                             term.vedette,
                             self._tb)
@@ -184,6 +199,6 @@ class Entry(object):
     def get_terms(self, locale):
         with self._tb.get_session() as session:
             return [Term(t.term_id, t.lemma, t.lang_id, t.vedette, self._tb) for
-                    t in session.query(mapping.Term).filter(
-                    mapping.Term.entry_id == self.entry_id,
-                    mapping.Term.lang_id == locale)]
+                    t in session.query(orm.Term).filter(
+                    orm.Term.entry_id == self.entry_id,
+                    orm.Term.lang_id == locale)]

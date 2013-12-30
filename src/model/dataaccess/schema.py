@@ -10,7 +10,7 @@ queried and is accessible via the 'schema' property of each termbase instance.
 
 import uuid
 
-from src.model import mapping
+from src.model import mapping as orm
 
 
 class Schema(object):
@@ -45,13 +45,13 @@ class Schema(object):
         assert prop_type != 'P' or values
         with self._tb.get_session() as session:
             prop_id = str(uuid.uuid4())
-            prop = mapping.Property(name=name, prop_id=prop_id, level=level,
-                                    prop_type=prop_type)
+            prop = orm.Property(name=name, prop_id=prop_id, level=level,
+                                prop_type=prop_type)
             session.add(prop)
             # adds the possible values for picklist properties
             for picklist_value in values:
-                value = mapping.PickListValue(prop_id=prop_id,
-                                              value=picklist_value)
+                value = orm.PickListValue(prop_id=prop_id,
+                                          value=picklist_value)
                 session.add(value)
 
     def delete_property(self, prop_id):
@@ -62,8 +62,8 @@ class Schema(object):
         :rtype: None
         """
         with self._tb.get_session() as session:
-            session.query(mapping.Property).filter(
-                mapping.Property.prop_id == prop_id).delete()
+            session.query(orm.Property).filter(
+                orm.Property.prop_id == prop_id).delete()
 
     def get_properties(self, level):
         """Returns a list of all the properties that a given termbase schema
@@ -78,8 +78,8 @@ class Schema(object):
         assert level in ['E', 'L', 'T']
         with self._tb.get_session() as session:
             return [Property(p.prop_id, p.name, self._tb) for p in
-                    session.query(mapping.Property).filter(
-                        mapping.Property.level == level)]
+                    session.query(orm.Property).filter(
+                        orm.Property.level == level)]
 
 
 class Property(object):
@@ -111,8 +111,8 @@ class Property(object):
         :rtype: str
         """
         with self._tb.get_session() as session:
-            return session.query(mapping.Property.prop_type).filter(
-                mapping.Property.prop_id == self.prop_id).scalar()
+            return session.query(orm.Property.prop_type).filter(
+                orm.Property.prop_id == self.prop_id).scalar()
 
     @property
     def values(self):
@@ -126,5 +126,5 @@ class Property(object):
         """
         with self._tb.get_session() as session:
             return [v[0] for v in
-                    session.query(mapping.PickListValue.value).filter(
-                        mapping.PickListValue.prop_id == self.prop_id)]
+                    session.query(orm.PickListValue.value).filter(
+                        orm.PickListValue.prop_id == self.prop_id)]
