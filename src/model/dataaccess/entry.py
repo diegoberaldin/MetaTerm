@@ -35,6 +35,15 @@ class Entry(object):
         self.entry_id = entry_id
 
     def get_vedette(self, locale):
+        """Retrieves the lemma of the vedette term for the language with the ID
+        equal to the given locale that is contained in the terminological entry.
+
+        :param locale: ID of the language of which the vedette term is needed
+        :type locale: str
+        :returns: the lemma of the vedette term of the invocation entry having
+        the given locale as its language ID
+        :rtype: str
+        """
         if not locale:
             return
         with self._tb.get_session() as session:
@@ -174,13 +183,13 @@ class Entry(object):
                 session.add(prop)
 
     def get_term(self, locale, lemma):
-        """Returns a Term (dataaccess) object corresponding to the term that is
+        """Returns a Term (data access) object corresponding to the term that is
         contained in the invocation entry having the given locale and the given
         lemma.
 
         :param locale: ID of the language of the desired term
         :param lemma: lemma of the desired term
-        :returns: a (dataaccess) Term object to manipulate the term if some
+        :returns: a (data access) Term object to manipulate the term if some
         term exists corresponding to the given criteria, None otherwise
         :rtype: Term
         """
@@ -197,6 +206,14 @@ class Entry(object):
                 return None
 
     def get_terms(self, locale):
+        """Returns the list of terms that are stored in the termbase under the
+        given entry and for the language with the given locale.
+
+        :param locale: ID of the language whose terms must be retrieved
+        :type locale: str
+        :returns: list of Term objects corresponding to the entry terms
+        :rtype: list
+        """
         with self._tb.get_session() as session:
             return [Term(t.term_id, t.lemma, t.lang_id, t.vedette, self._tb) for
                     t in session.query(orm.Term).filter(
