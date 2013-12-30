@@ -22,6 +22,15 @@ class EntryController(AbstractController):
     """
 
     def __init__(self, entry_model, entry_view):
+        """Constructor method.
+
+        :param entry_model: reference to the entry model representing the entry
+        set of the currently opened termbase
+        :type entry_model: EntryModel
+        :param entry_view: reference to the application main widget
+        :type entry_view: EntryWidget
+        :rtype: EntryController
+        """
         super(EntryController, self).__init__()
         self._model = entry_model
         self._view = entry_view
@@ -29,12 +38,32 @@ class EntryController(AbstractController):
         self._model.language = self._view.entry_list.current_language
 
     def _handle_language_changed(self):
+        """This handler is activated when the GUI language selector state is
+         changed, in this case the language of the entry model must be changed
+
+        :rtype: None
+        """
         self._model.language = self._view.entry_list.current_language
 
     def _handle_new_entry(self):
+        """This handler is activated when the user starts the creation of a new
+        terminological entry. It has the responsibility of clearing the content
+        of the entry display in the view and showing the entry creation form.
+
+        :rtype: None
+        """
         self._view.entry_display.display_create_entry_form()
 
     def _handle_save_entry(self):
+        """This handler is activated when the user requests to save an entry
+        which may either be a newly created one or an existing one after an
+        update. The controller must then determine whether to insert a new entry
+        or update an existing one, extract the information provided in the
+        form, make it persistent in the local termbase and put the UI in a
+        consistent state (displaying the updated entry).
+
+        :rtype: None
+        """
         form = self._view.entry_display.content
         if form.is_new:
             # creates the new entry
@@ -60,23 +89,45 @@ class EntryController(AbstractController):
             # inserts term properties
             term = entry.get_term(locale, lemma)
             term.set_property(property_id, value)
-        # updates the entry model
-        if form.is_new:
+            # updates the entry model
+        if form.is_new:  # insertion
             self._model.add_entry(entry)
-        else:
+        else:  # at least the dataChanged() signal must be emitted
             self._model.update_entry(entry)
-        # updates the UI
+            # updates the UI
         self._view.entry_display.display_entry(entry)
 
     def _handle_entry_index_changed(self, index):
+        """This handler is activated when the user selects a new entry in the
+        GUI list. In this case the controller must update the content of the
+        entry display in order to show the information about the selected entry.
+
+        :param index: index pointing to the new selected entry
+        :type index: QtCore.QModelIndex
+        :rtype: None
+        """
         selected_entry = self._model.get_entry(index)
         self._view.entry_display.display_entry(selected_entry)
 
     def _handle_edit_entry(self):
+        """This handler is activated when the user requests to edit the entry
+        that is currently being shown in the GUI entry display. It has the
+        responsibility of extracting the entry and displaying the update entry
+        form in order to start the editing operation.
+
+        :rtype: None
+        """
         entry = self._view.entry_display.current_entry
         self._view.entry_display.display_update_entry_form(entry)
 
     def _handle_delete_entry(self):
+        """This handler is activated when the user asks to delete the entry that
+        is currently being displayed in the GUI. The controller must then
+        extract the entry, delete it permanently from the currently opened
+        termbase, remove it from the entry model and reset the GUI.
+
+        :rtype: None
+        """
         entry = self._view.entry_display.current_entry
         mdl.get_main_model().open_termbase.delete_entry(entry)
         self._model.delete_entry(entry)
