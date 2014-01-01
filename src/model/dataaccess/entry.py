@@ -115,13 +115,17 @@ class Entry(object):
                     orm.EntryPropertyAssociation.prop_id == prop_id,
                     orm.EntryPropertyAssociation.entry_id == self.entry_id
                 ).one()
-                prop.value = value
+                if value:
+                    prop.value = value
+                else:
+                    session.delete(prop)
             except sqlalchemy.orm.exc.NoResultFound:
                 # the property had not been set previously
-                prop = orm.EntryPropertyAssociation(entry_id=self.entry_id,
-                                                    prop_id=prop_id,
-                                                    value=value)
-                session.add(prop)
+                if prop:
+                    prop = orm.EntryPropertyAssociation(entry_id=self.entry_id,
+                                                        prop_id=prop_id,
+                                                        value=value)
+                    session.add(prop)
 
     def get_language_property(self, lang_id, prop_id):
         """Gets the value of a language level property for the invocation
@@ -174,13 +178,17 @@ class Entry(object):
                     orm.EntryLanguagePropertyAssociation.ela_id == ela_id,
                     orm.EntryLanguagePropertyAssociation.prop_id == prop_id
                 ).one()
-                prop.value = value
+                if value:
+                    prop.value = value
+                else:
+                    session.delete(prop)
             except sqlalchemy.orm.exc.NoResultFound:
                 # the property had not been set previously
-                prop = orm.EntryLanguagePropertyAssociation(ela_id=ela_id,
-                                                            prop_id=prop_id,
-                                                            value=value)
-                session.add(prop)
+                if value:
+                    prop = orm.EntryLanguagePropertyAssociation(ela_id=ela_id,
+                                                                prop_id=prop_id,
+                                                                value=value)
+                    session.add(prop)
 
     def get_term(self, locale, lemma):
         """Returns a Term (data access) object corresponding to the term that is

@@ -62,10 +62,14 @@ class Term(object):
                 prop = session.query(orm.TermPropertyAssociation).filter(
                     orm.TermPropertyAssociation.term_id == self.term_id,
                     orm.TermPropertyAssociation.prop_id == prop_id).one()
-                prop.value = value
+                if value:
+                    prop.value = value
+                else:
+                    session.delete(prop)
             except sqlalchemy.orm.exc.NoResultFound:
                 # the property had not been set previously
-                prop = orm.TermPropertyAssociation(term_id=self.term_id,
-                                                   prop_id=prop_id,
-                                                   value=value)
-                session.add(prop)
+                if value:
+                    prop = orm.TermPropertyAssociation(term_id=self.term_id,
+                                                       prop_id=prop_id,
+                                                       value=value)
+                    session.add(prop)
