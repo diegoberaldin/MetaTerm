@@ -97,7 +97,7 @@ class AbstractEntryForm(QtGui.QWidget):
         the list of terms that the entry contains.
         :rtype: dict
         """
-        return {locale: [w.lemma for w in self._term_widgets[locale]]
+        return {locale: [w.lemma for w in self._term_widgets[locale] if w.lemma]
                 for locale in mdl.get_main_model().open_termbase.languages}
 
     def _fill_field(self, prop, field):
