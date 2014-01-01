@@ -94,7 +94,22 @@ class EntryController(AbstractController):
             # updates the entry model
         if form.is_new:  # insertion
             self._model.add_entry(entry)
-        else:  # at least the dataChanged() signal must be emitted
+        else:  # an existing entry is being edited
+            # checks for deleted terms
+            terms_to_delete = [
+                term for term in [t for locale in
+                                  mdl.get_main_model().open_termbase.languages
+                                  for t in entry.get_terms(locale)]  # all terms
+                if (term.locale, term.lemma) not in [(locale, lemma) for
+                                                     locale, lemmata_list
+                                                     in form.get_terms().items()
+                                                     for lemma in lemmata_list]]
+            # assuring no vedette term is **ever** deleted
+            assert all(not term.vedette for term in terms_to_delete)
+            # actually deletes the term
+            for term in terms_to_delete:
+                entry.delete_term(term)
+                # the dataChanged() signal must be emitted
             self._model.update_entry(entry)
             # updates the UI
         self._view.entry_display.display_entry(entry)
