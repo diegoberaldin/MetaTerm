@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-.. currentmodule:: src.view.entry
+.. currentmodule:: src.view.entry.widgets
 
 This module contains the definition of the classes that are used to display
 and manipulate entries in the application main window.
@@ -10,7 +10,7 @@ and manipulate entries in the application main window.
 from PyQt4 import QtCore, QtGui
 
 from src import model as mdl
-from src.view.entryforms import CreateEntryForm, UpdateEntryForm
+from src.view.entry.forms import CreateEntryForm, UpdateEntryForm
 
 
 class EntryWidget(QtGui.QSplitter):
