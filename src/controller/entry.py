@@ -7,6 +7,8 @@ This module contains the controller that governs entry creation, update and
 deletion and manages entry visualization in the graphical user interface.
 """
 
+from PyQt4 import QtGui
+
 from src.controller.abstract import AbstractController
 from src import model as mdl
 
@@ -65,6 +67,17 @@ class EntryController(AbstractController):
         :rtype: None
         """
         form = self._view.entry_display.content
+        if not form.is_valid:
+            message = QtGui.QMessageBox()
+            message.setIcon(QtGui.QMessageBox.Critical)
+            message.setText('Invalid entry')
+            message.setInformativeText('Check that all the mandatory fields '
+                                       'are filled-in and that there are not '
+                                       'terms with the same lemma within the '
+                                       'same language in this entry.')
+            message.exec()
+            # don't do anything of the rest
+            return
         if form.is_new:
             # creates the new entry
             entry = mdl.get_main_model().open_termbase.create_entry()

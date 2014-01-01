@@ -12,9 +12,6 @@ from PyQt4 import QtCore, QtGui
 from src import model as mdl
 from src.view.entry import fields
 
-# TODO: some refactoring is still needed!
-# I'd like to better isolate the forms and the CustomMenuXXXWidgets
-
 
 class AbstractEntryForm(QtGui.QWidget):
     """Base class used for entry creation and update forms, providing the
@@ -168,6 +165,22 @@ class AbstractEntryForm(QtGui.QWidget):
         """
         raise NotImplementedError('Override me!')
 
+    @property
+    def is_valid(self):
+        """Checks whether the content of the form is acceptable.
+
+        :returns: True if the content or the form is acceptable and can be
+        saved, False otherwise
+        :rtype: bool
+        """
+        term_dict = self.get_terms()
+        # checks that there are no (language, lemma) duplicates within the entry
+        for locale in term_dict.keys():
+            if any((lemma1 == lemma2 for lemma1 in term_dict[locale] for lemma2
+                    in term_dict[locale])):
+                return False
+        return True
+
 
 class CreateEntryForm(AbstractEntryForm):
     """Widget used to represent the form which is to be displayed whenever the
@@ -206,10 +219,13 @@ class CreateEntryForm(AbstractEntryForm):
             self._populate_fields('L', language_property_layout, locale)
             language_widget.layout().addLayout(language_property_layout)
             # creates the term widget and inserts term-level fields
-            term_widget = CustomMenuTermWidget(self, '', True, self)
+            term_widget = CustomMenuTermWidget(locale, '', True, self)
             self._term_widgets[locale].append(term_widget)
             term_label = QtGui.QLabel('<strong>Term</strong>', self)
             term_input = QtGui.QLineEdit(self)
+            # needed to record changes in the term fields
+            term_input.textEdited.connect(
+                lambda unused_text: self._handle_entry_changed())
             # needed to keep consistency
             term_input.textChanged.connect(term_widget.update_lemma)
             term_widget.layout().addRow(term_label, term_input)
@@ -274,12 +290,15 @@ class UpdateEntryForm(AbstractEntryForm):
                 term_label = QtGui.QLabel('<strong>Term</strong>', self)
                 term_input = QtGui.QLineEdit(self)
                 term_input.setText(term.lemma)
+                # needed to record changes in the term fields
+                term_input.textEdited.connect(
+                    lambda unused_text: self._handle_entry_changed())
                 # needed to keep consistency
                 term_input.textChanged.connect(term_widget.update_lemma)
                 term_widget.layout().addRow(term_label, term_input)
                 self._populate_fields('T', term_widget.layout(), locale,
                                       term.lemma)
-                # needed to keep field bound to the term in the input field
+                # needed to keep fields bound to the term in the input field
                 for field in [f for f in self._fields if
                               f.level == 'T' and f.locale == locale
                               and f.lemma == term.lemma]:
@@ -335,6 +354,9 @@ class UpdateEntryForm(AbstractEntryForm):
         term_widget = CustomMenuTermWidget(locale, '', False, self)
         term_label = QtGui.QLabel('<strong>Term</strong>', self)
         term_input = QtGui.QLineEdit(self)
+        # needed to record changes in the term fields
+        term_input.textEdited.connect(
+            lambda unused_text: self._handle_entry_changed())
         term_widget.layout().addRow(term_label, term_input)
         # keeps the link between the term widget and the input field
         term_input.textChanged.connect(term_widget.update_lemma)
