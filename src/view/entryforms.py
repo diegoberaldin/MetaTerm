@@ -13,6 +13,9 @@ from PyQt4 import QtCore, QtGui
 
 from src import model as mdl
 
+# TODO: some refactoring is still needed!
+# I'd like to better isolate the forms and the CustomMenuXXXWidgets
+
 
 class SelectFileInput(QtGui.QWidget):
     """Input widget used to select a resource from the local file system which
@@ -142,7 +145,8 @@ class AbstractFormField(object):
 
 
 class TextField(AbstractFormField):
-    """Textual field to define simple textual properties.
+    """Textual field to define simple textual properties. Note: the internal
+    widget can be a QtGui.QLineEdit or a QtGui.QTextEdit.
     """
 
     def __init__(self, prop, level, widget, locale=None, lemma=None):
@@ -150,7 +154,10 @@ class TextField(AbstractFormField):
 
     @property
     def value(self):
-        return self._widget.toPlainText()
+        if hasattr(self._widget, 'toPlainText'):
+            return self._widget.toPlainText()
+        if hasattr(self._widget, 'text'):
+            return self._widget.text()
 
     @value.setter
     def value(self, value):
@@ -215,36 +222,11 @@ class AbstractEntryForm(QtGui.QWidget):
         super(AbstractEntryForm, self).__init__(parent)
         self.setLayout(QtGui.QVBoxLayout(self))
         self._fields = []
-        self._terms = {locale: [] for locale in
-                       mdl.get_main_model().open_termbase.languages}
         # locale-keyed dictionary of the language widgets
         self._language_widgets = {}
-        # (locale, lemma)-keyed dictionary of term widgets
-        self._term_widgets = {}
-
-    def _append_language_flag(self, locale, child_layout):
-        """Appends to the provided child layout a couple of labels in order to
-        display the national flag of the language and its name.
-
-        :param child_layout: layout where the new items are to be added
-        :type child_layout: QtGui.QBoxLayout
-        :param locale: locale of the language being displayed
-        :type locale: str
-        :rtype: None
-        """
-        flag = QtGui.QLabel(self)
-        flag.setPixmap(
-            QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
-                15))
-        label_text = '<strong>{0}</strong>'.format(
-            mdl.DEFAULT_LANGUAGES[locale])
-        label = QtGui.QLabel(label_text, self)
-        # creates a sublayout
-        flag_sublayout = QtGui.QHBoxLayout()
-        flag_sublayout.addWidget(flag)
-        flag_sublayout.addWidget(label)
-        flag_sublayout.addStretch()
-        child_layout.addLayout(flag_sublayout)
+        # locale-keyed dictionary of term widgets (a list for every locale)
+        self._term_widgets = {locale: [] for locale in
+                              mdl.get_main_model().open_termbase.languages}
 
     @QtCore.pyqtSlot()
     def _handle_entry_changed(self):
@@ -302,7 +284,7 @@ class AbstractEntryForm(QtGui.QWidget):
         the list of terms that the entry contains.
         :rtype: dict
         """
-        return {locale: [f.text() for f in self._terms[locale]]
+        return {locale: [w.lemma for w in self._term_widgets[locale]]
                 for locale in mdl.get_main_model().open_termbase.languages}
 
     def _fill_field(self, prop, field):
@@ -412,29 +394,26 @@ class CreateEntryForm(AbstractEntryForm):
         self._populate_fields('E', entry_property_layout)
         self.layout().addLayout(entry_property_layout)
         for locale in mdl.get_main_model().open_termbase.languages:
-            # adds flag and language name
+            # creates the language widget
             language_widget = CustomMenuLanguageWidget(locale, self)
             self._language_widgets[locale] = language_widget
-            language_widget.setLayout(QtGui.QVBoxLayout(language_widget))
-            self._append_language_flag(locale, language_widget.layout())
             # inserts language-level properties
             language_property_layout = QtGui.QFormLayout()
             self._populate_fields('L', language_property_layout, locale)
             language_widget.layout().addLayout(language_property_layout)
-            # inserts term-level fields
+            # creates the term widget and inserts term-level fields
             term_widget = CustomMenuTermWidget(self, '', True, self)
-            term_widget.setLayout(QtGui.QFormLayout(term_widget))
+            self._term_widgets[locale].append(term_widget)
             term_label = QtGui.QLabel('<strong>Term</strong>', self)
             term_input = QtGui.QLineEdit(self)
             # needed to keep consistency
             term_input.textChanged.connect(term_widget.update_lemma)
-            self._terms[locale].append(term_input)
             term_widget.layout().addRow(term_label, term_input)
             self._populate_fields('T', term_widget.layout(), locale)
+            # needed to keep field bound to the term in the input field
             for field in [f for f in self._fields if
                           f.level == 'T' and f.locale == locale
                           and f.lemma is None]:
-                # needed to keep field bound to the term in the input field
                 term_input.textChanged.connect(field.update_lemma)
             language_widget.add_term_widget(term_widget)
             self.layout().addWidget(language_widget)
@@ -477,32 +456,29 @@ class UpdateEntryForm(AbstractEntryForm):
         self._populate_fields('E', entry_property_layout)
         self.layout().addLayout(entry_property_layout)
         for locale in mdl.get_main_model().open_termbase.languages:
-            # adds flag and language name
+            # creates the language widget
             language_widget = CustomMenuLanguageWidget(locale, self)
             self._language_widgets[locale] = language_widget
-            language_widget.setLayout(QtGui.QVBoxLayout(language_widget))
-            self._append_language_flag(locale, language_widget.layout())
             language_property_layout = QtGui.QFormLayout()
             self._populate_fields('L', language_property_layout, locale)
             language_widget.layout().addLayout(language_property_layout)
-            # fields for the terms (possibly more than one)
+            # create term widgets and inserts term-level fields
             for term in self.entry.get_terms(locale):
                 term_widget = CustomMenuTermWidget(locale, term.lemma,
                                                    term.vedette, self)
-                term_widget.setLayout(QtGui.QFormLayout(term_widget))
+                self._term_widgets[locale].append(term_widget)
                 term_label = QtGui.QLabel('<strong>Term</strong>', self)
                 term_input = QtGui.QLineEdit(self)
                 term_input.setText(term.lemma)
                 # needed to keep consistency
                 term_input.textChanged.connect(term_widget.update_lemma)
-                self._terms[locale].append(term_input)
                 term_widget.layout().addRow(term_label, term_input)
                 self._populate_fields('T', term_widget.layout(), locale,
                                       term.lemma)
+                # needed to keep field bound to the term in the input field
                 for field in [f for f in self._fields if
                               f.level == 'T' and f.locale == locale
                               and f.lemma == term.lemma]:
-                    # needed to keep field bound to the term in the input field
                     term_input.textChanged.connect(field.update_lemma)
                 language_widget.add_term_widget(term_widget)
             self.layout().addWidget(language_widget)
@@ -552,24 +528,52 @@ class UpdateEntryForm(AbstractEntryForm):
         :type locale: str
         :rtype: None
         """
-        term_widget = CustomMenuTermWidget(self)
-        term_widget.setLayout(QtGui.QFormLayout(term_widget))
+        term_widget = CustomMenuTermWidget(locale, '', False, self)
         term_label = QtGui.QLabel('<strong>Term</strong>', self)
         term_input = QtGui.QLineEdit(self)
         term_widget.layout().addRow(term_label, term_input)
-        self._terms[locale].append(term_input)
+        # keeps the link between the term widget and the input field
+        term_input.textChanged.connect(term_widget.update_lemma)
         self._populate_fields('T', term_widget.layout(), locale)
+        # needed to keep field bound to the term in the input field
         for field in [f for f in self._fields if
                       f.level == 'T' and f.locale == locale
                       and f.lemma is None]:
-            # needed to keep field bound to the term in the input field
             term_input.textChanged.connect(field.update_lemma)
         term_input.setText('')
+        # registers the field internally and displays the widget visually
+        self._term_widgets[locale].append(term_widget)
         self._language_widgets[locale].add_term_widget(term_widget)
+        # informs the controller that the entry has been changed
+        self._handle_entry_changed()
 
-        @QtCore.pyqtSlot(str, str)
-        def handle_delete_term(self, locale, lemma):
-            pass
+    @QtCore.pyqtSlot(str, str)
+    def handle_delete_term(self, locale, lemma):
+        """This slot is activated when the user chooses to delete a (non
+        vedette) term from the terminological entry. It has the responsibility
+        of removing the fields corresponding to the given term visually as well
+        as to remove the term from the internal data structure containing the
+        reference to the widgets.
+
+        *Note:* no field removal from the self._fields list is actually needed,
+        since those fields will automatically be excluded when extracting
+        term-level properties with ``get_term_level_property_values`` having no
+        correspondence in the ``get_terms`` output.
+
+        :param locale: ID of the language of the term being deleted
+        :type locale: str
+        :param lemma: lemma of the term being deleted
+        :type lemma: str
+        :rtype: None
+        """
+        # extracts the correct term widgets
+        term_widget = [w for w in self._term_widgets[locale] if
+                       w.lemma == lemma].pop()
+        # removes it visually and from the internal fields
+        self._language_widgets[locale].remove_term_widget(term_widget)
+        self._term_widgets[locale].remove(term_widget)
+        # informs the controller that the entry has been changed
+        self._handle_entry_changed()
 
 
 class CustomMenuLanguageWidget(QtGui.QLabel):
@@ -583,8 +587,6 @@ class CustomMenuLanguageWidget(QtGui.QLabel):
 
         :param locale: ID of the language the label is for
         :type locale: str
-        :param text: text to be shown in the label
-        :type text: str
         :param parent: reference *to the container form*
         :type parent: AbstractEntryForm
         :rtype: LanguageLabel
@@ -595,6 +597,32 @@ class CustomMenuLanguageWidget(QtGui.QLabel):
             self._add_term_action.setEnabled(False)
         self._add_term_action.triggered.connect(
             lambda: parent.handle_add_term(locale))
+        # initializes the widget layout
+        self.setLayout(QtGui.QVBoxLayout(self))
+        self._append_language_flag(locale)
+
+    def _append_language_flag(self, locale):
+        """Appends a national flag and the name of the language to the language
+        widget, by adding a sublayout. It requires that the language widget
+        layout be a QBoxLaout subclass, though.
+
+        :param locale: locale of the language being displayed
+        :type locale: str
+        :rtype: None
+        """
+        flag = QtGui.QLabel(self)
+        flag.setPixmap(
+            QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
+                15))
+        label_text = '<strong>{0}</strong>'.format(
+            mdl.DEFAULT_LANGUAGES[locale])
+        label = QtGui.QLabel(label_text, self)
+        # creates a sub-layout
+        flag_sub_layout = QtGui.QHBoxLayout()
+        flag_sub_layout.addWidget(flag)
+        flag_sub_layout.addWidget(label)
+        flag_sub_layout.addStretch()
+        self.layout().addLayout(flag_sub_layout)
 
     def contextMenuEvent(self, event):
         """Overridden in order to display a context menu which allows new terms
@@ -606,15 +634,27 @@ class CustomMenuLanguageWidget(QtGui.QLabel):
         """
         super(CustomMenuLanguageWidget, self).contextMenuEvent(event)
         context_menu = QtGui.QMenu('Language menu', self)
-        context_menu.setWindowFlags(QtCore.Qt.Tool)
         context_menu.addAction(self._add_term_action)
         context_menu.show()
         context_menu.move(event.globalPos())
 
     def add_term_widget(self, widget):
+        """Displays a new term widget among the language widget children.
+
+        :param widget: term widget to be added to the layout
+        :type widget: CustomMenuTermWidget
+        :rtype: None
+        """
         self.layout().addWidget(widget)
 
     def remove_term_widget(self, widget):
+        """Removes a term widget from those being displayed as children of the
+        language widget layout.
+
+        :param widget: term widget to be removed
+        :type widget: CustomMenuTermWidget
+        :rtype: None
+        """
         self.layout().removeWidget(widget)
 
 
@@ -646,6 +686,8 @@ class CustomMenuTermWidget(QtGui.QWidget):
             self._delete_term_action.setEnabled(False)
         self._delete_term_action.triggered.connect(
             lambda: parent.handle_delete_term(locale, self.lemma))
+        # initializes the widget layout
+        self.setLayout(QtGui.QFormLayout(self))
 
     def contextMenuEvent(self, event):
         """Overridden in order to provide users with a custom context menu.
@@ -658,11 +700,18 @@ class CustomMenuTermWidget(QtGui.QWidget):
         # context menu of the container widget (i.e. the language widget) must
         # *not* be displayed so no bubbling to parent's event handler is needed
         context_menu = QtGui.QMenu('Term menu', self)
-        context_menu.setWindowFlags(QtCore.Qt.Tool)
         context_menu.addAction(self._delete_term_action)
         context_menu.show()
         context_menu.move(event.globalPos())
 
     @QtCore.pyqtSlot(str)
     def update_lemma(self, text):
+        """Updates the lemma that is used for this CustomMenuTermWidget
+        identification, in order to keep it consistent with the content of
+        the term input field.
+
+        :param text: new lemma of the term
+        :type text: str
+        :rtype: None
+        """
         self.lemma = text
