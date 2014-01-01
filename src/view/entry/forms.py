@@ -7,6 +7,8 @@ This module contains the definition of the forms that are used in order to
 create new terminological entries or to modify existing ones.
 """
 
+import collections
+
 from PyQt4 import QtCore, QtGui
 
 from src import model as mdl
@@ -176,8 +178,8 @@ class AbstractEntryForm(QtGui.QWidget):
         term_dict = self.get_terms()
         # checks that there are no (language, lemma) duplicates within the entry
         for locale in term_dict.keys():
-            if any((lemma1 == lemma2 for lemma1 in term_dict[locale] for lemma2
-                    in term_dict[locale])):
+            if any(count > 1 for count
+                   in collections.Counter(term_dict[locale]).values()):
                 return False
         return True
 
