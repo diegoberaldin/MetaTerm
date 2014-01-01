@@ -425,7 +425,7 @@ class CreateEntryForm(AbstractEntryForm):
             term_input = QtGui.QLineEdit(self)
             self._terms[locale].append(term_input)
             term_widget.layout().addRow(term_label, term_input)
-            self._populate_fields('T', term_wigdget.layout(), locale)
+            self._populate_fields('T', term_widget.layout(), locale)
             for field in [f for f in self._fields if
                           f.level == 'T' and f.locale == locale
                           and f.lemma is None]:
@@ -485,7 +485,8 @@ class UpdateEntryForm(AbstractEntryForm):
                 term_input.setText(term.lemma)
                 self._terms[locale].append(term_input)
                 term_widget.layout().addRow(term_label, term_input)
-                self._populate_fields('T', term_widget.layout(), locale, term.lemma)
+                self._populate_fields('T', term_widget.layout(), locale,
+                                      term.lemma)
                 for field in [f for f in self._fields if
                               f.level == 'T' and f.locale == locale
                               and f.lemma == term.lemma]:
@@ -553,10 +554,10 @@ class UpdateEntryForm(AbstractEntryForm):
             term_input.textChanged.connect(field.update_lemma)
         term_input.setText('')
         self._language_layouts[locale].addWidget(term_widget)
-    
-	@QtCore.pyqtSlot(str, str)
-	def handle_delete_term(self, locale, lemma):
-        pass
+
+        @QtCore.pyqtSlot(str, str)
+        def handle_delete_term(self, locale, lemma):
+            pass
 
 
 class LanguageLabel(QtGui.QLabel):
@@ -596,45 +597,46 @@ class LanguageLabel(QtGui.QLabel):
         context_menu.addAction(self._add_term_action)
         context_menu.show()
         context_menu.move(event.globalPos())
-	
-	class CustomMenuTermWidget(QtGui.QWidget):
-        """This widget behaves almost likely a normal 'plain' QWidget with the
-        only notable exception that it provides a custom context menu allowing
-        users to operate on the term that is displayed inside it, e.g. removing
-        it (visually) from the entry it belongs to. It will be the controller
-        responsibility at a later moment to reflect the change in the termbase.
+
+
+class CustomMenuTermWidget(QtGui.QWidget):
+    """This widget behaves almost likely a normal 'plain' QWidget with the
+    only notable exception that it provides a custom context menu allowing
+    users to operate on the term that is displayed inside it, e.g. removing
+    it (visually) from the entry it belongs to. It will be the controller
+    responsibility at a later moment to reflect the change in the termbase.
+    """
+
+    def __init__(self, locale, lemma, is_vedette, parent):
+        """Constructor method.
+
+        :param locale: locale of the term language
+        :type locale: str
+        :param lemma: lemma of the term
+        :type lemma: str
+        :param is_vedette: flag indicating whether the term is a vedette
+        for the given language or not
+        :type is_vedette: bool
+        :param parent: reference to the *container form*
+        :type parent: QtGui.QWidget
         """
-        
-	    def __init__(self, locale, lemma, is_vedette, parent):
-            """Constructor method.
-            
-            :param locale: locale of the term language
-            :type locale: str
-            :param lemma: lemma of the term
-            :type lemma: str
-            :param is_vedette: flag indicating whether the term is a vedette
-            for the given language or not
-            :type is_vedette: bool
-            :param parent: reference to the *container form*
-            :type parent: QtGui.QWidget
-            """
-		    super(TermLabel, self).__init__(parent)
-			self._delete_term_action = QtGui.QAction('Delete term', self)
-			if is_vedette:
-			    self._delete_term_action.setEnabled(False)
-			self._delete_term_action.triggered.connect(
-			    lambda: parent.handle_term_deleted(locale, lemma))
-		
-		def contextMenuEvent(self, event):
-            """Overridden in order to provide users with a custom context menu.
-            
-            :param event: reference to the event being handled, it is needed
-            in order to determine the position where the menu will be shown
-            :type event: QtGui.QContextMenuEvent
-            """
-		    super(TermLabel, self).contextMenuEvent(event)
-			context_menu = QtGui.QMenu('Term menu', self)
-			context_menu.addAction(self._delete_term_action)
-			context_menu.show()
-			context_menu.move(event.globalPos())
-			
+        super(CustomMenuTermWidget, self).__init__(parent)
+        self._delete_term_action = QtGui.QAction('Delete term', self)
+        if is_vedette:
+            self._delete_term_action.setEnabled(False)
+        self._delete_term_action.triggered.connect(
+            lambda: parent.handle_term_deleted(locale, lemma))
+
+    def contextMenuEvent(self, event):
+        """Overridden in order to provide users with a custom context menu.
+
+        :param event: reference to the event being handled, it is needed
+        in order to determine the position where the menu will be shown
+        :type event: QtGui.QContextMenuEvent
+        """
+        super(CustomMenuTermWidget, self).contextMenuEvent(event)
+        context_menu = QtGui.QMenu('Term menu', self)
+        context_menu.addAction(self._delete_term_action)
+        context_menu.show()
+        context_menu.move(event.globalPos())
+
