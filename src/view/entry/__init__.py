@@ -9,3 +9,5 @@ the entry creation and edit forms, the fields that they are made up of and the
 set of widgets that are used to display single entries or entry lists in the
 application main window.
 """
+
+from src.view.entry.widgets import EntryWidget

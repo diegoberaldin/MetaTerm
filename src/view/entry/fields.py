@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 .. currentmodule:: src.view.entry.fields
@@ -72,7 +72,7 @@ class SelectFileInput(QtGui.QWidget):
         self._text_input.setText(value)
 
 
-class AbstractFormField(object):
+class AbstractFormField(QtCore.QObject):
     """This class is used as an abstraction mechanism for all the fields that
     are displayed in the form for the creation of a new terminological entry, no
     matter whether they are implemented using custom or library classes.
@@ -87,26 +87,29 @@ class AbstractFormField(object):
     through the GUI.
     """
 
-    def __init__(self, prop, level, widget, locale, lemma):
+    changed = QtCore.pyqtSignal()
+    """Signal emitted when the value of the form field changes.
+    """
+
+    def __init__(self, prop, level, locale, lemma):
         """Constructor method.
 
         :param prop: reference to the property to be defined
         :type prop: Property
         :param level: level of the defined property
         :type level: str
-        :param widget: reference to the graphical input widget
-        :type widget: QtGui.QWidget
         :param locale: representation of the locale of the language
         :type locale: str
         :param lemma: lemma of the defined term
         :type lemma: str
         :rtype: AbstractFormField
         """
+        super(AbstractFormField, self).__init__()
         self.property = prop
         self.locale = locale
         self.level = level
         self.lemma = lemma
-        self._widget = widget
+        self.widget = None
 
     @property
     def value(self):
@@ -146,19 +149,23 @@ class TextField(AbstractFormField):
     widget can be a QtGui.QLineEdit or a QtGui.QTextEdit.
     """
 
-    def __init__(self, prop, level, widget, locale=None, lemma=None):
-        super(TextField, self).__init__(prop, level, widget, locale, lemma)
+    def __init__(self, prop, level, parent, locale=None, lemma=None):
+        super(TextField, self).__init__(prop, level, locale, lemma)
+        self.widget = QtGui.QTextEdit(parent)
+        self.widget.setMaximumHeight(30)
+        # signal-slot connection
+        self.widget.textChanged.connect(self.changed)
 
     @property
     def value(self):
-        if hasattr(self._widget, 'toPlainText'):
-            return self._widget.toPlainText()
-        if hasattr(self._widget, 'text'):
-            return self._widget.text()
+        if hasattr(self.widget, 'toPlainText'):
+            return self.widget.toPlainText()
+        if hasattr(self.widget, 'text'):
+            return self.widget.text()
 
     @value.setter
     def value(self, value):
-        self._widget.setPlainText(value)
+        self.widget.setPlainText(value)
 
 
 class PicklistField(AbstractFormField):
@@ -166,18 +173,23 @@ class PicklistField(AbstractFormField):
     is a library combo box.
     """
 
-    def __init__(self, prop, level, widget, locale=None, lemma=None):
-        super(PicklistField, self).__init__(prop, level, widget, locale,
-                                            lemma)
+    def __init__(self, prop, level, parent, locale=None, lemma=None):
+        super(PicklistField, self).__init__(prop, level, locale, lemma)
+        self.widget = QtGui.QComboBox(parent)
+        model = QtGui.QStringListModel(prop.values)
+        self.widget.setModel(model)
+        # signal-slot connection
+        self.widget.currentIndexChanged.connect(
+            lambda unused_idx: self.changed.emit())
 
     @property
     def value(self):
-        return self._widget.currentText()
+        return self.widget.currentText()
 
     @value.setter
     def value(self, value):
-        index = self._widget.model().stringList().index(value)
-        self._widget.setCurrentIndex(index)
+        index = self.widget.model().stringList().index(value)
+        self.widget.setCurrentIndex(index)
 
 
 class FileField(AbstractFormField):
@@ -185,13 +197,16 @@ class FileField(AbstractFormField):
     system where such a resource can be found.
     """
 
-    def __init__(self, prop, level, widget, locale=None, lemma=None):
-        super(FileField, self).__init__(prop, level, widget, locale, lemma)
+    def __init__(self, prop, level, parent, locale=None, lemma=None):
+        super(FileField, self).__init__(prop, level, locale, lemma)
+        self.widget = SelectFileInput(parent)
+        # signal-slot connection
+        self.widget.path_changed.connect(self.changed)
 
     @property
     def value(self):
-        return self._widget.value
+        return self.widget.value
 
     @value.setter
     def value(self, value):
-        self._widget.value = value
+        self.widget.value = value

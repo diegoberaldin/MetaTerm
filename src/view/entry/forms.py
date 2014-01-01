@@ -7,8 +7,6 @@ This module contains the definition of the forms that are used in order to
 create new terminological entries or to modify existing ones.
 """
 
-import os
-
 from PyQt4 import QtCore, QtGui
 
 from src import model as mdl
@@ -143,33 +141,21 @@ class AbstractEntryForm(QtGui.QWidget):
         """
         for prop in mdl.get_main_model().open_termbase.schema.get_properties(
                 level):
-            label = QtGui.QLabel(prop.name, self)
             if prop.property_type == 'T':  # text property
-                widget = QtGui.QTextEdit(self)
-                widget.setMaximumHeight(30)
-                widget.textChanged.connect(self._handle_entry_changed)
-                field = fields.TextField(prop, level, widget)
+                field = fields.TextField(prop, level, self, locale, lemma)
             elif prop.property_type == 'I':  # image property
-                widget = fields.SelectFileInput(self)
-                field = fields.FileField(prop, level, widget)
-                widget.path_changed.connect(self._handle_entry_changed)
+                field = fields.FileField(prop, level, self, locale, lemma)
             else:  # picklist
-                widget = QtGui.QComboBox(self)
-                model = QtGui.QStringListModel(prop.values)
-                widget.setModel(model)
-                widget.currentIndexChanged.connect(
-                    lambda unused_idx: self._handle_entry_changed())
-                field = fields.PicklistField(prop, level, widget)
-            if level in ['L', 'T'] and locale:
-                field.locale = locale
-            if level == 'T' and lemma:
-                field.lemma = lemma
+                field = fields.PicklistField(prop, level, self, locale, lemma)
             self._fields.append(field)
+            # signal-slot connection
+            field.changed.connect(self._handle_entry_changed)
             # fills-in the widget
             self._fill_field(prop, field)
             # finally appends the widgets to the form layout
+            label = QtGui.QLabel(prop.name, self)
             label.setWordWrap(True)
-            child_layout.addRow(label, widget)
+            child_layout.addRow(label, field.widget)
 
     @property
     def is_new(self):
