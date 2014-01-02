@@ -50,6 +50,8 @@ class MainWindow(QtGui.QMainWindow):
         self._initialize_actions()
         # creates menus
         self._create_menus()
+        # creates the main toolbar
+        self._create_main_toolbar()
         # sets the central widget
         main_widget = EntryWidget(self)
         self.setCentralWidget(main_widget)
@@ -72,37 +74,37 @@ class MainWindow(QtGui.QMainWindow):
         :rtype: None
         """
         self.new_tb_action = QtGui.QAction(QtGui.QIcon(':/document-new.png'),
-                                           'New...', self)
+                                           'New termbase...', self)
         self.new_tb_action.triggered.connect(
             lambda: self.fire_event.emit('new_termbase', {}))
         self.open_tb_action = QtGui.QAction(QtGui.QIcon(':/document-open.png'),
-                                            'Open...', self)
+                                            'Open termbase...', self)
         self.open_tb_action.triggered.connect(self._handle_open_termbase)
         self.close_tb_action = QtGui.QAction(
-            QtGui.QIcon(':/document-close.png'), 'Close...', self)
+            QtGui.QIcon(':/document-close.png'), 'Close termbase...', self)
         self.close_tb_action.triggered.connect(
             lambda: self.fire_event.emit('close_termbase', {}))
         self.close_tb_action.setEnabled(False)
         self.delete_tb_action = QtGui.QAction(QtGui.QIcon(':/user-trash.png'),
-                                              'Delete...', self)
+                                              'Delete termbase...', self)
         self.delete_tb_action.triggered.connect(self._handle_delete_termbase)
         self.show_tb_properties_action = QtGui.QAction(
-            QtGui.QIcon(':/server-database'), 'Properties...', self)
+            QtGui.QIcon(':/server-database'), 'Termbase properties...', self)
         self.show_tb_properties_action.triggered.connect(
             self._handle_show_termbase_properties)
         self.show_tb_properties_action.setEnabled(False)
         self.create_entry_action = QtGui.QAction(
-            QtGui.QIcon(':/contact-new.png'), 'Insert', self)
+            QtGui.QIcon(':/contact-new.png'), 'Insert entry', self)
         self.create_entry_action.setEnabled(False)
         self.create_entry_action.triggered.connect(
             lambda: self.fire_event.emit('new_entry', {}))
         self.save_entry_action = QtGui.QAction(
-            QtGui.QIcon(':/document-save.png'), 'Save', self)
+            QtGui.QIcon(':/document-save.png'), 'Save entry', self)
         self.save_entry_action.setEnabled(False)
         self.save_entry_action.triggered.connect(
             lambda: self.fire_event.emit('save_entry', {}))
         self.edit_entry_action = QtGui.QAction(
-            QtGui.QIcon(':/document-edit.png'), 'Edit', self)
+            QtGui.QIcon(':/document-edit.png'), 'Edit entry', self)
         self.edit_entry_action.setEnabled(False)
         self.edit_entry_action.triggered.connect(
             lambda: self.fire_event.emit('edit_entry', {}))
@@ -112,7 +114,7 @@ class MainWindow(QtGui.QMainWindow):
         self.cancel_edit_action.triggered.connect(
             lambda: self.fire_event.emit('edit_canceled', {}))
         self.delete_entry_action = QtGui.QAction(
-            QtGui.QIcon(':/user-trash.png'), 'Delete', self)
+            QtGui.QIcon(':/user-trash.png'), 'Delete entry', self)
         self.delete_entry_action.setEnabled(False)
         self.delete_entry_action.triggered.connect(
             lambda: self.fire_event.emit('delete_entry', {}))
@@ -153,6 +155,20 @@ class MainWindow(QtGui.QMainWindow):
         help_menu = QtGui.QMenu('?', self)
         help_menu.addAction(self.about_qt_action)
         self.menuBar().addMenu(help_menu)
+
+    def _create_main_toolbar(self):
+        main_toolbar = QtGui.QToolBar(self)
+        main_toolbar.addAction(self.open_tb_action)
+        main_toolbar.addAction(self.new_tb_action)
+        main_toolbar.addSeparator()
+        main_toolbar.addAction(self.create_entry_action)
+        main_toolbar.addAction(self.save_entry_action)
+        main_toolbar.addAction(self.edit_entry_action)
+        main_toolbar.addAction(self.cancel_edit_action)
+        main_toolbar.addAction(self.delete_entry_action)
+        main_toolbar.addSeparator()
+        main_toolbar.addAction(self.quit_action)
+        self.addToolBar(main_toolbar)
 
     def display_message(self, message):
         """Displays a message in the application status bar.
