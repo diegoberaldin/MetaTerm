@@ -34,47 +34,21 @@ class MainWindow(QtGui.QMainWindow):
         :rtype: MainWindow
         """
         super(MainWindow, self).__init__()
-        # action initialization (they are member data after all, aren't they?)
-        self.new_tb_action = QtGui.QAction('New...', self)
-        self.new_tb_action.triggered.connect(
-            lambda: self.fire_event.emit('new_termbase', {}))
-        self.open_tb_action = QtGui.QAction('Open...', self)
-        self.open_tb_action.triggered.connect(self._handle_open_termbase)
-        self.close_tb_action = QtGui.QAction('Close...', self)
-        self.close_tb_action.triggered.connect(
-            lambda: self.fire_event.emit('close_termbase', {}))
-        self.close_tb_action.setEnabled(False)
-        self.delete_tb_action = QtGui.QAction('Delete...', self)
-        self.delete_tb_action.triggered.connect(self._handle_delete_termbase)
-        self.show_tb_properties_action = QtGui.QAction('Properties...', self)
-        self.show_tb_properties_action.triggered.connect(
-            self._handle_show_termbase_properties)
-        self.show_tb_properties_action.setEnabled(False)
-        self.create_entry_action = QtGui.QAction('Insert', self)
-        self.create_entry_action.setEnabled(False)
-        self.create_entry_action.triggered.connect(
-            lambda: self.fire_event.emit('new_entry', {}))
-        self.save_entry_action = QtGui.QAction('Save', self)
-        self.save_entry_action.setEnabled(False)
-        self.save_entry_action.triggered.connect(
-            lambda: self.fire_event.emit('save_entry', {}))
-        self.edit_entry_action = QtGui.QAction('Edit', self)
-        self.edit_entry_action.setEnabled(False)
-        self.edit_entry_action.triggered.connect(
-            lambda: self.fire_event.emit('edit_entry', {}))
-        self.cancel_edit_action = QtGui.QAction('Cancel edit', self)
-        self.cancel_edit_action.setEnabled(False)
-        self.cancel_edit_action.triggered.connect(
-            lambda: self.fire_event.emit('edit_canceled', {}))
-        self.delete_entry_action = QtGui.QAction('Delete', self)
-        self.delete_entry_action.setEnabled(False)
-        self.delete_entry_action.triggered.connect(
-            lambda: self.fire_event.emit('delete_entry', {}))
-        self.quit_action = QtGui.QAction('Quit', self)
-        self.quit_action.triggered.connect(lambda: QtGui.qApp.quit())
-        self.about_qt_action = QtGui.QAction('About Qt', self)
-        self.about_qt_action.triggered.connect(
-            lambda: QtGui.QMessageBox.aboutQt(self, 'About Qt'))
+        # initializes actions
+        self.new_tb_action = None
+        self.open_tb_action = None
+        self.close_tb_action = None
+        self.delete_tb_action = None
+        self.show_tb_properties_action = None
+        self.create_entry_action = None
+        self.save_entry_action = None
+        self.edit_entry_action = None
+        self.cancel_edit_action = None
+        self.delete_entry_action = None
+        self.quit_action = None
+        self.about_qt_action = None
+        self._initialize_actions()
+        # creates menus
         self._create_menus()
         # sets the central widget
         main_widget = EntryWidget(self)
@@ -90,6 +64,65 @@ class MainWindow(QtGui.QMainWindow):
             self._handle_termbase_opened)
         mdl.get_main_model().termbase_closed.connect(
             self._handle_termbase_closed)
+
+    def _initialize_actions(self):
+        """Initializes the name, icons and actions that will be associated to
+        the actions of the main application window.
+
+        :rtype: None
+        """
+        self.new_tb_action = QtGui.QAction(QtGui.QIcon(':/document-new.png'),
+                                           'New...', self)
+        self.new_tb_action.triggered.connect(
+            lambda: self.fire_event.emit('new_termbase', {}))
+        self.open_tb_action = QtGui.QAction(QtGui.QIcon(':/document-open.png'),
+                                            'Open...', self)
+        self.open_tb_action.triggered.connect(self._handle_open_termbase)
+        self.close_tb_action = QtGui.QAction(
+            QtGui.QIcon(':/document-close.png'), 'Close...', self)
+        self.close_tb_action.triggered.connect(
+            lambda: self.fire_event.emit('close_termbase', {}))
+        self.close_tb_action.setEnabled(False)
+        self.delete_tb_action = QtGui.QAction(QtGui.QIcon(':/user-trash.png'),
+                                              'Delete...', self)
+        self.delete_tb_action.triggered.connect(self._handle_delete_termbase)
+        self.show_tb_properties_action = QtGui.QAction(
+            QtGui.QIcon(':/server-database'), 'Properties...', self)
+        self.show_tb_properties_action.triggered.connect(
+            self._handle_show_termbase_properties)
+        self.show_tb_properties_action.setEnabled(False)
+        self.create_entry_action = QtGui.QAction(
+            QtGui.QIcon(':/contact-new.png'), 'Insert', self)
+        self.create_entry_action.setEnabled(False)
+        self.create_entry_action.triggered.connect(
+            lambda: self.fire_event.emit('new_entry', {}))
+        self.save_entry_action = QtGui.QAction(
+            QtGui.QIcon(':/document-save.png'), 'Save', self)
+        self.save_entry_action.setEnabled(False)
+        self.save_entry_action.triggered.connect(
+            lambda: self.fire_event.emit('save_entry', {}))
+        self.edit_entry_action = QtGui.QAction(
+            QtGui.QIcon(':/document-edit.png'), 'Edit', self)
+        self.edit_entry_action.setEnabled(False)
+        self.edit_entry_action.triggered.connect(
+            lambda: self.fire_event.emit('edit_entry', {}))
+        self.cancel_edit_action = QtGui.QAction(
+            QtGui.QIcon(':/dialog-cancel.png'), 'Cancel edit', self)
+        self.cancel_edit_action.setEnabled(False)
+        self.cancel_edit_action.triggered.connect(
+            lambda: self.fire_event.emit('edit_canceled', {}))
+        self.delete_entry_action = QtGui.QAction(
+            QtGui.QIcon(':/user-trash.png'), 'Delete', self)
+        self.delete_entry_action.setEnabled(False)
+        self.delete_entry_action.triggered.connect(
+            lambda: self.fire_event.emit('delete_entry', {}))
+        self.quit_action = QtGui.QAction(QtGui.QIcon(':/application-exit.png'),
+                                         'Quit', self)
+        self.quit_action.triggered.connect(lambda: QtGui.qApp.quit())
+        self.about_qt_action = QtGui.QAction(QtGui.QIcon(':/help-about.png'),
+                                             'About Qt', self)
+        self.about_qt_action.triggered.connect(
+            lambda: QtGui.QMessageBox.aboutQt(self, 'About Qt'))
 
     def _create_menus(self):
         """Creates the menus displayed in the main application menu bar.

@@ -7,10 +7,18 @@
         <file>flags/gr_GR.png</file>
         <file>flags/it_IT.png</file>
         <file>flags/ro_RO.png</file>
+        <file>application-exit.png</file>
+        <file>contact-new.png</file>
+        <file>dialog-cancel.png</file>
         <file>document-close.png</file>
+        <file>document-edit.png</file>
+        <file>document-open.png</file>
         <file>document-new.png</file>
         <file>document-save.png</file>
+        <file>help-about.png</file>
         <file>list-add.png</file>
         <file>list-remove.png</file>
+        <file>server-database.png</file>
+        <file>user-trash.png</file>
     </qresource>
 </RCC>
