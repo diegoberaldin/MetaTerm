@@ -9,7 +9,7 @@ This module contains the classes used to represent terms inside a termbase.
 import sqlalchemy
 import sqlalchemy.orm
 
-from src.model import mapping as orm
+from src.model.dataaccess import orm
 
 
 class Term(object):

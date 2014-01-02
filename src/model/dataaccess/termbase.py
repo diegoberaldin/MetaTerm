@@ -19,9 +19,8 @@ import logging
 import sqlalchemy.orm
 from sqlalchemy.exc import SQLAlchemyError
 
-from src.model import sql
-from src.model import mapping as orm
 from src.model.dataaccess.entry import Entry
+from src.model.dataaccess import orm
 from src.model.dataaccess.schema import Schema
 
 
@@ -43,7 +42,7 @@ class Termbase(object):
         session = sqlalchemy.orm.sessionmaker(self._get_engine())
         self._session = sqlalchemy.orm.scoped_session(session)
         # writes the termbase on disk (if needed)
-        sql.write_to_disk(self.get_termbase_file_name(), self._get_engine())
+        orm.write_to_disk(self.get_termbase_file_name(), self._get_engine())
 
     def get_termbase_file_name(self):
         """Returns the name of the file where the database is stored.
@@ -51,7 +50,7 @@ class Termbase(object):
         :returns: name of the local file where the termbase is stored
         :rtype: str
         """
-        return os.path.join(sql.DB_DIR, '{0}.sqlite'.format(self.name))
+        return os.path.join(orm.DB_DIR, '{0}.sqlite'.format(self.name))
 
     def _get_connection_string(self):
         """Returns the connection string to be used to interact with the local

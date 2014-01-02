@@ -10,7 +10,7 @@ queried and is accessible via the 'schema' property of each termbase instance.
 
 import uuid
 
-from src.model import mapping as orm
+from src.model.dataaccess import orm
 
 
 class Schema(object):

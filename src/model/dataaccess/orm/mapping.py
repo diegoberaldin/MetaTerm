@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-.. currentmodule:: src.model.mapping
+.. currentmodule:: src.model.dataaccess.orm.mapping
 
 This module contains all transfer object definitions used to perform the
 object-relational mapping with SQLAlchemy. This is the basis for the data access
@@ -11,7 +11,8 @@ layer too.
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.types import String, Boolean, Enum
 
-from src.model import sql, constants
+from src.model import constants
+from src.model.dataaccess.orm import sql
 
 
 class Entry(sql.Mappable):
