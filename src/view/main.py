@@ -180,11 +180,15 @@ class MainWindow(QtGui.QMainWindow):
         dialog = SelectTermbaseDialog(self)
         ret = dialog.exec()
         if ret:
-            button = QtGui.QMessageBox.warning(self, 'Warning',
-                                               'The operation cannot '
-                                               'be undone, do you '
-                                               'want to proceed?')
-            if button == QtGui.QMessageBox.Ok:
+            warning = QtGui.QMessageBox(self)
+            warning.setWindowTitle(Warning)
+            warning.setText('Are you sure you want to delete this termbase?')
+            warning.setInformativeText('The operation cannot be undone, do you '
+                                       'still want to proceed?')
+            warning.setStandardButtons(
+                QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+            ret = warning.exec()
+            if ret:
                 self.fire_event.emit('delete_termbase', {
                     'name': dialog.selected_termbase_name})
 
