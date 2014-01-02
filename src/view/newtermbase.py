@@ -113,10 +113,12 @@ class NamePage(QtGui.QWizardPage):
         """
         tb_name = '{0}.sqlite'.format(self.field('termbase_name'))
         if tb_name in mdl.get_termbase_names():
-            QtGui.QMessageBox.warning(self, 'Name conflict',
-                                      'A termbase with the same name already '
-                                      'exists on the system, please choose a '
-                                      'different one.')
+            warning = QtGui.QMessageBox(self)
+            warning.setWindowTitle('Name conflict')
+            warning.setText('A termbase with the same name already exists.')
+            warning.setInformativeText('Please choose a different one in '
+                                       'order to proceed.')
+            warning.exec()
             return False
         return True
 
