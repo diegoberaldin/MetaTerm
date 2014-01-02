@@ -120,6 +120,8 @@ class Term(sql.Mappable):
     entry_id = Column(String,
                       ForeignKey('Entries.entry_id', ondelete='CASCADE'),
                       nullable=False)
+    # other constraints
+    UniqueConstraint('entry_id', 'lang_id', 'lemma')
 
 
 class TermPropertyAssociation(sql.Mappable):
