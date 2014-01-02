@@ -296,7 +296,7 @@ class EntryScreen(QtGui.QWidget):
         entry_id_label = QtGui.QLabel(
             '<small>Entry ID: {0}</small>'.format(self.entry.entry_id))
         self.layout().addWidget(entry_id_label)
-        self.layout().addStretch()
+        self.layout().addStretch(1)
         schema = mdl.get_main_model().open_termbase.schema
         entry_property_layout = QtGui.QFormLayout()
         for prop in schema.get_properties('E'):
@@ -305,6 +305,7 @@ class EntryScreen(QtGui.QWidget):
                                 self.entry.get_property(prop.prop_id),
                                 entry_property_layout)
         self.layout().addLayout(entry_property_layout)
+        self.layout().addStretch(1)
         for locale in mdl.get_main_model().open_termbase.languages:
             language_layout = QtGui.QVBoxLayout()
             # adds flag and language name
@@ -342,8 +343,9 @@ class EntryScreen(QtGui.QWidget):
                                         term.get_property(prop.prop_id),
                                         term_layout)
                 language_layout.addLayout(term_layout)
+            self.layout().addStretch(2)
             self.layout().addLayout(language_layout)
-            self.layout().addStretch()
+        self.layout().addStretch(100)
 
     def _show_property(self, name, value, child_layout):
         """Displays a given row in the entry screen, containing the name of the
