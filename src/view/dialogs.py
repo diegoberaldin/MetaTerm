@@ -46,6 +46,7 @@ class SelectTermbaseDialog(QtGui.QDialog):
         :rtype: SelectTermbaseDialog
         """
         super(SelectTermbaseDialog, self).__init__(parent)
+        self.setWindowTitle('Select termbase')
         self.selected_termbase_name = None
         self.setLayout(QtGui.QVBoxLayout(self))
         # dialog content
