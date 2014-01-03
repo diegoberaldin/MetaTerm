@@ -43,6 +43,10 @@ class SelectFileInput(QtGui.QWidget):
     """Signal emitted when the path of the selected resource has changed.
     """
 
+    _PICTURE_HEIGHT = 150
+    """Default height of the pictures shown in the input display.
+    """
+
     def __init__(self, parent):
         """Constructor method.
 
@@ -51,16 +55,28 @@ class SelectFileInput(QtGui.QWidget):
         :rtype: SelectFileInput
         """
         super(SelectFileInput, self).__init__(parent)
-        self.setLayout(QtGui.QHBoxLayout(self))
+        self._content = ''
+        # content display
+        self._display = QtGui.QLabel(self)
+        # input field and input buttons
         self._text_input = QtGui.QLineEdit(self)
         self._text_input.setEnabled(False)
         browse_button = QtGui.QPushButton('Browse', self)
-        browse_button.clicked.connect(self._handle_button_clicked)
-        self.layout().addWidget(self._text_input)
-        self.layout().addWidget(browse_button)
+        browse_button.clicked.connect(self._handle_browse_clicked)
+        clear_button = QtGui.QPushButton('Clear', self)
+        clear_button.clicked.connect(self._handle_clear_clicked)
+        # input layout
+        input_layout = QtGui.QHBoxLayout()
+        input_layout.addWidget(self._text_input)
+        input_layout.addWidget(browse_button)
+        input_layout.addWidget(clear_button)
+        # puts it all together
+        self.setLayout(QtGui.QVBoxLayout(self))
+        self.layout().addWidget(self._display)
+        self.layout().addLayout(input_layout)
 
     @QtCore.pyqtSlot()
-    def _handle_button_clicked(self):
+    def _handle_browse_clicked(self):
         """Private slot to be called when the button is clicked, after asking
         the user for a path to a local resource this is shown in the text
         input field and the ``path_changed`` signal is emitted.
@@ -70,9 +86,27 @@ class SelectFileInput(QtGui.QWidget):
         file_path = QtGui.QFileDialog.getOpenFileName(self, 'Choose file',
                                                       os.path.expanduser('~'))
         if file_path:
-            self._text_input.setText(file_path)
+            try:
+                with open(file_path, 'rb') as file_handle:
+                    self._text_input.setText(file_path)
+                    self._display_image(file_handle.read())
+            except (IOError, FileNotFoundError):
+                pass
         else:
             self._text_input.setText('')
+        self.path_changed.emit()
+
+    @QtCore.pyqtSlot()
+    def _handle_clear_clicked(self):
+        """Completely resets the content of the input field, meaning that any
+        call to the value property from here on will result in an empty content.
+
+        :rtype: None
+        """
+        self._content = ''
+        self._text_input.setText('')
+        # resets the display
+        self._display.setPixmap(QtGui.QPixmap())
         self.path_changed.emit()
 
     @property
@@ -83,11 +117,30 @@ class SelectFileInput(QtGui.QWidget):
         :return: the selected (absolute) path to the resource
         :rtype: str
         """
-        return self._text_input.text()
+        if self._text_input.text():
+            try:
+                with open(self._text_input.text(), 'rb') as file_handle:
+                    return file_handle.read()
+            except (IOError, FileNotFoundError):
+                # this error should NOT pass silently, though
+                pass
+        return self._content  # otherwise the content must be returned (if any)
 
     @value.setter
     def value(self, value):
-        self._text_input.setText(value)
+        self._content = value
+        self._display_image(value)
+
+    def _display_image(self, byte_sequence):
+        """Convenience method used to display an image starting from a sequence
+        of bytes.
+
+        :param byte_sequence: array of bytes representing the image
+        :rtype: None
+        """
+        image = QtGui.QPixmap()
+        image.loadFromData(QtCore.QByteArray(byte_sequence))
+        self._display.setPixmap(image.scaledToHeight(self._PICTURE_HEIGHT))
 
 
 class AbstractFormField(QtCore.QObject):

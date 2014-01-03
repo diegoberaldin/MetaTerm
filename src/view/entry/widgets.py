@@ -299,6 +299,10 @@ class EntryScreen(QtGui.QWidget):
     show a terminological entry without allowing any modification to it.
     """
 
+    _PICTURE_HEIGHT = 150
+    """Default height of the pictures that will be shown in the entry screen.
+    """
+
     def __init__(self, entry, parent):
         """Constructor method.
 
@@ -319,7 +323,7 @@ class EntryScreen(QtGui.QWidget):
         entry_property_layout = QtGui.QFormLayout()
         for prop in schema.get_properties('E'):
             # shows entry-level properties
-            self._show_property(prop.name,
+            self._show_property(prop.name, prop.property_type,
                                 self.entry.get_property(prop.prop_id),
                                 entry_property_layout)
         self.layout().addLayout(entry_property_layout)
@@ -343,7 +347,8 @@ class EntryScreen(QtGui.QWidget):
             for prop in schema.get_properties('L'):
                 # shows language-level properties
                 value = self.entry.get_language_property(locale, prop.prop_id)
-                self._show_property(prop.name, value, language_property_layout)
+                self._show_property(prop.name, prop.property_type, value,
+                                    language_property_layout)
             language_layout.addLayout(language_property_layout)
             for term in self.entry.get_terms(locale):
                 term_layout = QtGui.QFormLayout()
@@ -357,7 +362,7 @@ class EntryScreen(QtGui.QWidget):
                 term_layout.addWidget(term_label)
                 for prop in schema.get_properties('T'):
                     # adds term-level properties
-                    self._show_property(prop.name,
+                    self._show_property(prop.name, prop.property_type,
                                         term.get_property(prop.prop_id),
                                         term_layout)
                 language_layout.addLayout(term_layout)
@@ -365,12 +370,14 @@ class EntryScreen(QtGui.QWidget):
             self.layout().addLayout(language_layout)
         self.layout().addStretch(100)
 
-    def _show_property(self, name, value, child_layout):
+    def _show_property(self, name, prop_type, value, child_layout):
         """Displays a given row in the entry screen, containing the name of the
         property on the left side and the corresponding value on the right side.
 
         :param name: name of the property to be displayed
         :type name: str
+        :param prop_type: type of the property in ``['T', 'I', 'P']``
+        :type prop_type: str
         :param value: value of the property to be displayed
         :type value: str
         :param child_layout: sub-layout where the property must be shown
@@ -380,7 +387,14 @@ class EntryScreen(QtGui.QWidget):
         if value:
             prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(name),
                                       self)
-            value_label = QtGui.QLabel(value, self)
+            value_label = QtGui.QLabel(self)
+            if prop_type == 'I':
+                image = QtGui.QPixmap()
+                image.loadFromData(QtCore.QByteArray(value))
+                value_label.setPixmap(
+                    image.scaledToHeight(self._PICTURE_HEIGHT))
+            else:
+                value_label.setText(value)
             child_layout.addRow(prop_label, value_label)
 
 
@@ -409,15 +423,3 @@ class WelcomeScreen(QtGui.QWidget):
         label.setWordWrap(True)
         self.setLayout(QtGui.QVBoxLayout(self))
         self.layout().addWidget(label)
-
-        # def paintEvent(self, event):
-        #     """Overridden to have the stylesheet applied.
-        #
-        #     :param event: reference to the paint event (unused)
-        #     :rtype: None
-        #     """
-        #     option = QtGui.QStyleOption()
-        #     option.init(self)
-        #     painter = QtGui.QPainter(self)
-        #     style = self.style()
-        #     style.drawPrimitive(QtGui.QStyle.PE_Widget, option, painter, self)
