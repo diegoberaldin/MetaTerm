@@ -388,6 +388,7 @@ class EntryScreen(QtGui.QWidget):
             prop_label = QtGui.QLabel('<strong>{0}:</strong>'.format(name),
                                       self)
             value_label = QtGui.QLabel(self)
+            value_label.setWordWrap(True)
             if prop_type == 'I':
                 image = QtGui.QPixmap()
                 image.loadFromData(QtCore.QByteArray(value))
