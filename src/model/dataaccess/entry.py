@@ -139,7 +139,7 @@ class Entry(object):
                     session.delete(prop)
             except sqlalchemy.orm.exc.NoResultFound:
                 # the property had not been set previously
-                if prop:
+                if value:
                     prop = orm.EntryPropertyAssociation(entry_id=self.entry_id,
                                                         prop_id=prop_id,
                                                         value=value)
