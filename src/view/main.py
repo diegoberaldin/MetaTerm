@@ -95,13 +95,16 @@ class MainWindow(QtGui.QMainWindow):
                                            'New termbase...', self)
         self.new_tb_action.triggered.connect(
             lambda: self.fire_event.emit('new_termbase', {}))
+        self.new_tb_action.setShortcut(QtGui.QKeySequence.New)
         self.open_tb_action = QtGui.QAction(QtGui.QIcon(':/document-open.png'),
                                             'Open termbase...', self)
         self.open_tb_action.triggered.connect(self._handle_open_termbase)
+        self.open_tb_action.setShortcut(QtGui.QKeySequence.Open)
         self.close_tb_action = QtGui.QAction(
             QtGui.QIcon(':/document-close.png'), 'Close termbase...', self)
         self.close_tb_action.triggered.connect(
             lambda: self.fire_event.emit('close_termbase', {}))
+        self.close_tb_action.setShortcut(QtGui.QKeySequence.Close)
         self.close_tb_action.setEnabled(False)
         self.delete_tb_action = QtGui.QAction(QtGui.QIcon(':/user-trash.png'),
                                               'Delete termbase...', self)
@@ -116,14 +119,17 @@ class MainWindow(QtGui.QMainWindow):
         self.create_entry_action.setEnabled(False)
         self.create_entry_action.triggered.connect(
             lambda: self.fire_event.emit('new_entry', {}))
+        self.create_entry_action.setShortcut(QtGui.QKeySequence('Ins'))
         self.save_entry_action = QtGui.QAction(
             QtGui.QIcon(':/document-save.png'), 'Save entry', self)
         self.save_entry_action.setEnabled(False)
+        self.save_entry_action.setShortcut(QtGui.QKeySequence.Save)
         self.save_entry_action.triggered.connect(
             lambda: self.fire_event.emit('save_entry', {}))
         self.edit_entry_action = QtGui.QAction(
             QtGui.QIcon(':/document-edit.png'), 'Edit entry', self)
         self.edit_entry_action.setEnabled(False)
+        self.edit_entry_action.setShortcut(QtGui.QKeySequence('Ctrl+e'))
         self.edit_entry_action.triggered.connect(
             lambda: self.fire_event.emit('edit_entry', {}))
         self.cancel_edit_action = QtGui.QAction(
@@ -131,11 +137,13 @@ class MainWindow(QtGui.QMainWindow):
         self.cancel_edit_action.setEnabled(False)
         self.cancel_edit_action.triggered.connect(
             lambda: self.fire_event.emit('edit_canceled', {}))
+        self.cancel_edit_action.setShortcut(QtGui.QKeySequence('Esc'))
         self.delete_entry_action = QtGui.QAction(
             QtGui.QIcon(':/user-trash.png'), 'Delete entry', self)
         self.delete_entry_action.setEnabled(False)
         self.delete_entry_action.triggered.connect(
             lambda: self.fire_event.emit('delete_entry', {}))
+        self.delete_entry_action.setShortcut(QtGui.QKeySequence.Delete)
         self.quit_action = QtGui.QAction(QtGui.QIcon(':/application-exit.png'),
                                          'Quit', self)
         self.quit_action.triggered.connect(lambda: QtGui.qApp.quit())
