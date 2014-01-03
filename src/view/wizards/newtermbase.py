@@ -19,7 +19,7 @@
 # For further information, contact the authors at <diego.beraldin@gmail.com>.
 
 """
-.. currentmodule:: src.view.newtermbase
+.. currentmodule:: src.view.wizards.newtermbase
 
 This module contains the classes used to define the wizard that will guide the
 user through the creation of a new terminological database.

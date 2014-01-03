@@ -19,11 +19,10 @@
 # For further information, contact the authors at <diego.beraldin@gmail.com>.
 
 """
-.. currentmodule:: src.view
+.. currentmodule:: src.view.wizards
 
-This package contains the modules which the application GUI is made up of.
+This package contains, as the name suggests, the definition of the wizards that
+are used in the GUI to guide the user throughout complex procedures.
 """
 
-from src.view.main import MainWindow
-from src.view.wizards import NewTermbaseWizard
-from src.view import res
+from src.view.wizards.newtermbase import NewTermbaseWizard
