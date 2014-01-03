@@ -41,12 +41,12 @@ class NewTermbaseWizard(QtGui.QWizard):
     """Signal emitted so that events can be handled by the controller.
     """
 
-    MINIMUM_WIDTH = 500
-    """Minimum width of the wizard window.
+    _WIDTH = 500
+    """Default width of the wizard window.
     """
 
-    MINIMUM_HEIGHT = 400
-    """Minimum height of the wizard window.
+    _HEIGHT = 400
+    """Default height of the wizard window.
     """
 
     def __init__(self, termbase_definition_model, parent):
@@ -68,8 +68,8 @@ class NewTermbaseWizard(QtGui.QWizard):
         for page in self._pages:
             self.addPage(page)
         self._pages[2].fire_event.connect(self.fire_event)
-        self.setMinimumSize(self.MINIMUM_WIDTH, self.MINIMUM_HEIGHT)
-        self.setVisible(True)
+        self.resize(self._WIDTH, self._HEIGHT)
+        self.show()
 
     def accept(self):
         self.fire_event.emit('termbase_created', {})
