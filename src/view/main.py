@@ -57,6 +57,7 @@ class MainWindow(QtGui.QMainWindow):
         self.open_tb_action = None
         self.close_tb_action = None
         self.delete_tb_action = None
+        self.export_tb_action = None
         self.show_tb_properties_action = None
         self.create_entry_action = None
         self.save_entry_action = None
@@ -109,6 +110,12 @@ class MainWindow(QtGui.QMainWindow):
         self.delete_tb_action = QtGui.QAction(QtGui.QIcon(':/user-trash.png'),
                                               'Delete termbase...', self)
         self.delete_tb_action.triggered.connect(self._handle_delete_termbase)
+        self.export_tb_action = QtGui.QAction(
+            QtGui.QIcon(':/document-export-table.png'),
+            'Export...', self)
+        self.export_tb_action.setEnabled(False)
+        self.export_tb_action.triggered.connect(
+            lambda: self.fire_event.emit('export', {}))
         self.show_tb_properties_action = QtGui.QAction(
             QtGui.QIcon(':/server-database'), 'Termbase properties...', self)
         self.show_tb_properties_action.triggered.connect(
@@ -117,21 +124,18 @@ class MainWindow(QtGui.QMainWindow):
         self.create_entry_action = QtGui.QAction(
             QtGui.QIcon(':/contact-new.png'), 'Insert entry', self)
         self.create_entry_action.setEnabled(False)
-        self.create_entry_action.triggered.connect(
-            lambda: self.fire_event.emit('new_entry', {}))
+        self.create_entry_action.triggered.connect(self._handle_new_entry)
         self.create_entry_action.setShortcut(QtGui.QKeySequence('Ins'))
         self.save_entry_action = QtGui.QAction(
             QtGui.QIcon(':/document-save.png'), 'Save entry', self)
         self.save_entry_action.setEnabled(False)
         self.save_entry_action.setShortcut(QtGui.QKeySequence.Save)
-        self.save_entry_action.triggered.connect(
-            lambda: self.fire_event.emit('save_entry', {}))
+        self.save_entry_action.triggered.connect(self._handle_save_entry)
         self.edit_entry_action = QtGui.QAction(
             QtGui.QIcon(':/document-edit.png'), 'Edit entry', self)
         self.edit_entry_action.setEnabled(False)
         self.edit_entry_action.setShortcut(QtGui.QKeySequence('Ctrl+e'))
-        self.edit_entry_action.triggered.connect(
-            lambda: self.fire_event.emit('edit_entry', {}))
+        self.edit_entry_action.triggered.connect(self._handle_edit_entry)
         self.cancel_edit_action = QtGui.QAction(
             QtGui.QIcon(':/dialog-cancel.png'), 'Cancel edit', self)
         self.cancel_edit_action.setEnabled(False)
@@ -163,7 +167,10 @@ class MainWindow(QtGui.QMainWindow):
         termbase_menu.addAction(self.open_tb_action)
         termbase_menu.addAction(self.close_tb_action)
         termbase_menu.addAction(self.delete_tb_action)
+        termbase_menu.addSeparator()
+        termbase_menu.addAction(self.export_tb_action)
         termbase_menu.addAction(self.show_tb_properties_action)
+        termbase_menu.addSeparator()
         termbase_menu.addAction(self.quit_action)
         self.menuBar().addMenu(termbase_menu)
         # entry menu
@@ -174,9 +181,6 @@ class MainWindow(QtGui.QMainWindow):
         entry_menu.addAction(self.cancel_edit_action)
         entry_menu.addAction(self.delete_entry_action)
         self.menuBar().addMenu(entry_menu)
-        # view menu
-        view_menu = QtGui.QMenu('View', self)
-        self.menuBar().addMenu(view_menu)
         # help menu
         help_menu = QtGui.QMenu('?', self)
         help_menu.addAction(self.about_qt_action)
@@ -236,6 +240,7 @@ class MainWindow(QtGui.QMainWindow):
         :rtype: None
         """
         self.show_tb_properties_action.setEnabled(True)
+        self.export_tb_action.setEnabled(True)
         self.close_tb_action.setEnabled(True)
         self.create_entry_action.setEnabled(True)
 
@@ -247,6 +252,7 @@ class MainWindow(QtGui.QMainWindow):
         :rtype: None
         """
         self.show_tb_properties_action.setEnabled(False)
+        self.export_tb_action.setEnabled(False)
         self.close_tb_action.setEnabled(False)
         self.create_entry_action.setEnabled(False)
 
@@ -283,3 +289,33 @@ class MainWindow(QtGui.QMainWindow):
         """
         dialog = TermbasePropertyDialog(self)
         dialog.exec()
+
+    @QtCore.pyqtSlot()
+    def _handle_edit_entry(self):
+        """When editing of an entry is started, the operation can be cancelled.
+
+        :rtype: None
+        """
+        self.cancel_edit_action.setEnabled(True)
+        self.fire_event.emit('edit_entry', {})
+
+    @QtCore.pyqtSlot()
+    def _handle_new_entry(self):
+        """When the creation of an entry is started, the operation can be
+        cancelled by erasing entry creation form.
+
+        :rtype: None
+        """
+        self.cancel_edit_action.setEnabled(True)
+        self.fire_event.emit('new_entry', {})
+
+    @QtCore.pyqtSlot()
+    def _handle_save_entry(self):
+        """When an entry gets inserted or updated in the currently opened
+        termbase, it cannot be saved any more until it is edited and modified
+        once again, so this handler prevents that action from being triggered.
+
+        :rtype: None
+        """
+        self._view.save_entry_action.setEnabled(False)
+        self.fire_event.emit('save_entry', {})

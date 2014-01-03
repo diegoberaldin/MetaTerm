@@ -152,21 +152,6 @@ class MainController(AbstractController):
         self._view.delete_entry_action.setEnabled(True)
         self._view.cancel_edit_action.setEnabled(False)
 
-    def _handle_edit_entry(self):
-        """When editing of an entry is started, the operation can be cancelled.
-
-        :rtype: None
-        """
-        self._view.cancel_edit_action.setEnabled(True)
-
-    def _handle_new_entry(self):
-        """When the creation of an entry is started, the operation can be
-        cancelled by erasing entry creation form.
-
-        :rtype: None
-        """
-        self._view.cancel_edit_action.setEnabled(True)
-
     def _handle_ui_reset(self):
         """When the UI is reset no entry can be manipulated, so this event
         handler prevents the entry manipulation actions from being triggered.
@@ -177,12 +162,3 @@ class MainController(AbstractController):
         self._view.edit_entry_action.setEnabled(False)
         self._view.delete_entry_action.setEnabled(False)
         self._view.cancel_edit_action.setEnabled(False)
-
-    def _handle_save_entry(self):
-        """When an entry gets inserted or updated in the currently opened
-        termbase, it cannot be saved any more until it is edited and modified
-        once again, so this handler prevents that action from being triggered.
-
-        :rtype: None
-        """
-        self._view.save_entry_action.setEnabled(False)
