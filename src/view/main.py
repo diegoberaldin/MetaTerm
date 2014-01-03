@@ -157,16 +157,24 @@ class MainWindow(QtGui.QMainWindow):
         self.menuBar().addMenu(help_menu)
 
     def _create_main_toolbar(self):
+        """Creates the application main menu bar which is displayed in the
+        top area of the main window.
+
+        :rtype: None
+        """
+        # termbase-related operations
         main_toolbar = QtGui.QToolBar(self)
         main_toolbar.addAction(self.open_tb_action)
         main_toolbar.addAction(self.new_tb_action)
         main_toolbar.addSeparator()
+        # entry-related operations
         main_toolbar.addAction(self.create_entry_action)
         main_toolbar.addAction(self.save_entry_action)
         main_toolbar.addAction(self.edit_entry_action)
         main_toolbar.addAction(self.cancel_edit_action)
         main_toolbar.addAction(self.delete_entry_action)
         main_toolbar.addSeparator()
+        # other operations
         main_toolbar.addAction(self.quit_action)
         self.addToolBar(main_toolbar)
 
