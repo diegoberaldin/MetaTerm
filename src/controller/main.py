@@ -28,11 +28,11 @@ processing all those events that are generated there.
 
 import os
 
-from PyQt4 import QtCore
 from src import model as mdl
 from src import view as gui
 from src.controller.abstract import AbstractController
 from src.controller.newtermbase import NewTermbaseController
+from src.controller.export import ExportController
 from src.controller.entry import EntryController
 
 
@@ -72,9 +72,10 @@ class MainController(AbstractController):
         # initializes the entry-specific part of the view with the entry model
         entry_view = self._view.centralWidget()
         entry_view.entry_model = entry_model
-        # creates child controller
-        self._children['entry'] = EntryController(entry_model, entry_view)
+        # adds child controller
+        self._add_child('entry', EntryController(entry_model, entry_view))
         # signal-slot connections
+        # the entry controller receives events from the whole window
         self._view.fire_event.connect(self._children['entry'].handle_event)
 
     def _handle_new_termbase(self):
@@ -87,15 +88,13 @@ class MainController(AbstractController):
         # creates the view
         wizard = gui.NewTermbaseWizard(termbase_definition_model, self._view)
         # creates the controller
-        self._children['new_termbase'] = NewTermbaseController(
-            termbase_definition_model, wizard)
+        self._add_child('new_termbase',
+                        NewTermbaseController(termbase_definition_model,
+                                              wizard))
         # signal-slot connection
-        self._children['new_termbase'].finished.connect(
-            lambda: self._finalize_child_controller('new_termbase'))
         wizard.accepted.connect(
             lambda: self._handle_open_termbase(wizard.field('termbase_name')))
 
-    @QtCore.pyqtSlot(str)
     def _finalize_child_controller(self, child_name):
         """This slot is used as a means by the main controller to observe its
         child controllers and safely delete (causing them to be garbage
@@ -106,6 +105,21 @@ class MainController(AbstractController):
         :rtype: None
         """
         del self._children[child_name]
+
+    def _add_child(self, child_name, child_ref):
+        """Registers the controller with the given name in the internal data
+        structure keeping track of the sub-controllers and handles its
+        finalization correctly.
+
+        :param child_name: name of the sub-controller
+        :type child_name: str
+        :param child_ref: reference to the sub-controller object
+        :type child_ref: AbstractController
+        :rtype: None
+        """
+        self._children[child_name] = child_ref
+        self._children[child_name].finished.connect(
+            lambda: self._finalize_child_controller(child_name))
 
     def _handle_close_termbase(self):
         """Closes the currently open termbase.
@@ -162,3 +176,13 @@ class MainController(AbstractController):
         self._view.edit_entry_action.setEnabled(False)
         self._view.delete_entry_action.setEnabled(False)
         self._view.cancel_edit_action.setEnabled(False)
+
+    def _handle_export(self):
+        """Starts the export wizard and activates a child controller to take
+        control of it.
+
+        :rtype: None
+        """
+        wizard = gui.ExportWizard(self._view)
+        self._add_child('export', ExportController(wizard))
+

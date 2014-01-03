@@ -25,5 +25,5 @@ This package contains the modules which the application GUI is made up of.
 """
 
 from src.view.main import MainWindow
-from src.view.wizards import NewTermbaseWizard
+from src.view.wizards import NewTermbaseWizard, ExportWizard
 from src.view import res

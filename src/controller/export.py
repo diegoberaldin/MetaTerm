@@ -19,11 +19,27 @@
 # For further information, contact the authors at <diego.beraldin@gmail.com>.
 
 """
-.. currentmodule:: src.view.wizards
+.. currentmodule:: src.controller.entry
 
-This package contains, as the name suggests, the definition of the wizards that
-are used in the GUI to guide the user throughout complex procedures.
+This module contains the controller that governs entry creation, update and
+deletion and manages entry visualization in the graphical user interface.
 """
 
-from src.view.wizards.newtermbase import NewTermbaseWizard
-from src.view.wizards.export import ExportWizard
+from PyQt4 import QtCore
+
+from src.controller.abstract import AbstractController
+from src.model import get_main_model
+
+
+class ExportController(AbstractController):
+    def __init__(self, view):
+        super(ExportController, self).__init__()
+        self._view = view
+        self._model = get_main_model().open_termbase
+        # signal-slot connection
+        self._view.rejected.connect(self.finished)
+        self._view.finished.connect(self._handle_wizard_finished)
+
+    @QtCore.pyqtSlot()
+    def _handle_wizard_finished(self):
+        pass
