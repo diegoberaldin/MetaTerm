@@ -256,7 +256,7 @@ class MainWindow(QtGui.QMainWindow):
         ret = dialog.exec()
         if ret:
             warning = QtGui.QMessageBox(self)
-            warning.setWindowTitle(Warning)
+            warning.setWindowTitle('Warning')
             warning.setText('Are you sure you want to delete this termbase?')
             warning.setInformativeText('The operation cannot be undone, do you '
                                        'still want to proceed?')
