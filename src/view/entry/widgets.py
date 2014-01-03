@@ -96,8 +96,10 @@ class EntryList(QtGui.QWidget):
         :rtype: EntryList
         """
         super(EntryList, self).__init__(parent)
-        self._model = None
+        self._model = QtGui.QSortFilterProxyModel(self)
+        self._model.setSortCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self._view = QtGui.QListView(self)
+        self._view.setModel(self._model)
         self._selector = LanguageSelector(self)
         # puts everything together
         self.setLayout(QtGui.QVBoxLayout(self))
@@ -105,9 +107,31 @@ class EntryList(QtGui.QWidget):
         self.layout().addWidget(self._view)
         # signal-slot connection
         self._selector.fire_event.connect(self.fire_event)
-        self._view.clicked.connect(
-            lambda index: self.fire_event.emit('entry_index_changed',
-                                               {'index': index}))
+        self._view.clicked.connect(self._handle_view_clicked)
+
+    @QtCore.pyqtSlot(int)
+    def _handle_view_clicked(self, unused_index):
+        """When the view is clicked this slot it activated to convert the
+        selected index from the proxy model to an original model index, passing
+        the control to the controller to handle the index and display the entry.
+
+        :param unused_index:
+        :return:
+        """
+        target_index = self._view.selectedIndexes().pop()
+        source_index = self._model.mapToSource(target_index)
+        self.fire_event.emit('entry_index_changed',
+                             {'index': source_index})
+
+    def sort_entries(self):
+        """Simple method to allow the controller to sort entries again after
+        those operations which alter the entry model. It is provided to better
+        isolate the underlying QSortFilterProxyModel used internally in the
+        entry list widget.
+
+        :rtype: None
+        """
+        self._model.sort(0)
 
     @property
     def model(self):
@@ -126,8 +150,8 @@ class EntryList(QtGui.QWidget):
         :type value: EntryModel
         :rtype: None
         """
-        self._model = value
-        self._view.setModel(self._model)
+        self._model.setSourceModel(value)
+        self.model.sort(0)
 
     @property
     def current_language(self):

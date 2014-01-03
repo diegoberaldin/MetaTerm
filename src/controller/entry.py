@@ -144,6 +144,7 @@ class EntryController(AbstractController):
             self._model.update_entry(entry)
             # updates the UI
         self._view.entry_display.display_entry(entry)
+        self._view.entry_list.sort_entries()
 
     def _handle_entry_index_changed(self, index):
         """This handler is activated when the user selects a new entry in the
@@ -179,6 +180,7 @@ class EntryController(AbstractController):
         entry = self._view.entry_display.current_entry
         mdl.get_main_model().open_termbase.delete_entry(entry)
         self._model.delete_entry(entry)
+        self._view.entry_list.sort_entries()
         self._view.entry_display.display_welcome_screen()
 
     def _handle_edit_canceled(self):
