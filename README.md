@@ -1,6 +1,8 @@
 MetaTerm is a not-so-pretentious terminology management application written in
 the Python programming language.
 
+![a screenshot of the application main window][screenshot]
+
 It is designed as a totally open source, cross-platform application and it
 is built upon standard technologies such as the SQLite DBMS. This makes it
 possible to have the internal representation of the termbase stored as a simple
@@ -21,3 +23,5 @@ to the ISO 30042 2008 standard).
 
 MetaTerm is free software, released under the GPLv3 license. See LICENCE for
 further information about what you can (and can't) do with the software.
+
+[screenshot]: https://raw.github.com/diegoberaldin/MetaTerm/master/doc/img/main_window.png
