@@ -317,5 +317,5 @@ class MainWindow(QtGui.QMainWindow):
 
         :rtype: None
         """
-        self._view.save_entry_action.setEnabled(False)
+        self.save_entry_action.setEnabled(False)
         self.fire_event.emit('save_entry', {})
