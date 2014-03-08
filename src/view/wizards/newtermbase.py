@@ -26,7 +26,9 @@ user through the creation of a new terminological database.
 """
 
 from PyQt4 import QtGui, QtCore
+
 from src import model as mdl
+
 
 PROP_TYPES = ['Text', 'Image', 'Picklist']
 """Type of the properties that must be displayed in the UI.
@@ -41,11 +43,11 @@ class NewTermbaseWizard(QtGui.QWizard):
     """Signal emitted so that events can be handled by the controller.
     """
 
-    _WIDTH = 500
+    _WIDTH = 800
     """Default width of the wizard window.
     """
 
-    _HEIGHT = 400
+    _HEIGHT = 600
     """Default height of the wizard window.
     """
 
@@ -253,6 +255,14 @@ class DefinitionModelPage(QtGui.QWizardPage):
     terms and, in case of picklist properties, the set of acceptable values.
     """
 
+    RIGHT_COLUMN_WIDTH = 300
+    """Default right column width
+    """
+
+    LEFT_COLUMN_WIDTH = 100
+    """Default left column width
+    """
+
     fire_event = QtCore.pyqtSignal(str, dict)
     """Signal emitted to dispatch event to the controller.
     """
@@ -278,7 +288,10 @@ class DefinitionModelPage(QtGui.QWizardPage):
         self._splitter = QtGui.QSplitter(self)
         self._splitter.addWidget(self._view)
         self._splitter.addWidget(self._form)
-        self._splitter.setSizes([200, 300])
+        self._splitter.setSizes([self.LEFT_COLUMN_WIDTH,
+                                 self.RIGHT_COLUMN_WIDTH])
+        self._splitter.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding,
+                                     QtGui.QSizePolicy.Expanding)
         self.setLayout(QtGui.QVBoxLayout(self))
         self.layout().addWidget(self._splitter)
 
@@ -302,7 +315,7 @@ class DefinitionModelPage(QtGui.QWizardPage):
         else:  # modify existing property
             self._form = ChangePropertyForm(item, self)
         self._form.fire_event.connect(self.fire_event)
-        self._form.setMinimumWidth(250)
+        self._form.setMinimumWidth(self.RIGHT_COLUMN_WIDTH)
         self._splitter.addWidget(self._form)
         old_form.deleteLater()
 
