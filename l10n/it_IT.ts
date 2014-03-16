@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="it_IT">
+<!DOCTYPE TS><TS version="2.0" language="it_IT" sourcelanguage="">
 <context>
     <name>CreateEntryForm</name>
     <message>
@@ -79,6 +78,60 @@
         <location filename="src/view/entry/widgets.py" line="344"/>
         <source>&lt;small&gt;Entry ID: {0}&lt;/small&gt;</source>
         <translation>&lt;small&gt;ID scheda: {0}&lt;/small&gt;</translation>
+    </message>
+</context>
+<context>
+    <name>ExportTypePage</name>
+    <message>
+        <location filename="src/view/wizards/export.py" line="65"/>
+        <source>Select export type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="66"/>
+        <source>Please select an output format for termbase data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="68"/>
+        <source>Available types</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="70"/>
+        <source>comma-separated values (*.csv)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="73"/>
+        <source>tab-separated values (*.tab)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ExportWizard</name>
+    <message>
+        <location filename="src/view/wizards/export.py" line="52"/>
+        <source>Export termbase data</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>LanguagePage</name>
+    <message>
+        <location filename="src/view/wizards/export.py" line="93"/>
+        <source>Select language pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="95"/>
+        <source>Please select the two languages you wish to export to the CSV file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="98"/>
+        <source>Please select the two languages you wish to export to the TSV file.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

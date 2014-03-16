@@ -42,4 +42,5 @@ class ExportController(AbstractController):
 
     @QtCore.pyqtSlot()
     def _handle_wizard_finished(self):
-        pass
+        # TODO: unfinished!
+        self.finished.emit()
