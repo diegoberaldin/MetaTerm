@@ -184,7 +184,7 @@ class LanguageSelector(QtGui.QWidget):
         """
         super(LanguageSelector, self).__init__(parent)
         self.setLayout(QtGui.QHBoxLayout(self))
-        self.layout().addWidget(QtGui.QLabel('Language', self))
+        self.layout().addWidget(QtGui.QLabel(self.tr('Language'), self))
         self._language_combo = QtGui.QComboBox(self)
         self.layout().addWidget(self._language_combo)
         self._default_languages = DefaultLanguages(self)
@@ -342,7 +342,7 @@ class EntryScreen(QtGui.QWidget):
         self.setLayout(QtGui.QVBoxLayout(self))
         self.entry = entry
         entry_id_label = QtGui.QLabel(
-            '<small>Entry ID: {0}</small>'.format(self.entry.entry_id))
+            self.tr('<small>Entry ID: {0}</small>').format(self.entry.entry_id))
         self.layout().addWidget(entry_id_label)
         self.layout().addStretch(1)
         schema = mdl.get_main_model().open_termbase.schema
@@ -439,13 +439,15 @@ class WelcomeScreen(QtGui.QWidget):
         :rtype: CreateEntryForm
         """
         super(WelcomeScreen, self).__init__(parent)
-        text = ('<h1>Welcome to MetaTerm!</h1>'
-                '<strong>MetaTerm</strong> is an application that helps you '
-                'creating and maintaining terminological databases .<br /> '
-                'If you want to create a new termbase go to <code>Termbase &gt;'
-                'New...</code> in order to start the creation wizard.<br />'
-                'To open an existing termbase go to <code>Termbase &gt; '
-                'Open...</code> and choose one of the available items.')
+        text = (self.tr('<h1>Welcome to MetaTerm!</h1>'
+                        '<strong>MetaTerm</strong> is an application that '
+                        'helps you creating and maintaining terminological '
+                        'databases .<br /> If you want to create a new '
+                        'termbase go to <code>Termbase &gt; New...</code> '
+                        'in order to start the creation wizard.<br /> To open '
+                        'an existing termbase go to <code>Termbase &gt; '
+                        'Open...</code> and choose one of the available '
+                        'items.'))
         label = QtGui.QLabel(text, self)
         label.setWordWrap(True)
         self.setLayout(QtGui.QVBoxLayout(self))

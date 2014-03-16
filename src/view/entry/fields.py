@@ -30,6 +30,10 @@ provided by the Qt libraries.
 import os
 
 from PyQt4 import QtCore, QtGui
+import logging
+
+# a logger for this module
+_LOG = logging.getLogger('src.view')
 
 
 class SelectFileInput(QtGui.QWidget):
@@ -61,9 +65,9 @@ class SelectFileInput(QtGui.QWidget):
         # input field and input buttons
         self._text_input = QtGui.QLineEdit(self)
         self._text_input.setEnabled(False)
-        browse_button = QtGui.QPushButton('Browse', self)
+        browse_button = QtGui.QPushButton(self.tr('Browse'), self)
         browse_button.clicked.connect(self._handle_browse_clicked)
-        clear_button = QtGui.QPushButton('Clear', self)
+        clear_button = QtGui.QPushButton(self.tr('Clear'), self)
         clear_button.clicked.connect(self._handle_clear_clicked)
         # input layout
         input_layout = QtGui.QHBoxLayout()
@@ -75,6 +79,38 @@ class SelectFileInput(QtGui.QWidget):
         self.layout().addWidget(self._display)
         self.layout().addLayout(input_layout)
 
+    @property
+    def value(self):
+        """Allows for subsequent form fields to access the selected value, i.e.
+        the path that is shown in the text input field of the widget.
+
+        :return: the selected (absolute) path to the resource
+        :rtype: str
+        """
+        if self._text_input.text():
+            try:
+                with open(self._text_input.text(), 'rb') as file_handle:
+                    return file_handle.read()
+            except (IOError, FileNotFoundError) as e:
+                _LOG.exception(e)
+        return self._content  # otherwise the content must be returned (if any)
+
+    @value.setter
+    def value(self, value):
+        self._content = value
+        self._display_image(value)
+
+    def _display_image(self, byte_sequence):
+        """Convenience method used to display an image starting from a sequence
+        of bytes.
+
+        :param byte_sequence: array of bytes representing the image
+        :rtype: None
+        """
+        image = QtGui.QPixmap()
+        image.loadFromData(QtCore.QByteArray(byte_sequence))
+        self._display.setPixmap(image.scaledToHeight(self._PICTURE_HEIGHT))
+
     @QtCore.pyqtSlot()
     def _handle_browse_clicked(self):
         """Private slot to be called when the button is clicked, after asking
@@ -83,7 +119,7 @@ class SelectFileInput(QtGui.QWidget):
 
         :rtype: None
         """
-        file_path = QtGui.QFileDialog.getOpenFileName(self, 'Choose file',
+        file_path = QtGui.QFileDialog.getOpenFileName(self, self.tr('Choose file'),
                                                       os.path.expanduser('~'))
         if file_path:
             try:
@@ -108,39 +144,6 @@ class SelectFileInput(QtGui.QWidget):
         # resets the display
         self._display.setPixmap(QtGui.QPixmap())
         self.path_changed.emit()
-
-    @property
-    def value(self):
-        """Allows for subsequent form fields to access the selected value, i.e.
-        the path that is shown in the text input field of the widget.
-
-        :return: the selected (absolute) path to the resource
-        :rtype: str
-        """
-        if self._text_input.text():
-            try:
-                with open(self._text_input.text(), 'rb') as file_handle:
-                    return file_handle.read()
-            except (IOError, FileNotFoundError):
-                # this error should NOT pass silently, though
-                pass
-        return self._content  # otherwise the content must be returned (if any)
-
-    @value.setter
-    def value(self, value):
-        self._content = value
-        self._display_image(value)
-
-    def _display_image(self, byte_sequence):
-        """Convenience method used to display an image starting from a sequence
-        of bytes.
-
-        :param byte_sequence: array of bytes representing the image
-        :rtype: None
-        """
-        image = QtGui.QPixmap()
-        image.loadFromData(QtCore.QByteArray(byte_sequence))
-        self._display.setPixmap(image.scaledToHeight(self._PICTURE_HEIGHT))
 
 
 class AbstractFormField(QtCore.QObject):
@@ -224,7 +227,7 @@ class TextField(AbstractFormField):
         super(TextField, self).__init__(prop, level, locale, lemma)
         self.widget = QtGui.QTextEdit(parent)
         self.widget.setMaximumHeight(30)
-        # signal-slot connection
+        # signal-slot connections
         self.widget.textChanged.connect(self.changed)
 
     @property
@@ -249,7 +252,7 @@ class PicklistField(AbstractFormField):
         self.widget = QtGui.QComboBox(parent)
         model = QtGui.QStringListModel(prop.values)
         self.widget.setModel(model)
-        # signal-slot connection
+        # signal-slot connections
         self.widget.currentIndexChanged.connect(
             lambda unused_idx: self.changed.emit())
 

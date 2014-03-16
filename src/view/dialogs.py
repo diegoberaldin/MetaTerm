@@ -29,7 +29,6 @@ pieces of information of interest.
 from PyQt4 import QtCore, QtGui
 
 from src import model as mdl
-
 from src.view.enum import DefaultLanguages
 
 
@@ -48,12 +47,12 @@ class SelectTermbaseDialog(QtGui.QDialog):
         :rtype: SelectTermbaseDialog
         """
         super(SelectTermbaseDialog, self).__init__(parent)
-        self.setWindowTitle('Select termbase')
+        self.setWindowTitle(self.tr('Select termbase'))
         self.selected_termbase_name = None
         self.setLayout(QtGui.QVBoxLayout(self))
         # dialog content
         upper_label = QtGui.QLabel(
-            'Please select a termbase from the list below:', self)
+            self.tr('Please select a termbase from the list below:'), self)
         upper_label.setWordWrap(True)
         self._view = QtGui.QListView(self)
         self._view.setModel(QtGui.QStringListModel(mdl.get_termbase_names()))
@@ -100,7 +99,7 @@ class TermbasePropertyDialog(QtGui.QDialog):
         :rtype: TermbasePropertyDialog
         """
         super(TermbasePropertyDialog, self).__init__(parent)
-        self.setWindowTitle('Termbase properties')
+        self.setWindowTitle(self.tr('Termbase properties'))
         self.setLayout(QtGui.QVBoxLayout(self))
         self._populate_language_group()
         self._populate_stats_group()
@@ -118,7 +117,7 @@ class TermbasePropertyDialog(QtGui.QDialog):
             item.setText(DefaultLanguages(self)[locale])
             item.setIcon(QtGui.QIcon(':/flags/{0}.png'.format(locale)))
             language_view.insertItem(language_view.count(), item)
-        language_group = QtGui.QGroupBox('Languages', self)
+        language_group = QtGui.QGroupBox(self.tr('Languages'), self)
         language_group.setLayout(QtGui.QVBoxLayout(language_group))
         language_group.layout().addWidget(language_view)
         self.layout().addWidget(language_group)
@@ -129,16 +128,16 @@ class TermbasePropertyDialog(QtGui.QDialog):
 
         :rtype: None
         """
-        stats_group = QtGui.QGroupBox('Statistics', self)
+        stats_group = QtGui.QGroupBox(self.tr('Statistics'), self)
         stats_group.setLayout(QtGui.QGridLayout(stats_group))
         stats_group.layout().addWidget(
-            QtGui.QLabel('Number of entries:', stats_group), 0, 0)
+            QtGui.QLabel(self.tr('Number of entries:'), stats_group), 0, 0)
         tb = mdl.get_main_model().open_termbase
         stats_group.layout().addWidget(
             QtGui.QLabel(str(tb.entry_number), stats_group), 0,
             1)
-        stats_group.layout().addWidget(QtGui.QLabel('Total size:', stats_group),
-                                       1, 0)
+        stats_group.layout().addWidget(QtGui.QLabel(self.tr('Total size:'),
+                                                    stats_group), 1, 0)
         stats_group.layout().addWidget(
             QtGui.QLabel(tb.size, stats_group), 1, 1)
         self.layout().addWidget(stats_group)

@@ -21,5 +21,6 @@
         <file>list-remove.png</file>
         <file>server-database.png</file>
         <file>user-trash.png</file>
+        <file>l10n/it_IT.qm</file>
     </qresource>
 </RCC>

@@ -27,11 +27,13 @@ as well as the definition of the ``QApplication`` where the event loop is run.
 
 import logging.config
 import sys
-from PyQt4 import QtGui
+
+from PyQt4 import QtCore, QtGui
 
 from src import model, controller, view
 
-_CSS = 'view/res/style.qss'
+
+_CSS = 'style.qss'
 """Location of the application stylesheet (Qt StyleSheet).
 """
 
@@ -65,6 +67,10 @@ class MetaTermApplication(QtGui.QApplication):
         model.initialize_tb_folder()
         # styles the application
         self._apply_style()
+        # translates the application UI
+        translator = QtCore.QTranslator()
+        translator.load(':/l10n/{0}'.format(QtCore.QLocale.system().name()))
+        self.installTranslator(translator)
         # creates the view
         self._view = view.MainWindow()
         # creates the controller
@@ -87,6 +93,5 @@ class MetaTermApplication(QtGui.QApplication):
 
 # what to to when this module is executed as the main module (which it is)
 if __name__ == '__main__':
-    # 2 lines of plain old boilerplate code won't harm anybody
     app = MetaTermApplication(sys.argv)
     sys.exit(app.exec())

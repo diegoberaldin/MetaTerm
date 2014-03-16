@@ -62,15 +62,6 @@ class AbstractEntryForm(QtGui.QWidget):
         self._term_widgets = {locale: [] for locale in
                               mdl.get_main_model().open_termbase.languages}
 
-    @QtCore.pyqtSlot()
-    def _handle_entry_changed(self):
-        """ This slot is called to inform the controller that some input field
-        has been filled or that its content has changed.
-
-        :rtype: None
-        """
-        self.fire_event.emit('entry_changed', {})
-
     def get_entry_level_property_values(self):
         """Allows the controller to access the information inserted in the
         form by the user for entry-level properties.
@@ -135,6 +126,15 @@ class AbstractEntryForm(QtGui.QWidget):
         :rtype: None
         """
         raise NotImplementedError('Implement me!')
+
+    @QtCore.pyqtSlot()
+    def _handle_entry_changed(self):
+        """ This slot is called to inform the controller that some input field
+        has been filled or that its content has changed.
+
+        :rtype: None
+        """
+        self.fire_event.emit('entry_changed', {})
 
     def _populate_fields(self, level, child_layout, locale=None, lemma=None):
         """This method is designed to be called several times in the form
@@ -242,7 +242,7 @@ class CreateEntryForm(AbstractEntryForm):
             # creates the term widget and inserts term-level fields
             term_widget = CustomMenuTermWidget(locale, '', True, self)
             self._term_widgets[locale].append(term_widget)
-            term_label = QtGui.QLabel('<strong>Term</strong>', self)
+            term_label = QtGui.QLabel(self.tr('<strong>Term</strong>'), self)
             term_input = QtGui.QLineEdit(self)
             # needed to record changes in the term fields
             term_input.textEdited.connect(
@@ -251,7 +251,7 @@ class CreateEntryForm(AbstractEntryForm):
             term_input.textChanged.connect(term_widget.update_lemma)
             term_widget.layout().addRow(term_label, term_input)
             self._populate_fields('T', term_widget.layout(), locale)
-            # needed to keep field bound to the term in the input field
+            # needed to keep fields bound to the term in the input field
             for field in [f for f in self._fields if
                           f.level == 'T' and f.locale == locale
                           and f.lemma is None]:
@@ -308,7 +308,8 @@ class UpdateEntryForm(AbstractEntryForm):
                 term_widget = CustomMenuTermWidget(locale, term.lemma,
                                                    term.vedette, self)
                 self._term_widgets[locale].append(term_widget)
-                term_label = QtGui.QLabel('<strong>Term</strong>', self)
+                term_label = QtGui.QLabel(self.tr('<strong>Term</strong>'),
+                                          self)
                 term_input = QtGui.QLineEdit(self)
                 term_input.setText(term.lemma)
                 # needed to record changes in the term fields
@@ -373,7 +374,7 @@ class UpdateEntryForm(AbstractEntryForm):
         :rtype: None
         """
         term_widget = CustomMenuTermWidget(locale, '', False, self)
-        term_label = QtGui.QLabel('<strong>Term</strong>', self)
+        term_label = QtGui.QLabel(self.tr('<strong>Term</strong>'), self)
         term_input = QtGui.QLineEdit(self)
         # needed to record changes in the term fields
         term_input.textEdited.connect(
@@ -439,7 +440,7 @@ class CustomMenuLanguageWidget(QtGui.QLabel):
         :rtype: LanguageLabel
         """
         super(CustomMenuLanguageWidget, self).__init__(parent)
-        self._add_term_action = QtGui.QAction('Add term', self)
+        self._add_term_action = QtGui.QAction(self.tr('Add term'), self)
         if parent.is_new:  # when the entry is new just one term is allowed
             self._add_term_action.setEnabled(False)
         self._add_term_action.triggered.connect(
@@ -480,7 +481,7 @@ class CustomMenuLanguageWidget(QtGui.QLabel):
         :rtype: None
         """
         super(CustomMenuLanguageWidget, self).contextMenuEvent(event)
-        context_menu = QtGui.QMenu('Language menu', self)
+        context_menu = QtGui.QMenu(self.tr('Language menu'), self)
         context_menu.addAction(self._add_term_action)
         context_menu.show()
         context_menu.move(event.globalPos())
@@ -528,7 +529,7 @@ class CustomMenuTermWidget(QtGui.QWidget):
         """
         super(CustomMenuTermWidget, self).__init__(parent)
         self.lemma = lemma
-        self._delete_term_action = QtGui.QAction('Delete term', self)
+        self._delete_term_action = QtGui.QAction(self.tr('Delete term'), self)
         if is_vedette:
             self._delete_term_action.setEnabled(False)
         self._delete_term_action.triggered.connect(
@@ -546,7 +547,7 @@ class CustomMenuTermWidget(QtGui.QWidget):
         # Here we do not delegate to superclass implementation because the
         # context menu of the container widget (i.e. the language widget) must
         # *not* be displayed so no bubbling to parent's event handler is needed
-        context_menu = QtGui.QMenu('Term menu', self)
+        context_menu = QtGui.QMenu(self.tr('Term menu'), self)
         context_menu.addAction(self._delete_term_action)
         context_menu.show()
         context_menu.move(event.globalPos())
