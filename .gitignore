@@ -8,6 +8,7 @@
 doc/_build/*
 
 # resources
+*.qm
 resources.py
 
 # IDE directories

@@ -1,16 +1,1 @@
-/******************************************************************************
-COLORS:
-    aquamarine: #4ca0e7;
-    cyan: #096bbe;
-    gray: #ababab;
-    light cyan: #8dc0f3;
-    light gray: #f0f0f0;
-******************************************************************************/
-
-EntryScreen {
-  background-color: white;
-}
-
-WelcomeScreen {
-  background-color: white;
-}
+../style.qss
