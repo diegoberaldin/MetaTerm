@@ -169,11 +169,11 @@ class LanguagePage(QtGui.QWizardPage):
         self._populate_available_languages()
         # buttons for moving languages around
         button_widget = QtGui.QWidget(self)
-        select_language_button = QtGui.QPushButton('>', button_widget)
-        select_language_button.setMaximumWidth(40)
+        select_language_button = QtGui.QToolButton(button_widget)
+        select_language_button.setIcon(QtGui.QIcon(':/arrow-right'))
         select_language_button.clicked.connect(self._handle_language_selected)
-        deselect_language_button = QtGui.QPushButton('<', button_widget)
-        deselect_language_button.setMaximumWidth(40)
+        deselect_language_button = QtGui.QToolButton(button_widget)
+        deselect_language_button.setIcon(QtGui.QIcon(':/arrow-left'))
         deselect_language_button.clicked.connect(
             self._handle_language_deselected)
         button_widget.setLayout(QtGui.QVBoxLayout(button_widget))
@@ -246,7 +246,6 @@ class LanguagePage(QtGui.QWizardPage):
         while self._chosen_languages.count():
             items.append(self._chosen_languages.takeItem(0))
         items = [item.data(0) for item in items]
-        # TODO: careful when new languages are added
         return [k for lang_name in items for k, v in
                 self._default_languages if v == lang_name]
 

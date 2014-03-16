@@ -1,13 +1,8 @@
 <RCC>
     <qresource prefix="/">
-        <file>flags/en_GB.png</file>
-        <file>flags/en_US.png</file>
-        <file>flags/es_ES.png</file>
-        <file>flags/fr_FR.png</file>
-        <file>flags/gr_GR.png</file>
-        <file>flags/it_IT.png</file>
-        <file>flags/ro_RO.png</file>
         <file>application-exit.png</file>
+        <file>arrow-left.png</file>
+        <file>arrow-right.png</file>
         <file>contact-new.png</file>
         <file>dialog-cancel.png</file>
         <file>document-close.png</file>
@@ -21,6 +16,13 @@
         <file>list-remove.png</file>
         <file>server-database.png</file>
         <file>user-trash.png</file>
+        <file>flags/en_GB.png</file>
+        <file>flags/en_US.png</file>
+        <file>flags/es_ES.png</file>
+        <file>flags/fr_FR.png</file>
+        <file>flags/gr_GR.png</file>
+        <file>flags/it_IT.png</file>
+        <file>flags/ro_RO.png</file>
         <file>l10n/it_IT.qm</file>
     </qresource>
 </RCC>
