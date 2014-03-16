@@ -55,57 +55,6 @@ class MainController(AbstractController):
         # child controllers
         self._children = {}
 
-    def _handle_open_termbase(self, name):
-        """Opens an existing termbase.
-
-        :param name: the name of the termbase to open
-        :type name: str
-        :rtype: None
-        """
-        # creates a termbase and saves it in the main application model
-        termbase = mdl.Termbase(name)
-        mdl.get_main_model().open_termbase = termbase
-        # prints a message in the view
-        self._view.display_message('Currently working on {0}'.format(name))
-        # creates an entry model
-        entry_model = mdl.EntryModel(termbase)
-        # initializes the entry-specific part of the view with the entry model
-        entry_view = self._view.centralWidget()
-        entry_view.entry_model = entry_model
-        # adds child controller
-        self._add_child('entry', EntryController(entry_model, entry_view))
-        # signal-slot connections
-        # the entry controller receives events from the whole window
-        self._view.fire_event.connect(self._children['entry'].handle_event)
-
-    def _handle_new_termbase(self):
-        """Starts the wizard used to create a new termbase.
-
-        :rtype: None
-        """
-        # instantiates the model
-        termbase_definition_model = mdl.TermbaseDefinitionModel()
-        # creates the view
-        wizard = gui.NewTermbaseWizard(termbase_definition_model, self._view)
-        # creates the controller
-        self._add_child('new_termbase',
-                        NewTermbaseController(termbase_definition_model,
-                                              wizard))
-        # signal-slot connection
-        wizard.accepted.connect(
-            lambda: self._handle_open_termbase(wizard.field('termbase_name')))
-
-    def _finalize_child_controller(self, child_name):
-        """This slot is used as a means by the main controller to observe its
-        child controllers and safely delete (causing them to be garbage
-        collected) them when they inform it that they are done with their tasks.
-
-        :param child_name: key to be used in the children dictionary
-        :type child_name: str
-        :rtype: None
-        """
-        del self._children[child_name]
-
     def _add_child(self, child_name, child_ref):
         """Registers the controller with the given name in the internal data
         structure keeping track of the sub-controllers and handles its
@@ -120,6 +69,17 @@ class MainController(AbstractController):
         self._children[child_name] = child_ref
         self._children[child_name].finished.connect(
             lambda: self._finalize_child_controller(child_name))
+
+    def _finalize_child_controller(self, child_name):
+        """This slot is used as a means by the main controller to observe its
+        child controllers and safely delete (causing them to be garbage
+        collected) them when they inform it that they are done with their tasks.
+
+        :param child_name: key to be used in the children dictionary
+        :type child_name: str
+        :rtype: None
+        """
+        del self._children[child_name]
 
     def _handle_close_termbase(self):
         """Closes the currently open termbase.
@@ -165,6 +125,55 @@ class MainController(AbstractController):
         self._view.delete_entry_action.setEnabled(True)
         self._view.cancel_edit_action.setEnabled(False)
 
+    def _handle_export(self):
+        """Starts the export wizard and activates a child controller to take
+        control of it.
+
+        :rtype: None
+        """
+        wizard = gui.ExportWizard(self._view)
+        self._add_child('export', ExportController(wizard))
+
+    def _handle_open_termbase(self, name):
+        """Opens an existing termbase.
+
+        :param name: the name of the termbase to open
+        :type name: str
+        :rtype: None
+        """
+        # creates a termbase and saves it in the main application model
+        termbase = mdl.Termbase(name)
+        mdl.get_main_model().open_termbase = termbase
+        # prints a message in the view
+        self._view.display_message('Currently working on {0}'.format(name))
+        # creates an entry model
+        entry_model = mdl.EntryModel(termbase)
+        # initializes the entry-specific part of the view with the entry model
+        entry_view = self._view.centralWidget()
+        entry_view.entry_model = entry_model
+        # adds child controller
+        self._add_child('entry', EntryController(entry_model, entry_view))
+        # signal-slot connections
+        # the entry controller receives events from the whole window
+        self._view.fire_event.connect(self._children['entry'].handle_event)
+
+    def _handle_new_termbase(self):
+        """Starts the wizard used to create a new termbase.
+
+        :rtype: None
+        """
+        # instantiates the model
+        termbase_definition_model = mdl.TermbaseDefinitionModel()
+        # creates the view
+        wizard = gui.NewTermbaseWizard(termbase_definition_model, self._view)
+        # creates the controller
+        self._add_child('new_termbase',
+                        NewTermbaseController(termbase_definition_model,
+                                              wizard))
+        # signal-slot connection
+        wizard.accepted.connect(
+            lambda: self._handle_open_termbase(wizard.field('termbase_name')))
+
     def _handle_ui_reset(self):
         """When the UI is reset no entry can be manipulated, so this event
         handler prevents the entry manipulation actions from being triggered.
@@ -175,13 +184,4 @@ class MainController(AbstractController):
         self._view.edit_entry_action.setEnabled(False)
         self._view.delete_entry_action.setEnabled(False)
         self._view.cancel_edit_action.setEnabled(False)
-
-    def _handle_export(self):
-        """Starts the export wizard and activates a child controller to take
-        control of it.
-
-        :rtype: None
-        """
-        wizard = gui.ExportWizard(self._view)
-        self._add_child('export', ExportController(wizard))
 
