@@ -62,20 +62,19 @@ class DefaultLanguages(QtCore.QObject):
         if item not in self._DEFAULT_LANGUAGES:
             # prevents an error but possibly creates new ones
             return None
-        index = self._DEFAULT_LANGUAGES.index(item)
-        if index == 0:
+        if item == 'en_US':
             return self.tr('English (Unites States)')
-        if index == 1:
+        if item == 'en_GB':
             return self.tr('English (United Kingdom)')
-        if index == 2:
+        if item == 'es_ES':
             return self.tr('Spanish (Spain)')
-        if index == 3:
+        if item == 'fr_FR':
             return self.tr('French (France)')
-        if index == 4:
+        if item == 'it_IT':
             return self.tr('Italian (Italy)')
-        if index == 5:
+        if item == 'ro_RO':
             return self.tr("Romanian")
-        if index == 6:
+        if item == 'gr_GR':
             return self.tr('Greek')
 
     def __iter__(self):
@@ -86,5 +85,8 @@ class DefaultLanguages(QtCore.QObject):
         language and a localized version of its name
         :rtype: tuple
         """
-        for x in self._DEFAULT_LANGUAGES:
-            yield (x, self[x])
+        items = [(locale, self[locale]) for locale in self._DEFAULT_LANGUAGES]
+        # sort according to localized name
+        items.sort(key=lambda t: t[1])
+        for item in items:
+            yield item
