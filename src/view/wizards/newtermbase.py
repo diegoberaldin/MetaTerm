@@ -28,6 +28,7 @@ user through the creation of a new terminological database.
 from PyQt4 import QtGui, QtCore
 
 from src import model as mdl
+from src.view.enum import DefaultLanguages
 
 
 PROP_TYPES = ['Text', 'Image', 'Picklist']
@@ -156,6 +157,7 @@ class LanguagePage(QtGui.QWizardPage):
         :rtype: LanguagePage
         """
         super(LanguagePage, self).__init__(parent)
+        self._default_languages = DefaultLanguages(self)
         self.setTitle('Termbase languages')
         self.setSubTitle(
             'Select the languages of the terms that will be stored in the new '
@@ -189,7 +191,7 @@ class LanguagePage(QtGui.QWizardPage):
 
         :rtype: None
         """
-        for locale, language_name in mdl.DEFAULT_LANGUAGES.items():
+        for locale, language_name in self._default_languages:
             flag = QtGui.QIcon(':/flags/{0}.png'.format(locale))
             item = QtGui.QListWidgetItem(flag, language_name,
                                          self._available_languages)
@@ -246,7 +248,7 @@ class LanguagePage(QtGui.QWizardPage):
         items = [item.data(0) for item in items]
         # TODO: careful when new languages are added
         return [k for lang_name in items for k, v in
-                mdl.DEFAULT_LANGUAGES.items() if v == lang_name]
+                self._default_languages if v == lang_name]
 
 
 class DefinitionModelPage(QtGui.QWizardPage):

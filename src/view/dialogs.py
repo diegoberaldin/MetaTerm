@@ -30,6 +30,8 @@ from PyQt4 import QtCore, QtGui
 
 from src import model as mdl
 
+from src.view.enum import DefaultLanguages
+
 
 class SelectTermbaseDialog(QtGui.QDialog):
     """Simple dialog where one among the available termbase can be chosen. It
@@ -113,7 +115,7 @@ class TermbasePropertyDialog(QtGui.QDialog):
         language_view = QtGui.QListWidget(self)
         for locale in mdl.get_main_model().open_termbase.languages:
             item = QtGui.QListWidgetItem()
-            item.setText(mdl.DEFAULT_LANGUAGES[locale])
+            item.setText(DefaultLanguages(self)[locale])
             item.setIcon(QtGui.QIcon(':/flags/{0}.png'.format(locale)))
             language_view.insertItem(language_view.count(), item)
         language_group = QtGui.QGroupBox('Languages', self)

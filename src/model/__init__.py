@@ -29,7 +29,6 @@ which contains the object-oriented data access layer of the application.
 
 from src.model.dataaccess import Termbase
 from src.model.dataaccess.orm import initialize_tb_folder, get_termbase_names
-from src.model.constants import DEFAULT_LANGUAGES
 from src.model.itemmodels import (TermbaseDefinitionModel,
                                   PropertyNode, EntryModel)
 from src.model.main import get_main_model

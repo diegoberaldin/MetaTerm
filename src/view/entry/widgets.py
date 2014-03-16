@@ -29,6 +29,7 @@ from PyQt4 import QtCore, QtGui
 
 from src import model as mdl
 from src.view.entry.forms import CreateEntryForm, UpdateEntryForm
+from src.view.enum import DefaultLanguages
 
 
 class EntryWidget(QtGui.QSplitter):
@@ -186,6 +187,7 @@ class LanguageSelector(QtGui.QWidget):
         self.layout().addWidget(QtGui.QLabel('Language', self))
         self._language_combo = QtGui.QComboBox(self)
         self.layout().addWidget(self._language_combo)
+        self._default_languages = DefaultLanguages(self)
         # signal-slot connection
         mdl.get_main_model().termbase_opened.connect(
             self._regenerate_language_list)
@@ -203,7 +205,7 @@ class LanguageSelector(QtGui.QWidget):
         :rtype: None
         """
         if mdl.get_main_model().open_termbase:  # termbase opened
-            locale_list = [mdl.DEFAULT_LANGUAGES[locale] for locale in
+            locale_list = [self._default_languages[locale] for locale in
                            mdl.get_main_model().open_termbase.languages]
         else:  # termbase closed
             locale_list = []
@@ -221,7 +223,7 @@ class LanguageSelector(QtGui.QWidget):
         language_name = self._language_combo.currentText()
         if language_name:
             inverted_languages = {value: key for key, value in
-                                  mdl.DEFAULT_LANGUAGES.items()}
+                                  self._default_languages}
             return inverted_languages[language_name]
 
 
@@ -360,7 +362,7 @@ class EntryScreen(QtGui.QWidget):
                 QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
                     15))
             label = QtGui.QLabel(
-                '<strong>{0}</strong>'.format(mdl.DEFAULT_LANGUAGES[locale]),
+                '<strong>{0}</strong>'.format(DefaultLanguages(self)[locale]),
                 self)
             language_flag_layout = QtGui.QHBoxLayout()
             language_flag_layout.addWidget(flag)

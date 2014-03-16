@@ -31,6 +31,7 @@ from PyQt4 import QtCore, QtGui
 
 from src import model as mdl
 from src.view.entry import fields
+from src.view.enum import DefaultLanguages
 
 
 class AbstractEntryForm(QtGui.QWidget):
@@ -461,7 +462,7 @@ class CustomMenuLanguageWidget(QtGui.QLabel):
             QtGui.QPixmap(':/flags/{0}.png'.format(locale)).scaledToHeight(
                 15))
         label_text = '<strong>{0}</strong>'.format(
-            mdl.DEFAULT_LANGUAGES[locale])
+            DefaultLanguages(self)[locale])
         label = QtGui.QLabel(label_text, self)
         # creates a sub-layout
         flag_sub_layout = QtGui.QHBoxLayout()
