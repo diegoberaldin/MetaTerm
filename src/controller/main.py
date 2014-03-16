@@ -128,7 +128,6 @@ class MainController(AbstractController):
         """
         mdl.get_main_model().open_termbase = None
         self._view.display_message('Current termbase closed.')
-        self._children['entry'].finished.emit()
 
     def _handle_delete_termbase(self, name):
         """Permanently deletes a termbase from disk.

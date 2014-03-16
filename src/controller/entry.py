@@ -195,3 +195,13 @@ class EntryController(AbstractController):
             self._view.entry_display.display_entry(entry)
         else:
             self._view.entry_display.display_welcome_screen()
+
+    def _handle_close_termbase(self):
+        """
+        When the current termbase is being closed, the entry controller
+        associated with it must be closed in order for a new controller to be
+        instantiated upon next opening.
+
+        :rtype: None
+        """
+        self.finished.emit()
