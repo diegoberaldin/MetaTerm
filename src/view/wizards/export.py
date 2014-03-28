@@ -25,7 +25,10 @@ This module contains the classes used to define the wizard that will guide the
 user in exporting the information of the currently opened termbase.
 """
 
-from PyQt4 import QtGui
+from PyQt4 import QtCore, QtGui
+
+from src.view.enum import DefaultLanguages
+from src import model as mdl
 
 
 class ExportWizard(QtGui.QWizard):
@@ -89,6 +92,7 @@ class ExportTypePage(QtGui.QWizardPage):
 class LanguagePage(QtGui.QWizardPage):
     def __init__(self, parent):
         super(LanguagePage, self).__init__(parent)
+        self._languages = DefaultLanguages(self)
         # title and subtitle
         self.setTitle(self.tr('Select language pair'))
         if self.field('csv_type'):
@@ -98,6 +102,59 @@ class LanguagePage(QtGui.QWizardPage):
             subtitle = self.tr('Please select the two languages you wish to '
                                'export to the TSV file.')
         self.setTitle(subtitle)
+        self._available_languages_view = QtGui.QListWidget(self)
+        self._chosen_languages = QtGui.QListWidget(self)
+        self._populate_language_views()
+        button_widget = QtGui.QWidget(self)
+        button_widget.setLayout(QtGui.QVBoxLayout(button_widget))
+        select_button = QtGui.QToolButton(button_widget)
+        select_button.setIcon(QtGui.QIcon(':/arrow-right'))
+        select_button.clicked.connect(self._handle_language_selected)
+        deselect_button = QtGui.QToolButton(button_widget)
+        deselect_button.clicked.connect(self._handle_language_unselected)
+        deselect_button.setIcon(QtGui.QIcon(':/arrow-left'))
+        button_widget.layout().addWidget(select_button)
+        button_widget.layout().addWidget(deselect_button)
+        # puts it all together
+        self.setLayout(QtGui.QHBoxLayout(self))
+        self.layout().addWidget(self._available_languages_view)
+        self.layout().addWidget(button_widget)
+        self.layout().addWidget(self._chosen_languages)
+
+    def _populate_language_views(self):
+        termbase_locales = mdl.get_main_model().open_termbase.languages
+        for locale in termbase_locales:
+            flag = QtGui.QIcon(':/{0}'.format(locale))
+            name = self._languages[locale]
+            item = QtGui.QListWidgetItem(flag, name,
+                                         self._available_languages_view)
+            self._available_languages_view.addItem(item)
+
+    @QtCore.pyqtSlot()
+    def _handle_language_selected(self):
+        row = self._available_languages_view.currentRow()
+        item = self._available_languages_view.takeItem(row)
+        self._chosen_languages.addItem(item)
+        self._chosen_languages.sortItems(QtCore.Qt.AscendingOrder)
+        self.completeChanged.emit()
+
+    @QtCore.pyqtSlot()
+    def _handle_language_unselected(self):
+        row = self._chosen_languages.currentRow()
+        item = self._chosen_languages.takeItem(row)
+        self._available_languages_view.addItem(item)
+        self._available_languages_view.sortItems(QtCore.Qt.AscendingOrder)
+        self.completeChanged.emit()
+
+    def isComplete(self):
+        return (super(LanguagePage, self).isComplete()
+                and self._chosen_languages.count() == 2)
+
+    def get_selected_locales(self):
+        names = [self._chosen_languages.item(index).data(0)
+                 for index in range(self._chosen_languages.count())]
+        inverted_languages = {value: key for key, value in self._languages}
+        return [inverted_languages[name] for name in names]
 
 
 class FieldSelectionPage(QtGui.QWizardPage):

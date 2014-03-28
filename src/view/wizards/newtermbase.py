@@ -196,7 +196,6 @@ class LanguagePage(QtGui.QWizardPage):
             item = QtGui.QListWidgetItem(flag, language_name,
                                          self._available_languages)
             self._available_languages.addItem(item)
-        self._available_languages.sortItems(QtCore.Qt.AscendingOrder)
 
     @QtCore.pyqtSlot()
     def _handle_language_selected(self):
@@ -242,12 +241,10 @@ class LanguagePage(QtGui.QWizardPage):
         :return: list of all selected locales
         :rtype: list
         """
-        items = []
-        while self._chosen_languages.count():
-            items.append(self._chosen_languages.takeItem(0))
-        items = [item.data(0) for item in items]
-        return [k for lang_name in items for k, v in
-                self._default_languages if v == lang_name]
+        names = [self._chosen_languages.item(index).data(0)
+                 for index in range(self._chosen_languages.count())]
+        inverted_languages = {value: key for key, value in self._languages}
+        return [inverted_languages[name] for name in names]
 
 
 class DefinitionModelPage(QtGui.QWizardPage):
