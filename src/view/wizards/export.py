@@ -34,6 +34,9 @@ from src import model as mdl
 
 
 class ExportWizard(QtGui.QWizard):
+    """Wizard that has the responsibility of guiding end users through the
+    procedure of exporting the currently opened termbase to a file.
+    """
     TYPE_PAGE, LANGUAGE_PAGE, THIRD_FIELD_PAGE, FINAL_PAGE = range(4)
     """Constants used as page IDs in order to create this non-linear wizard.
     """
@@ -67,6 +70,13 @@ class ExportWizard(QtGui.QWizard):
 
     @property
     def export_type(self):
+        """Returns a constant value corresponding to the export type selected
+        by the user in the ExportTypePage. Returned values correspond to
+        the ExportWizard.TYPE_TSV and ExportWizard.TYPE_CSV constants.
+
+        :return: a constant defining the selected export type
+        :rtype: int
+        """
         if self.field('csv_type'):
             return ExportWizard.TYPE_CSV
         else:
@@ -74,23 +84,54 @@ class ExportWizard(QtGui.QWizard):
 
     @property
     def selected_locales(self):
-        return self.page(ExportWizard.LANGUAGE_PAGE).get_selected_locales()
+        """List of locales corresponding to the selected languages. The
+        returned list is ordered and the first item must be interpreted
+        as the source language of the exported termbase.
+
+        :return: the list of the selected locales
+        :rtype: list
+        """
+        return self.page(ExportWizard.LANGUAGE_PAGE).selected_locales
 
     @property
     def third_field(self):
+        """Property object that has been selected as the third field for
+        a CSV or TSV termbase export.
+
+        :return: the property object
+        :rtype: src.model.dataaccess.schema.Property
+        """
         return self.page(ExportWizard.THIRD_FIELD_PAGE).third_field_property
 
     @property
     def output_file_path(self):
-        return self.page(ExportWizard.FINAL_PAGE).get_output_file_path()
+        """Path of the file that has been selected to contain the exported
+        termbase.
+
+        :return: path of the output file
+        :rtype: str
+        """
+        return self.page(ExportWizard.FINAL_PAGE).output_file_path
 
 
 class ExportTypePage(QtGui.QWizardPage):
+    """Page of the wizard where users can choose in which for to export
+    their data, e.g. comma-separated or tab-separated values.
+    """
+
     def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the parent widget
+        :type parent: QtGui.QWidget
+        :rtype: ExportTypePage
+        """
         super(ExportTypePage, self).__init__(parent)
+        # sets title and subtitle
         self.setTitle(self.tr('Select export type'))
         self.setSubTitle(
             self.tr('Please select an output format for termbase data.'))
+        # list of export format options
         type_group = QtGui.QGroupBox(self.tr('Available types'), self)
         type_group.setLayout(QtGui.QVBoxLayout(type_group))
         csv_option = QtGui.QRadioButton(
@@ -108,12 +149,29 @@ class ExportTypePage(QtGui.QWizardPage):
         self.registerField('tsv_type', tsv_option)
 
     def nextId(self):
+        """Overridden in order to return the correct page id according
+        to the user's choice.
+
+        :return: id of the next page
+        :rtype: int
+        """
         if self.field('csv_type') or self.field('tsv_type'):
             return ExportWizard.LANGUAGE_PAGE
 
 
 class LanguagePage(QtGui.QWizardPage):
+    """Page of the wizard where users can select the languages they wish to
+    export. The first language is currently interpreted as the source language,
+    in case of 'directed' export formats such as CSV or TSV.
+    """
+
     def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the parent widget
+        :type parent: QtGui.QWidget
+        :rtype: LanguagePage
+        """
         super(LanguagePage, self).__init__(parent)
         self._languages = DefaultLanguages(self)
         # page title
@@ -140,7 +198,10 @@ class LanguagePage(QtGui.QWizardPage):
         self.layout().addWidget(self._chosen_languages)
 
     def initializePage(self):
-        # shows the correct subtitle
+        """Overridden in order to correctly set the subtitle, which depends on
+        previous choices and cannot be added upon instantiation
+        :rtype: None
+        """
         if self.field('csv_type'):
             subtitle = self.tr('Please select the two languages you wish to '
                                'export to the CSV file.')
@@ -154,6 +215,9 @@ class LanguagePage(QtGui.QWizardPage):
         self.setSubTitle(subtitle)
 
     def _populate_language_views(self):
+        """Utility method used to populate the available language list.
+        :rtype: None
+        """
         termbase_locales = mdl.get_main_model().open_termbase.languages
         for locale in termbase_locales:
             flag = QtGui.QIcon(':/flags/{0}'.format(locale))
@@ -164,6 +228,12 @@ class LanguagePage(QtGui.QWizardPage):
 
     @QtCore.pyqtSlot()
     def _handle_language_selected(self):
+        """Moves the QtGui.QListWidgetItem corresponding to the
+        selected language from the list of available languages to
+        the list of the selected ones.
+
+        :rtype: None
+        """
         row = self._available_languages_view.currentRow()
         item = self._available_languages_view.takeItem(row)
         # order is significant
@@ -172,6 +242,12 @@ class LanguagePage(QtGui.QWizardPage):
 
     @QtCore.pyqtSlot()
     def _handle_language_unselected(self):
+        """Moves the QtGui.QListWidgetItem corresponding to the
+        selected language back from the list of selected languages to
+        the list of the available ones.
+
+        :rtype: None
+        """
         row = self._chosen_languages.currentRow()
         item = self._chosen_languages.takeItem(row)
         self._available_languages_view.addItem(item)
@@ -179,22 +255,52 @@ class LanguagePage(QtGui.QWizardPage):
         self.completeChanged.emit()
 
     def isComplete(self):
+        """Overridden in order to return True only if two languages have
+        been chosen by the user.
+
+        :return: True if exactly 2 languages have been chosen by the user,
+        False otherwise
+        :rtype: bool
+        """
         return (super(LanguagePage, self).isComplete()
                 and self._chosen_languages.count() == 2)
 
-    def get_selected_locales(self):
+    @property
+    def selected_locales(self):
+        """List of the locales corresponding to the languages that the user has
+        selected in the wizard page.
+
+        :return: ordered list of the selected locales, where the first one is
+        to be interpreted as the source language
+        :rtype: list
+        """
         names = [self._chosen_languages.item(index).data(QtCore.Qt.DisplayRole)
                  for index in range(self._chosen_languages.count())]
         inverted_languages = {value: key for key, value in self._languages}
         return [inverted_languages[name] for name in names]
 
     def nextId(self):
+        """Overridden in order to return the id of the next page.
+
+        :return: id of the next page in the wizard
+        :rtype: int
+        """
         if self.field('csv_type') or self.field('tsv_type'):
             return ExportWizard.THIRD_FIELD_PAGE
 
 
 class ThirdFieldSelectionPage(QtGui.QWizardPage):
+    """Wizard page where users can select the third field that will
+    be exported in simple delimited formats such as CSV or TSV.
+    """
+
     def __init__(self, parent):
+        """Constructor method.
+
+        :param parent: reference to the parent widget
+        :type parent: QtGui.QWidget
+        :rtype: ThirdFieldSelectionPage
+        """
         super(ThirdFieldSelectionPage, self).__init__(parent)
         self._schema = mdl.get_main_model().open_termbase.schema
         self.third_field_property = None
@@ -212,7 +318,11 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
         self.layout().addWidget(self._fields)
 
     def initializePage(self):
-        # shows the correct subtitle
+        """Shows the correct subtitle, which depends on previous user choices
+        and cannot be statically determined upon class instantiation.
+
+        :rtype: None
+        """
         subtitle = self.tr('Please select exactly one field '
                            'from the list below.')
         if self.field('csv_type'):
@@ -225,11 +335,20 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
 
     @QtCore.pyqtSlot(QtGui.QListWidgetItem)
     def _handle_item_clicked(self, item):
+        """Marks as unselected every other checked fields and stores
+        internally the selected property.
+
+        :param item: currently activated list item
+        :type item: QtGui.QListWidgetItem
+        :rtype: None
+        """
         for index in range(self._fields.count()):
             current = self._fields.item(index)
             if current is not item:
+                # other fields must be unselected
                 current.setCheckState(QtCore.Qt.Unchecked)
         if item.checkState() == QtCore.Qt.Checked:
+            # remembers the property that has been selected
             property_name = item.data(QtCore.Qt.DisplayRole)
             property_list = [p for p in self._schema.get_properties('E')
                              if p.name == property_name]
@@ -242,14 +361,36 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
         self.completeChanged.emit()
 
     def isComplete(self):
+        """Determines whether the user has completed this step based on
+        whether they have chosen the property to be exported.
+
+        :return: True if the page is complete, False otherwise
+        :rtype: bool
+        """
+        # TODO: the third field is actually optional!
         return self.third_field_property is not None
 
     def nextId(self):
+        """Goes straight to the final page.
+
+        :return: id of the next wizard page
+        :rtype: int
+        """
         return ExportWizard.FINAL_PAGE
 
 
 class FinalPage(QtGui.QWizardPage):
+    """Final page of the export wizard, where users can eventually select the
+    output file where the exported data will be persisted.
+    """
+
     def __init__(self, parent):
+        """Constructor method
+
+        :param parent: reference to the widget parent
+        :type parent: QtGui.QWidget
+        :rtype: FinalPage
+        """
         super(FinalPage, self).__init__(parent)
         self.setTitle(self.tr('Select the output file'))
         self.setSubTitle(self.tr('Please select the destination '
@@ -265,7 +406,13 @@ class FinalPage(QtGui.QWizardPage):
         self.setLayout(QtGui.QVBoxLayout(self))
         self.layout().addWidget(select_file_widget)
 
+    @QtCore.pyqtSlot()
     def _handle_browse_button_pressed(self):
+        """Shows a dialog allowing users to select the output file and shows
+        its path in the associated QtGui.QLineEdit in the page.
+
+        :rtype: None
+        """
         if self.field('csv_type'):
             file_filter = self.tr('Comma-separated values (*.csv)')
         elif self.field('tsv_type'):
@@ -273,6 +420,7 @@ class FinalPage(QtGui.QWizardPage):
         else:
             # TODO: this must be handled
             file_filter = ''
+        # shows a dialog to pick file
         dialog = QtGui.QFileDialog(self, self.tr('Select output file'),
                                    os.path.expanduser('~'), file_filter)
         dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
@@ -280,17 +428,29 @@ class FinalPage(QtGui.QWizardPage):
             paths = dialog.selectedFiles()
             if paths:
                 path = paths.pop().strip()
+                # appends file extension if missing
                 if self.field('csv_type') and not path.endswith('.csv'):
                     path += '.csv'
                 elif self.field('tsv_type') and not path.endswith('.tsv'):
                     path += '.tsv'
+                # saves the output path
                 self._path_input.setText(path)
         else:
             self._path_input.clear()
         self.completeChanged.emit()
 
-    def get_output_file_path(self):
+    @property
+    def output_file_path(self):
+        """Path of the file where the termbase should be exported.
+        :return: the selected path or '' if none was selected
+        :rtype: str
+        """
         return self._path_input.text()
 
     def isComplete(self):
-        return len(self.get_output_file_path()) > 0
+        """Overridden in order to state whether the page is complete based on
+        the user having selected an output file or not.
+        :return: True if the user has selected an output path, False otherwise
+        :rtype: bool
+        """
+        return len(self.output_file_path) > 0
