@@ -25,6 +25,8 @@ This module contains the classes used to define the wizard that will guide the
 user in exporting the information of the currently opened termbase.
 """
 
+import os
+
 from PyQt4 import QtCore, QtGui
 
 from src.view.enum import DefaultLanguages
@@ -35,6 +37,8 @@ class ExportWizard(QtGui.QWizard):
     TYPE_PAGE, LANGUAGE_PAGE, THIRD_FIELD_PAGE, FINAL_PAGE = range(4)
     """Constants used as page IDs in order to create this non-linear wizard.
     """
+
+    TYPE_CSV, TYPE_TSV = range(2)
 
     _WIDTH = 600
     """Default window width.
@@ -60,6 +64,25 @@ class ExportWizard(QtGui.QWizard):
         self.setPage(self.FINAL_PAGE, FinalPage(self))
         self.resize(self._WIDTH, self._HEIGHT)
         self.show()
+
+    @property
+    def export_type(self):
+        if self.field('csv_type'):
+            return ExportWizard.TYPE_CSV
+        else:
+            return ExportWizard.TYPE_TSV
+
+    @property
+    def selected_locales(self):
+        return self.page(ExportWizard.LANGUAGE_PAGE).get_selected_locales()
+
+    @property
+    def third_field(self):
+        return self.page(ExportWizard.THIRD_FIELD_PAGE).third_field_property
+
+    @property
+    def output_file_path(self):
+        return self.page(ExportWizard.FINAL_PAGE).get_output_file_path()
 
 
 class ExportTypePage(QtGui.QWizardPage):
@@ -124,6 +147,10 @@ class LanguagePage(QtGui.QWizardPage):
         else:
             subtitle = self.tr('Please select the two languages you wish to '
                                'export to the TSV file.')
+        subtitle += self.tr('The order is significant in that the first '
+                            'language will be interpreted as the <strong>'
+                            'source</strong> language and the second will be '
+                            'interpreted as the <strong>target</strong> one.')
         self.setSubTitle(subtitle)
 
     def _populate_language_views(self):
@@ -139,8 +166,8 @@ class LanguagePage(QtGui.QWizardPage):
     def _handle_language_selected(self):
         row = self._available_languages_view.currentRow()
         item = self._available_languages_view.takeItem(row)
+        # order is significant
         self._chosen_languages.addItem(item)
-        self._chosen_languages.sortItems(QtCore.Qt.AscendingOrder)
         self.completeChanged.emit()
 
     @QtCore.pyqtSlot()
@@ -169,12 +196,13 @@ class LanguagePage(QtGui.QWizardPage):
 class ThirdFieldSelectionPage(QtGui.QWizardPage):
     def __init__(self, parent):
         super(ThirdFieldSelectionPage, self).__init__(parent)
-        self.property_name = None
+        self._schema = mdl.get_main_model().open_termbase.schema
+        self.third_field_property = None
         self.setTitle(self.tr('Select which fields to export'))
         schema = mdl.get_main_model().open_termbase.schema
         # field selection widget
         self._fields = QtGui.QListWidget(self)
-        for prop in schema.get_properties('T'):
+        for prop in schema.get_properties('E'):
             item = QtGui.QListWidgetItem(prop.name, self._fields)
             item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
             item.setCheckState(QtCore.Qt.Unchecked)
@@ -202,13 +230,19 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
             if current is not item:
                 current.setCheckState(QtCore.Qt.Unchecked)
         if item.checkState() == QtCore.Qt.Checked:
-            self.property_name = item.data(QtCore.Qt.DisplayRole)
+            property_name = item.data(QtCore.Qt.DisplayRole)
+            property_list = [p for p in self._schema.get_properties('E')
+                             if p.name == property_name]
+            if property_list:
+                self.third_field_property = property_list.pop()
+            else:
+                self.third_field_property = None
         else:
-            self.property_name = None
+            self.third_field_property = None
         self.completeChanged.emit()
 
     def isComplete(self):
-        return self.property_name is not None
+        return self.third_field_property is not None
 
     def nextId(self):
         return ExportWizard.FINAL_PAGE
@@ -217,3 +251,46 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
 class FinalPage(QtGui.QWizardPage):
     def __init__(self, parent):
         super(FinalPage, self).__init__(parent)
+        self.setTitle(self.tr('Select the output file'))
+        self.setSubTitle(self.tr('Please select the destination '
+                                 'where the resulting file should be written'))
+        self._path_input = QtGui.QLineEdit(self)
+        self._path_input.setEnabled(False)
+        browse_button = QtGui.QPushButton(self.tr('Browse'))
+        browse_button.clicked.connect(self._handle_browse_button_pressed)
+        select_file_widget = QtGui.QWidget(self)
+        select_file_widget.setLayout(QtGui.QHBoxLayout(select_file_widget))
+        select_file_widget.layout().addWidget(self._path_input)
+        select_file_widget.layout().addWidget(browse_button)
+        self.setLayout(QtGui.QVBoxLayout(self))
+        self.layout().addWidget(select_file_widget)
+
+    def _handle_browse_button_pressed(self):
+        if self.field('csv_type'):
+            file_filter = self.tr('Comma-separated values (*.csv)')
+        elif self.field('tsv_type'):
+            file_filter = self.tr('Tab-separated values (*.tsv)')
+        else:
+            # TODO: this must be handled
+            file_filter = ''
+        dialog = QtGui.QFileDialog(self, self.tr('Select output file'),
+                                   os.path.expanduser('~'), file_filter)
+        dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+        if dialog.exec_():
+            paths = dialog.selectedFiles()
+            if paths:
+                path = paths.pop().strip()
+                if self.field('csv_type') and not path.endswith('.csv'):
+                    path += '.csv'
+                elif self.field('tsv_type') and not path.endswith('.tsv'):
+                    path += '.tsv'
+                self._path_input.setText(path)
+        else:
+            self._path_input.clear()
+        self.completeChanged.emit()
+
+    def get_output_file_path(self):
+        return self._path_input.text()
+
+    def isComplete(self):
+        return len(self.get_output_file_path()) > 0
