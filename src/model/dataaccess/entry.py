@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # MetaTerm - A terminology management application written in Python
-# Copyright (C) 2013 Diego Beraldin
+# Copyright (C) 2014 Diego Beraldin
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -245,3 +245,8 @@ class Entry(object):
                     t in session.query(orm.Term).filter(
                     orm.Term.entry_id == self.entry_id,
                     orm.Term.lang_id == locale)]
+
+    def __eq__(self, other):
+        if hasattr(other, 'entry_id'):
+            return self.entry_id == other.entry_id
+        return False

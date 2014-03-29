@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # MetaTerm - A terminology management application written in Python
-# Copyright (C) 2013 Diego Beraldin
+# Copyright (C) 2014 Diego Beraldin
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -146,3 +146,8 @@ class Property(object):
             return [v[0] for v in
                     session.query(orm.PickListValue.value).filter(
                         orm.PickListValue.prop_id == self.prop_id)]
+
+    def __eq__(self, other):
+        if hasattr(other, 'prop_id'):
+            return self.prop_id == other.prop_id
+        return False
