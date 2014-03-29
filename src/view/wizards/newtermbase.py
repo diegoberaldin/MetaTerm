@@ -94,7 +94,7 @@ class NewTermbaseWizard(QtGui.QWizard):
         :rtype: list
         """
         language_page = self._pages[1]
-        return language_page.get_selected_locales()
+        return language_page.selected_locales
 
 
 class NamePage(QtGui.QWizardPage):
@@ -234,7 +234,8 @@ class LanguagePage(QtGui.QWizardPage):
         some_language_selected = self._chosen_languages.count() != 0
         return super(LanguagePage, self).isComplete() and some_language_selected
 
-    def get_selected_locales(self):
+    @property
+    def selected_locales(self):
         """Returns a list of all the language locales that have been selected
         this ``LanguagePage`` instance.
 
