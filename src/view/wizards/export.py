@@ -28,7 +28,6 @@ user in exporting the information of the currently opened termbase.
 import os
 
 from PyQt4 import QtCore, QtGui
-
 from src.view.enum import DefaultLanguages
 from src import model as mdl
 
@@ -102,6 +101,10 @@ class ExportWizard(QtGui.QWizard):
         :rtype: src.model.dataaccess.schema.Property
         """
         return self.page(ExportWizard.THIRD_FIELD_PAGE).third_field_property
+
+    @property
+    def third_field_details(self):
+        return self.page(ExportWizard.THIRD_FIELD_PAGE).third_field_property_details
 
     @property
     def output_file_path(self):
@@ -304,14 +307,27 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
         super(ThirdFieldSelectionPage, self).__init__(parent)
         self._schema = mdl.get_main_model().open_termbase.schema
         self.third_field_property = None
+        self.third_field_property_details = None
         self.setTitle(self.tr('Select which fields to export'))
         schema = mdl.get_main_model().open_termbase.schema
         # field selection widget
         self._fields = QtGui.QListWidget(self)
+        # adds a list item for each entry level property
         for prop in schema.get_properties('E'):
             item = QtGui.QListWidgetItem(prop.name, self._fields)
             item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
             item.setCheckState(QtCore.Qt.Unchecked)
+            item.setData(QtCore.Qt.UserRole, (prop, 'entry'))
+        # adds two list items for each term level property (source and target)
+        for prop in self._schema.get_properties('T'):
+            source_item = QtGui.QListWidgetItem('{0} (source)'.format(prop.name), self._fields)
+            source_item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsUserCheckable)
+            source_item.setCheckState(QtCore.Qt.Unchecked)
+            source_item.setData(QtCore.Qt.UserRole, (prop, 'term_source'))
+            target_item = QtGui.QListWidgetItem('{0} (target)'.format(prop.name), self._fields)
+            target_item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            target_item.setCheckState(QtCore.Qt.Unchecked)
+            target_item.setData(QtCore.Qt.UserRole, (prop, 'term_target'))
         self._fields.itemClicked.connect(self._handle_item_clicked)
         # puts it all together
         self.setLayout(QtGui.QVBoxLayout(self))
@@ -349,15 +365,17 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
                 current.setCheckState(QtCore.Qt.Unchecked)
         if item.checkState() == QtCore.Qt.Checked:
             # remembers the property that has been selected
-            property_name = item.data(QtCore.Qt.DisplayRole)
-            property_list = [p for p in self._schema.get_properties('E')
-                             if p.name == property_name]
-            if property_list:
-                self.third_field_property = property_list.pop()
+            prop, prop_detail = item.getData(QtCore.Qt.UserRole)
+            self.third_field_property = prop
+            if prop_detail == 'term_source':
+                self.third_field_property_details = 'source'
+            elif prop_detail == 'term_target':
+                self.third_field_property_details = 'target'
             else:
-                self.third_field_property = None
+                self.third_field_property_details = None
         else:
             self.third_field_property = None
+            self.third_field_property_details = None
         self.completeChanged.emit()
 
     def isComplete(self):
