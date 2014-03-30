@@ -321,7 +321,7 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
         # adds two list items for each term level property (source and target)
         for prop in self._schema.get_properties('T'):
             source_item = QtGui.QListWidgetItem('{0} (source)'.format(prop.name), self._fields)
-            source_item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsUserCheckable)
+            source_item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
             source_item.setCheckState(QtCore.Qt.Unchecked)
             source_item.setData(QtCore.Qt.UserRole, (prop, 'term_source'))
             target_item = QtGui.QListWidgetItem('{0} (target)'.format(prop.name), self._fields)
@@ -365,7 +365,7 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
                 current.setCheckState(QtCore.Qt.Unchecked)
         if item.checkState() == QtCore.Qt.Checked:
             # remembers the property that has been selected
-            prop, prop_detail = item.getData(QtCore.Qt.UserRole)
+            prop, prop_detail = item.data(QtCore.Qt.UserRole)
             self.third_field_property = prop
             if prop_detail == 'term_source':
                 self.third_field_property_details = 'source'

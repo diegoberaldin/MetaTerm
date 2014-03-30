@@ -60,7 +60,7 @@ class ExportController(AbstractController):
         and 'third' keys that will correspond to export fields
         :rtype: list
         """
-        third_field = self._view.third_field_property
+        third_field = self._view.third_field
         third_field_details = self._view.third_field_details
         locales = self._view.selected_locales
         result = []
