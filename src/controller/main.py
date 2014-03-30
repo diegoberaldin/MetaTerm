@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # MetaTerm - A terminology management application written in Python
-# Copyright (C) 2013 Diego Beraldin
+# Copyright (C) 2014 Diego Beraldin
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ class MainController(AbstractController):
         :rtype: None
         """
         mdl.get_main_model().open_termbase = None
-        self._view.display_message('Current termbase closed.')
+        self._view.display_message(self.tr('Current termbase closed.'))
 
     def _handle_delete_termbase(self, name):
         """Permanently deletes a termbase from disk.
@@ -103,7 +103,7 @@ class MainController(AbstractController):
         if os.path.exists(file_name):
             os.remove(file_name)
             self._view.display_message(
-                'Termbase {0} has been deleted.'.format(name))
+                self.tr('Termbase {0} has been deleted.'.format(name)))
 
     def _handle_entry_changed(self):
         """When the content of an entry manipulator form gets changed, the
