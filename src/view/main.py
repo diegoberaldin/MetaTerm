@@ -78,6 +78,8 @@ class MainWindow(QtGui.QMainWindow):
         # window size and title
         self.resize(self._WIDTH, self._HEIGHT)
         self.setWindowTitle(self.tr('MetaTerm'))
+        # window icon
+        self.setWindowIcon(QtGui.QIcon(':/server-database'))
         # displays a message in the status bar
         self.statusBar().showMessage(self.tr('Started.'))
         # signal-slot connections

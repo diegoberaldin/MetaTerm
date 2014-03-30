@@ -210,7 +210,7 @@ class LanguagePage(QtGui.QWizardPage):
                                'export to the CSV file.')
         else:
             subtitle = self.tr('Please select the two languages you wish to '
-                               'export to the TSV file.')
+                               'export to the TAB file.')
         subtitle += self.tr('The order is significant in that the first '
                             'language will be interpreted as the <strong>'
                             'source</strong> language and the second will be '
@@ -346,7 +346,7 @@ class ThirdFieldSelectionPage(QtGui.QWizardPage):
                                  ' in the resulting CSV file.'))
         else:
             subtitle += (self.tr('This will be exported as the third column '
-                                 'in the resulting TSV file.'))
+                                 'in the resulting TAB file.'))
         self.setSubTitle(subtitle)
 
     @QtCore.pyqtSlot(QtGui.QListWidgetItem)
@@ -434,7 +434,7 @@ class FinalPage(QtGui.QWizardPage):
         if self.field('csv_type'):
             file_filter = self.tr('Comma-separated values (*.csv)')
         elif self.field('tsv_type'):
-            file_filter = self.tr('Tab-separated values (*.tsv)')
+            file_filter = self.tr('Tab-separated values (*.tab)')
         else:
             # TODO: this must be handled
             file_filter = ''
@@ -449,8 +449,8 @@ class FinalPage(QtGui.QWizardPage):
                 # appends file extension if missing
                 if self.field('csv_type') and not path.endswith('.csv'):
                     path += '.csv'
-                elif self.field('tsv_type') and not path.endswith('.tsv'):
-                    path += '.tsv'
+                elif self.field('tsv_type') and not path.endswith('.tab'):
+                    path += '.tab'
                 # saves the output path
                 self._path_input.setText(path)
         else:

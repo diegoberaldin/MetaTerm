@@ -83,55 +83,103 @@
 <context>
     <name>ExportTypePage</name>
     <message>
-        <location filename="src/view/wizards/export.py" line="65"/>
+        <location filename="src/view/wizards/export.py" line="134"/>
         <source>Select export type</source>
-        <translation type="unfinished"></translation>
+        <translation>Selezione tipo di esportazione</translation>
     </message>
     <message>
-        <location filename="src/view/wizards/export.py" line="66"/>
+        <location filename="src/view/wizards/export.py" line="135"/>
         <source>Please select an output format for termbase data.</source>
-        <translation type="unfinished"></translation>
+        <translation>Selezionare un formato di output per l&apos;esportazione del termbase.</translation>
     </message>
     <message>
-        <location filename="src/view/wizards/export.py" line="68"/>
+        <location filename="src/view/wizards/export.py" line="138"/>
         <source>Available types</source>
-        <translation type="unfinished"></translation>
+        <translation>Tipologie disponibili</translation>
     </message>
     <message>
-        <location filename="src/view/wizards/export.py" line="70"/>
+        <location filename="src/view/wizards/export.py" line="140"/>
         <source>comma-separated values (*.csv)</source>
-        <translation type="unfinished"></translation>
+        <translation>valori separati da virgole (*.csv)</translation>
     </message>
     <message>
-        <location filename="src/view/wizards/export.py" line="73"/>
+        <location filename="src/view/wizards/export.py" line="143"/>
         <source>tab-separated values (*.tab)</source>
-        <translation type="unfinished"></translation>
+        <translation>valori separati da tabulazione(*.tab)</translation>
     </message>
 </context>
 <context>
     <name>ExportWizard</name>
     <message>
-        <location filename="src/view/wizards/export.py" line="52"/>
+        <location filename="src/view/wizards/export.py" line="61"/>
         <source>Export termbase data</source>
-        <translation type="unfinished"></translation>
+        <translation>Esportazione del termbase</translation>
+    </message>
+</context>
+<context>
+    <name>FinalPage</name>
+    <message>
+        <location filename="src/view/wizards/export.py" line="413"/>
+        <source>Select the output file</source>
+        <translation>Selezione del file di output</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="414"/>
+        <source>Please select the destination where the resulting file should be written</source>
+        <translation>Selezionare il file di destinazione su cui sarà esportato il termbase</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="418"/>
+        <source>Browse</source>
+        <translation>Sfoglia</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="435"/>
+        <source>Comma-separated values (*.csv)</source>
+        <translation>Valori separati da virgole (*.csv)</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="437"/>
+        <source>Tab-separated values (*.tsv)</source>
+        <translation type="obsolete">Valori separati da tabulazione(*.tab)</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="442"/>
+        <source>Select output file</source>
+        <translation>Selezionare file di output</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="437"/>
+        <source>Tab-separated values (*.tab)</source>
+        <translation>Valori separati da tabulazione (*.tab)</translation>
     </message>
 </context>
 <context>
     <name>LanguagePage</name>
     <message>
-        <location filename="src/view/wizards/export.py" line="93"/>
+        <location filename="src/view/wizards/export.py" line="181"/>
         <source>Select language pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Selezione delle lingue</translation>
     </message>
     <message>
-        <location filename="src/view/wizards/export.py" line="95"/>
+        <location filename="src/view/wizards/export.py" line="209"/>
         <source>Please select the two languages you wish to export to the CSV file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Selezionare le lingue da esportare nel file CSV.</translation>
     </message>
     <message>
-        <location filename="src/view/wizards/export.py" line="98"/>
+        <location filename="src/view/wizards/export.py" line="212"/>
         <source>Please select the two languages you wish to export to the TSV file.</source>
-        <translation type="unfinished"></translation>
+        <translation type="obsolete">Selezionare le due lingue da esportare nel file TSV.</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="214"/>
+        <source>The order is significant in that the first language will be interpreted as the &lt;strong&gt;source&lt;/strong&gt; language and the second will be interpreted as the &lt;strong&gt;target&lt;/strong&gt; one.</source>
+        <translation>L&apos;ordine è significativo in quanto la prima sarà interpretata come la lingua &lt;strong&gt;di partenza&lt;/string&gt; e la seconda come lingua &lt;strong&gt;di arrivo&lt;/strong&gt;.</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="212"/>
+        <source>Please select the two languages you wish to export to the TAB file.</source>
+        <translation>Selezionare le due lingue da esportare nel file TAB.</translation>
     </message>
 </context>
 <context>
@@ -143,6 +191,19 @@
     </message>
 </context>
 <context>
+    <name>MainController</name>
+    <message>
+        <location filename="src/controller/main.py" line="90"/>
+        <source>Current termbase closed.</source>
+        <translation>Termbase chiuso.</translation>
+    </message>
+    <message>
+        <location filename="src/controller/main.py" line="105"/>
+        <source>Termbase {0} has been deleted.</source>
+        <translation>Il termbase {0} è stato cancellato.</translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
         <location filename="src/view/main.py" line="80"/>
@@ -150,102 +211,102 @@
         <translation>MetaTerm</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="82"/>
+        <location filename="src/view/main.py" line="84"/>
         <source>Started.</source>
         <translation>Avviato.</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="127"/>
+        <location filename="src/view/main.py" line="129"/>
         <source>Termbase</source>
         <translation>Termbase</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="139"/>
+        <location filename="src/view/main.py" line="141"/>
         <source>Entry</source>
         <translation>Scheda</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="147"/>
+        <location filename="src/view/main.py" line="149"/>
         <source>?</source>
         <translation>?</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="165"/>
+        <location filename="src/view/main.py" line="167"/>
         <source>Warning</source>
         <translation>Avviso</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="166"/>
+        <location filename="src/view/main.py" line="168"/>
         <source>Are you sure you want to delete this termbase?</source>
         <translation>Eliminare davvero questo termbase?</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="168"/>
+        <location filename="src/view/main.py" line="170"/>
         <source>The operation cannot be undone, do you still want to proceed?</source>
         <translation>L&apos;operazione non potrà essere annullata. Continuare?</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="262"/>
+        <location filename="src/view/main.py" line="264"/>
         <source>New termbase...</source>
         <translation>Nuovo termbase...</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="267"/>
+        <location filename="src/view/main.py" line="269"/>
         <source>Open termbase...</source>
         <translation>Apri termbase...</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="271"/>
+        <location filename="src/view/main.py" line="273"/>
         <source>Close termbase...</source>
         <translation>Chiudi termbase...</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="277"/>
+        <location filename="src/view/main.py" line="279"/>
         <source>Delete termbase...</source>
         <translation>Elimina termbase...</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="280"/>
+        <location filename="src/view/main.py" line="282"/>
         <source>Export...</source>
         <translation>Esporta...</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="286"/>
+        <location filename="src/view/main.py" line="288"/>
         <source>Termbase properties...</source>
         <translation>Proprietà...</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="292"/>
+        <location filename="src/view/main.py" line="294"/>
         <source>Insert entry</source>
         <translation>Inserisci scheda</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="297"/>
+        <location filename="src/view/main.py" line="299"/>
         <source>Save entry</source>
         <translation>Salva scheda</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="302"/>
+        <location filename="src/view/main.py" line="304"/>
         <source>Edit entry</source>
         <translation>Modifica scheda</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="307"/>
+        <location filename="src/view/main.py" line="309"/>
         <source>Cancel edit</source>
         <translation>Annulla modifiche</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="313"/>
+        <location filename="src/view/main.py" line="315"/>
         <source>Delete entry</source>
         <translation>Elimina scheda</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="319"/>
+        <location filename="src/view/main.py" line="321"/>
         <source>Quit</source>
         <translation>Chiudi</translation>
     </message>
     <message>
-        <location filename="src/view/main.py" line="324"/>
+        <location filename="src/view/main.py" line="326"/>
         <source>About Qt</source>
         <translation>Informazioni su Qt</translation>
     </message>
@@ -307,6 +368,34 @@
         <location filename="src/view/dialogs.py" line="139"/>
         <source>Total size:</source>
         <translation>Dimensione totale:</translation>
+    </message>
+</context>
+<context>
+    <name>ThirdFieldSelectionPage</name>
+    <message>
+        <location filename="src/view/wizards/export.py" line="311"/>
+        <source>Select which fields to export</source>
+        <translation>Selezione campi da esportare</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="342"/>
+        <source>Please select exactly one field from the list below.</source>
+        <translation>Selezionare uno soltanto dei campi dalla lista.</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="345"/>
+        <source>This will be exported as the third column  in the resulting CSV file.</source>
+        <translation>Il campo sarà esportato come terza colonna nel file CSV risultante.</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="348"/>
+        <source>This will be exported as the third column in the resulting TSV file.</source>
+        <translation type="obsolete">Il campo sarà esportato come terza colonna nel file TSV risultante.</translation>
+    </message>
+    <message>
+        <location filename="src/view/wizards/export.py" line="348"/>
+        <source>This will be exported as the third column in the resulting TAB file.</source>
+        <translation>Il campo sarà esportato come terza colonna nel file TAB risultante.</translation>
     </message>
 </context>
 <context>
